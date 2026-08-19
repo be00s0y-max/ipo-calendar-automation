@@ -1,0 +1,3 @@
+_tmp_*.xml
+__pycache__/
+*.pyc

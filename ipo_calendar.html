@@ -1,0 +1,3204 @@
+<meta charset="utf-8">
+<title>공모주 캘린더</title>
+<style>
+  /* 흰 배경의 단일 라이트 테마. 이벤트 색상은 무지개 대신 절제된 두 축으로만
+     구분한다: 실제 의사결정이 걸린 일정(수요예측·납입)은 브랜드 남색, 나머지
+     (청약·상장·락업해제)는 중립 회색 톤 — "오늘/공휴일"만 별도의 경고색을 쓴다. */
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #eef0f3;
+    --surface-3: #e3e6ec;
+    --ink: #191c22;
+    --ink-dim: #5b6270;
+    --ink-faint: #8b93a1;
+    --border: #dde1e8;
+    --accent: #234b8c;
+    --accent-ink: #ffffff;
+    --today-ring: #b3401f;
+    --ev-demand: #234b8c;
+    --ev-sub: #6b7280;
+    --ev-pay: #234b8c;
+    --ev-list: #8b93a1;
+    --ev-lockup: #b0b6c0;
+    --cell-out: #f8f9fb;
+    --backdrop: rgba(20,23,31,0.45);
+
+    --font-kr: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  }
+
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-kr);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  /* 종목명이 긴 칩이 캘린더 칸에서 잘리는 경우가 있어 예전(1180px)보다 넓혔다. */
+  .wrap { max-width: 1560px; margin: 0 auto; padding: 36px 28px 70px; }
+
+  /* ---- header ---- */
+  header {
+    display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);
+  }
+  .title-block h1 { margin: 0 0 6px; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; text-wrap: balance; }
+  .title-block p { margin: 0; color: var(--ink-dim); font-size: 12.5px; }
+  .title-block p b { color: var(--ink); font-weight: 600; }
+  .today-badge {
+    font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 15px; text-align: right; min-width: 160px;
+  }
+  .today-badge .label { display: block; font-family: var(--font-kr); font-size: 11px; color: var(--ink-faint); margin-bottom: 2px; }
+  .today-badge .date { font-size: 16px; font-weight: 700; color: var(--accent); }
+
+  /* ---- today digest ---- */
+  .digest {
+    display: flex; flex-direction: column; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 20px;
+  }
+  .digest-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .digest-row.done-row { padding-top: 10px; border-top: 1px dashed var(--border); }
+  .digest .dl { font-size: 12px; font-weight: 700; color: var(--ink-faint); white-space: nowrap; }
+  .digest .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .digest .none { font-size: 12.5px; color: var(--ink-faint); }
+  .digest .spacer { flex: 1 1 auto; }
+  .digest .count { font-size: 12px; color: var(--ink-dim); white-space: nowrap; }
+  .digest .count b { color: var(--ink); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  /* ---- controls ---- */
+  .controls {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 14px;
+  }
+  .nav { display: flex; align-items: center; gap: 10px; }
+  .nav button.step {
+    width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); cursor: pointer; font-size: 14px; line-height: 1;
+  }
+  .nav button.step:hover { background: var(--row-hover, var(--surface-2)); }
+  .nav .period-label { font-size: 16px; font-weight: 700; min-width: 150px; text-align: center; font-variant-numeric: tabular-nums; }
+  button.today-jump {
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim);
+    border-radius: 7px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-weight: 600;
+  }
+  button.today-jump:hover { color: var(--ink); }
+  button.today-jump:disabled { opacity: 0.6; cursor: default; }
+
+  .toggles { display: flex; align-items: center; gap: 8px; }
+
+  .ppt-status {
+    display: none; margin-bottom: 14px; padding: 10px 14px; border-radius: 8px;
+    font-size: 12.5px; font-weight: 600; border: 1px solid var(--border);
+  }
+  .ppt-status.show { display: block; }
+  .ppt-status.ok { color: var(--ev-list); background: color-mix(in srgb, var(--ev-list) 12%, var(--surface)); border-color: color-mix(in srgb, var(--ev-list) 40%, var(--border)); }
+  .ppt-status.err { color: var(--today-ring); background: color-mix(in srgb, var(--today-ring) 12%, var(--surface)); border-color: color-mix(in srgb, var(--today-ring) 40%, var(--border)); }
+  .ppt-status.info { color: var(--ink-dim); }
+
+  /* ---- tabs ---- */
+  .tabbar {
+    display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tabbtn {
+    border: none; background: none; color: var(--ink-faint); font-size: 13.5px; font-weight: 700;
+    padding: 10px 16px; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tabbtn:hover { color: var(--ink-dim); }
+  .tabbtn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .stage-head { margin-bottom: 16px; }
+  .stage-head h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; }
+  .stage-head p { margin: 0; font-size: 12.5px; color: var(--ink-dim); }
+  .nav-setting {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
+    font-size: 12.5px; font-weight: 600; color: var(--ink-dim);
+  }
+  .nav-setting input {
+    width: 200px; padding: 6px 9px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); font-family: var(--font-mono); font-size: 12.5px;
+  }
+
+  .stage-table-wrap {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto;
+  }
+  table.stage-table { border-collapse: collapse; width: 100%; min-width: 900px; }
+  table.stage-table thead th {
+    text-align: left; font-size: 11px; letter-spacing: 0.02em; color: var(--ink-faint);
+    font-weight: 700; padding: 10px 12px; border-bottom: 1px solid var(--border);
+    background: var(--surface-2); white-space: nowrap; position: sticky; top: 0;
+  }
+  table.stage-table tbody td {
+    padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap;
+  }
+  table.stage-table tbody tr:last-child td { border-bottom: none; }
+  table.stage-table tbody tr:hover { background: var(--row-hover, var(--surface-2)); }
+  .stc-name { font-weight: 700; font-size: 13px; }
+  .stc-uw { font-size: 11px; color: var(--ink-faint); }
+  .stc-ref { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-dim); }
+  .stc-computed { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-dim); font-weight: 700; }
+  table.stage-table input[type=text], table.stage-table input[type=number], table.stage-table input[type=date], table.stage-table select {
+    width: 100%; min-width: 90px; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); font-size: 12.5px; font-family: var(--font-mono);
+  }
+  table.stage-table select { font-family: var(--font-kr); }
+  table.stage-table input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  table.stage-table input:focus, table.stage-table select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .seg button {
+    border: none; background: transparent; color: var(--ink-dim); font-size: 12.5px; font-weight: 600;
+    padding: 7px 14px; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button.active { background: var(--accent); color: var(--accent-ink); }
+  .seg button:not(.active):hover { background: var(--surface-2); color: var(--ink); }
+
+  /* 캘린더/종목정보는 진행 단계가 아니라 참고자료라, 파이프라인 탭(신청~상장)과
+     성격이 다르다는 걸 얇은 구분선으로 표시한다. */
+  .tab-divider { width: 1px; background: var(--border); margin: 8px 6px; }
+
+  /* ---- 종목정보(DART 증권신고서) 탭 — 목록 ---- */
+  .info-list-row { cursor: pointer; }
+  .info-list-row:hover { background: var(--row-hover, var(--surface-2)); }
+  .info-list-row .stc-name::after { content: " ›"; color: var(--ink-faint); font-weight: 400; }
+  .info-none { color: var(--ink-faint); font-size: 12px; }
+  .miniband {
+    display: flex; width: 100%; min-width: 130px; height: 14px; border-radius: 4px; overflow: hidden;
+    background: var(--surface-3);
+  }
+  .miniband span { display: block; height: 100%; }
+
+  /* ---- 종목정보 탭 — 상세 페이지 ----
+     38.co.kr의 종목 상세 페이지(표 안에 라벨·값이 촘촘히 박힌 정보표 스타일)를
+     참고해서, 헐렁한 flex 목록 대신 실선 테두리가 있는 표 형태로 짰다. */
+  .info-detail-page { max-width: 720px; margin: 0 auto; padding: 28px 8px 36px; }
+  .info-back {
+    border: none; background: none; color: var(--ink-dim); font-size: 12.5px; font-weight: 700;
+    cursor: pointer; padding: 0; margin-bottom: 14px;
+  }
+  .info-back:hover { color: var(--ink); }
+  .filing-link {
+    display: block; text-decoration: none; background: var(--surface-2); border: 1px solid var(--border);
+    border-left: 4px solid var(--accent); border-radius: 10px; padding: 14px 18px; font-size: 13.5px;
+    font-weight: 700; color: var(--ink); margin-bottom: 26px; transition: background .12s ease;
+  }
+  .filing-link:hover { background: var(--surface-3); }
+  .filing-link-none { color: var(--ink-faint); font-weight: 600; font-style: normal; border-left-color: var(--border); }
+  .info-detail-head { margin-bottom: 26px; }
+  .info-detail-name { font-size: 26px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.01em; }
+
+  .info-section-title {
+    font-size: 13.5px; font-weight: 800; color: var(--ink); margin: 34px 0 12px;
+    padding-left: 11px; border-left: 3px solid var(--accent);
+  }
+  .info-section-title:first-of-type { margin-top: 0; }
+
+  /* 라벨(th)|값(td)이 두 쌍씩 한 행에 들어가는 정보표 — 38의 "시장구분 코스닥
+     종목코드 417030" 같은 조밀한 표기를 그대로 따르되, 모서리를 둥글려서
+     스프레드시트가 아니라 카드처럼 보이게 한다. */
+  table.info-grid {
+    width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed;
+    margin-bottom: 6px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  }
+  table.info-grid th, table.info-grid td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 11px 14px; font-size: 12.5px; text-align: left; word-break: keep-all; }
+  table.info-grid tr:last-child th, table.info-grid tr:last-child td { border-bottom: none; }
+  table.info-grid th:last-child, table.info-grid td:last-child { border-right: none; }
+  table.info-grid th { width: 22%; background: var(--surface-2); color: var(--ink-dim); font-weight: 700; }
+  table.info-grid td { width: 28%; color: var(--ink); font-weight: 600; }
+  table.info-grid td a { color: var(--accent); }
+
+  .info-sched { display: flex; gap: 20px; flex-wrap: wrap; font-size: 12px; color: var(--ink-dim); margin-bottom: 14px; }
+  .info-sched b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 700; }
+  .info-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 4px; }
+  .info-detail-grid h4 { margin: 0 0 9px; font-size: 11.5px; letter-spacing: 0.02em; color: var(--ink-dim); font-weight: 700; }
+  table.mini-table {
+    width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px;
+    border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  }
+  table.mini-table th {
+    background: var(--surface-2); color: var(--ink-dim); font-size: 11px; font-weight: 700;
+    padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left;
+  }
+  table.mini-table th.mt-num, table.mini-table td.mt-num { text-align: right; }
+  table.mini-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  table.mini-table tr:last-child td { border-bottom: none; }
+  table.mini-table td.mt-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.mini-table tr.mt-total td { font-weight: 800; background: var(--surface-2); }
+  .info-source { margin-top: 16px; font-size: 10.5px; color: var(--ink-faint); }
+
+  /* ---- 저장 토스트 ---- */
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(10px);
+    background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 700;
+    padding: 10px 20px; border-radius: 8px; opacity: 0; pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease; z-index: 50;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---- calendar grid ---- */
+  .cal-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+  }
+  .cal-dow {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--border); background: var(--surface-2);
+  }
+  .cal-dow div { padding: 8px 10px; font-size: 11px; font-weight: 700; color: var(--ink-faint); letter-spacing: 0.03em; }
+  /* 네이버 달력 표기 관례: 일요일만 빨갛게, 토요일은 평일과 동일 */
+  .cal-dow div:first-child { color: var(--today-ring); }
+
+  .cal-grid { display: block; }
+  .week-row { display: grid; grid-template-columns: repeat(7, 1fr); }
+  /* 월별 칸은 최소 높이만 지정 — 일정이 많은 날이 있는 주는 그 행 전체가
+     필요한 만큼 늘어난다(잘라서 "+N개 더"로 숨기지 않음). */
+  .cal-grid.month .cell { min-height: 112px; }
+  .cal-grid.week .cell { min-height: 260px; }
+
+  .cell {
+    /* min-width:0으로 그리드 아이템의 기본 min-width:auto를 꺼준다 — 안 그러면
+       칩 안의 긴 종목명(white-space:nowrap)이 그 칸의 열을 실제 내용 너비만큼
+       밀어버려서, 주(週)마다 제일 긴 이름이 다르니 열 너비가 들쭉날쭉(칩 폭이
+       98px~212px까지 벌어짐)해지는 게 진짜 "삐뚤빼뚤"의 원인이었다. */
+    min-width: 0; overflow: hidden;
+    border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 7px 7px 8px; position: relative; background: var(--surface);
+  }
+  .week-row .cell:last-child { border-right: none; }
+  .cell.out { background: var(--cell-out); }
+  .cell.out .daynum { color: var(--ink-faint); }
+
+  .daynum { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12.5px; font-weight: 600; color: var(--ink-dim); margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+  /* 네이버 달력 관례: 일요일·공휴일 날짜 숫자와 공휴일 이름을 빨갛게(토요일은
+     평일과 동일). "오늘"은 채워진 배지라 같은 빨강이어도 형태로 구별되는데,
+     소스 순서상 이 규칙보다 뒤에 와야 배지 위 글자색이 이 빨강에 덮이지 않는다. */
+  .cell.sunday .daynum .num, .cell.holiday .daynum .num { color: var(--today-ring); }
+  .daynum .holiday-name { font-size: 10px; font-weight: 700; color: var(--today-ring); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell.is-today .daynum .num {
+    background: var(--today-ring); color: var(--accent-ink); border-radius: 5px; padding: 1px 6px; font-weight: 700;
+  }
+  .cal-grid.week .daynum { font-size: 13px; }
+  .cal-grid.week .daynum .wd { color: var(--ink-faint); font-weight: 700; }
+
+  .chip {
+    display: flex; align-items: center; gap: 5px; width: 100%; text-align: left;
+    border: none; border-radius: 5px; padding: 3px 6px; margin-bottom: 3px;
+    font-size: 11px; font-weight: 600; cursor: pointer; color: var(--ink);
+    background: color-mix(in srgb, var(--chip-color) 16%, var(--surface));
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .chip:hover { background: color-mix(in srgb, var(--chip-color) 28%, var(--surface)); }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--chip-color); flex: 0 0 auto; }
+  .chip .clabel { color: var(--ink-faint); font-weight: 500; flex: 0 0 auto; }
+  .chip.done { opacity: 0.55; background: var(--surface-3); color: var(--ink-faint); }
+  .chip.done::before { background: var(--ink-faint); }
+  .cal-grid.week .chip { font-size: 12px; padding: 5px 8px; }
+
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap; padding: 12px 16px;
+    border-top: 1px solid var(--border); background: var(--surface-2);
+    font-size: 11.5px; color: var(--ink-dim);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  /* ---- side panel ---- */
+  .backdrop {
+    position: fixed; inset: 0; background: var(--backdrop); z-index: 40;
+    opacity: 0; pointer-events: none; transition: opacity .15s ease;
+  }
+  .backdrop.show { opacity: 1; pointer-events: auto; }
+
+  .panel {
+    position: fixed; top: 0; right: 0; height: 100%; width: 380px; max-width: 92vw;
+    background: var(--surface); border-left: 1px solid var(--border); z-index: 41;
+    transform: translateX(100%); transition: transform .18s ease;
+    display: flex; flex-direction: column;
+  }
+  .panel.show { transform: translateX(0); }
+  .panel-head { padding: 20px 20px 14px; border-bottom: 1px solid var(--border); }
+  .panel-head .pname { font-size: 18px; font-weight: 800; margin-bottom: 2px; text-wrap: balance; }
+  .panel-head .puw { font-size: 12px; color: var(--ink-dim); }
+  .panel-close {
+    position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); cursor: pointer; font-size: 14px;
+  }
+  .panel-close:hover { color: var(--ink); }
+  .panel-body { padding: 18px 20px; overflow-y: auto; flex: 1 1 auto; }
+
+  .panel-section { margin-bottom: 22px; }
+  .panel-section h3 { font-size: 11px; letter-spacing: 0.04em; color: var(--ink-faint); font-weight: 700; margin: 0 0 10px; }
+
+  .sched-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px dashed var(--border); font-size: 12.5px;
+  }
+  .sched-row:last-child { border-bottom: none; }
+  .sched-row .k { color: var(--ink-dim); display: flex; align-items: center; gap: 7px; }
+  .sched-row .k i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .sched-row .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .sched-row.current-lockup { background: color-mix(in srgb, var(--ev-lockup) 12%, transparent); border-radius: 6px; padding: 7px 8px; margin: 0 -8px; }
+  .sched-row.current-lockup .v::after { content: " ✓ 확약"; color: var(--ev-lockup); font-weight: 700; font-family: var(--font-kr); }
+
+  label.field { display: block; margin-bottom: 12px; }
+  label.field .flabel { display: block; font-size: 12px; font-weight: 600; color: var(--ink-dim); margin-bottom: 5px; }
+  .checkline { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; cursor: pointer; user-select: none; }
+  .checkline input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .checkline span { font-size: 13.5px; font-weight: 600; }
+
+  input[type=number], select {
+    width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); font-size: 13px; font-family: var(--font-mono);
+  }
+  select { font-family: var(--font-kr); }
+  input[type=number]:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .save-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .save-btn {
+    background: var(--accent); color: var(--accent-ink); border: none; border-radius: 7px;
+    padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .save-btn:hover { filter: brightness(1.06); }
+
+  footer {
+    margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 11.5px; color: var(--ink-faint); line-height: 1.7;
+  }
+  footer b { color: var(--ink-dim); }
+
+  @media (max-width: 760px) {
+    .cal-grid.month .cell { min-height: 80px; }
+    .chip .clabel { display: none; }
+  }
+
+  /* ================= print =================
+     회사에서 실제 쓰던 ★수요예측캘린더 엑셀 양식(노란 월/연도 박스, 굵은
+     빨간 일(日) 숫자, 얇은 점선 그리드, 한 줄짜리 일정 텍스트)을 그대로
+     재현한다. */
+  .print-header { display: none; }
+  @media print {
+    @page { size: landscape; margin: 6mm; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+
+    /* 화면이 다크모드여도 인쇄는 항상 밝은 배색으로 고정 — 잉크 절약 + 가독성 */
+    :root {
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface-2: #f2f3f5;
+      --surface-3: #e7e9ed;
+      --ink: #14171f;
+      --ink-dim: #444b58;
+      --ink-faint: #6b7280;
+      --border: #b9bec6;
+      --accent: #8a6118;
+      --accent-ink: #ffffff;
+      --today-ring: #a8371f;
+      --ev-demand: #2f5d85;
+      --ev-sub: #8a6118;
+      --ev-pay: #a8371f;
+      --ev-list: #2e6b4c;
+      --ev-lockup: #6a4a8c;
+      --cell-out: #f4f5f7;
+      --cal-yellow: #fff3b0;
+      /* JS가 인쇄 직전(beforeprint) 실제 렌더 높이를 재서 이 값들을 채운다 —
+         달이 몇 주로 나오든, 어느 날에 일정이 몇 개가 몰리든 항상 한 페이지
+         안에 들어오도록 폰트·행높이를 역산한다. */
+      --print-font: 9px;
+      --print-daynum: 13px;
+      --print-row-h: auto;
+    }
+
+    body { font-size: 11px; }
+    .wrap { max-width: none; padding: 0; }
+    .today-badge, .digest, .controls, footer, .backdrop, .panel, .ppt-status, .legend, .tabbar { display: none !important; }
+    .tab-panel { display: none !important; }
+    .tab-panel#tab-calendar { display: block !important; }
+
+    .print-header {
+      display: flex; align-items: stretch; gap: 10px; margin-bottom: 6px;
+    }
+    .print-header .month-box {
+      background: var(--cal-yellow); border: 2px solid var(--ink);
+      padding: 5px 16px; font-size: 22px; font-weight: 800; white-space: nowrap;
+      display: flex; align-items: center;
+    }
+    .print-header .note {
+      border-bottom: 2px solid var(--ink); flex: 1 1 auto;
+      display: flex; align-items: center; font-size: 11px; font-weight: 700;
+      padding: 0 4px;
+    }
+
+    header { display: none; }
+    .cal-card { border: 1px solid var(--border); border-radius: 0; }
+
+    .week-row { break-inside: avoid; page-break-inside: avoid; }
+    .cell { height: var(--print-row-h) !important; min-height: 0 !important; overflow: hidden !important; break-inside: avoid; padding: 3px 4px; }
+
+    .cal-dow div { font-size: 10px; padding: 4px 6px; }
+    .daynum { margin-bottom: 2px; }
+    .daynum .num { font-size: var(--print-daynum); font-weight: 700; color: var(--today-ring); font-family: var(--font-kr); }
+    .cell.out .daynum .num { color: var(--ink-faint); }
+
+    .print-line {
+      font-size: var(--print-font); line-height: 1.28; white-space: normal;
+      padding: 0; word-break: keep-word;
+    }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <h1>공모주 캘린더</h1>
+    </div>
+    <div class="today-badge">
+      <span class="label">오늘</span>
+      <span class="date" id="todayDate">—</span>
+    </div>
+  </header>
+
+  <div class="digest" id="digest"></div>
+
+  <div class="tabbar" id="tabbar">
+    <button class="tabbtn active" data-tab="calendar">캘린더</button>
+    <button class="tabbtn" data-tab="info">종목정보</button>
+    <span class="tab-divider"></span>
+    <button class="tabbtn" data-tab="apply">수요예측 신청</button>
+    <button class="tabbtn" data-tab="join">수요예측 참여</button>
+    <button class="tabbtn" data-tab="allot">배정</button>
+    <button class="tabbtn" data-tab="sub">청약</button>
+    <button class="tabbtn" data-tab="pay">납입</button>
+    <button class="tabbtn" data-tab="list">상장</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-calendar">
+
+  <div class="controls">
+    <div class="nav" id="navGroup">
+      <button class="step" id="prevBtn" aria-label="이전">‹</button>
+      <div class="period-label" id="periodLabel">—</div>
+      <button class="step" id="nextBtn" aria-label="다음">›</button>
+      <button class="today-jump" id="todayJump">오늘로</button>
+    </div>
+    <div class="toggles">
+      <div class="seg" id="viewSeg">
+        <button data-view="month" class="active">월별</button>
+        <button data-view="week">주별</button>
+      </div>
+      <div class="seg" id="filterSeg">
+        <button data-filter="all" class="active">전체</button>
+        <button data-filter="joined">참여</button>
+      </div>
+      <button class="today-jump" id="printBtn">인쇄</button>
+      <button class="today-jump" id="pptBtn">PPT 다운로드</button>
+      <button class="today-jump" id="pngBtn">이미지로 다운로드</button>
+    </div>
+  </div>
+  <div id="pptStatus" class="ppt-status"></div>
+
+  <div class="print-header" id="printHeader">
+    <div class="month-box" id="printMonthBox"></div>
+    <div class="note">수요예측 마지막날 5시 마감, 첫날 청약, 납입: 12시 이전</div>
+  </div>
+
+  <div class="cal-card" id="calCard">
+    <div class="cal-dow" id="calDow"></div>
+    <div class="cal-grid month" id="calGrid"></div>
+    <div class="legend">
+      <span><i style="background:var(--ev-demand)"></i>수요예측</span>
+      <span><i style="background:var(--ev-sub)"></i>청약</span>
+      <span><i style="background:var(--ev-pay)"></i>납입</span>
+      <span><i style="background:var(--ev-list)"></i>상장</span>
+      <span><i style="background:var(--ev-lockup)"></i>락업해제 (15일·1개월·3개월·6개월)</span>
+    </div>
+  </div>
+
+  <footer>
+    <b>락업해제일</b>은 상장일 기준 15일·1개월·3개월·6개월 네 가지를 모두 표시했습니다 — 계산된 날짜가 주말·공휴일(거래소 휴장일)이면 다음 영업일로 옮겨서 표시합니다(그날은 매도할 수 없으니까요). 실제 확약 기간은 종목 상세 패널에서 지정할 수 있고, 지정하면 해당 구간에 "확약" 표시가 붙습니다.<br>
+    <b>참여 정보(참여가격·수량·확약여부)</b>는 종목 카드를 클릭해 입력·저장하며, <b>이 브라우저에만</b> 저장됩니다(localStorage) — 다른 기기·브라우저에서는 보이지 않고, 캐시를 지우면 사라집니다. 여러 사람과 공유해서 쓰려면 별도 저장소 연동이 필요해요.<br>
+    목록 자체(수요예측 파이프라인)는 2026.08.18 스크랩 스냅샷이며 자동 갱신되지 않습니다. 재수집 주기·데이터 소스는 추후 확정하기로 했습니다.
+  </footer>
+
+  </div>
+
+  <div class="tab-panel" id="tab-info">
+    <div class="stage-head">
+      <h2>종목정보 <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— DART 증권신고서 기준</span></h2>
+      <p>전체 딜의 일정·공모정보를 한 목록으로 보여줍니다(수요예측일 순). 종목 행을 클릭하면 그 종목의 상세 페이지로 이동하고, 상세 페이지 맨 위에 해당 증권신고서 DART 원문 링크가 있습니다.
+      확정 수치가 38커뮤니케이션과 다르면 <b>이 문서(DART, 법적 공시)를 우선</b>합니다 — 38은 아직 신고서가 없는 종목의 일정 확인용으로만 씁니다.</p>
+    </div>
+    <div class="stage-table-wrap" id="info-table"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-apply">
+    <div class="stage-head">
+      <h2>수요예측 신청</h2>
+      <p>수요예측 참여를 검토·신청하는 단계입니다. 실제 가격/수량 입력은 "수요예측 참여" 탭에서 합니다.</p>
+    </div>
+    <div class="stage-table-wrap" id="stage-apply"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-join">
+    <div class="stage-head">
+      <h2>수요예측 참여</h2>
+      <p>실제로 제출한 참여가격·수량·확약여부입니다. 캘린더 탭에서 종목 카드를 클릭해 입력한 것과 같은 데이터입니다.</p>
+    </div>
+    <div class="stage-table-wrap" id="stage-join"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-allot">
+    <div class="stage-head">
+      <h2>배정</h2>
+      <p>주간사로부터 통보받은 배정 결과를 기록합니다. 배정비중은 공모금액·기준 NAV 대비 자동 계산됩니다.</p>
+      <label class="nav-setting">기준 NAV (원)
+        <input type="number" id="navInput" min="0" step="1" placeholder="예: 50000000000">
+      </label>
+    </div>
+    <div class="stage-table-wrap" id="stage-allot"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-sub">
+    <div class="stage-head">
+      <h2>청약</h2>
+      <p>실제 청약 수량과 청약증거금을 기록합니다.</p>
+    </div>
+    <div class="stage-table-wrap" id="stage-sub"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-pay">
+    <div class="stage-head">
+      <h2>납입</h2>
+      <p>납입금액과 납입 확인 여부를 기록합니다.</p>
+    </div>
+    <div class="stage-table-wrap" id="stage-pay"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-list">
+    <div class="stage-head">
+      <h2>상장</h2>
+      <p>상장 당일 시초가·종가와 참여가 대비 수익률을 기록합니다.</p>
+    </div>
+    <div class="stage-table-wrap" id="stage-list"></div>
+  </div>
+
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="panel" id="panel">
+  <div class="panel-head">
+    <button class="panel-close" id="panelClose">✕</button>
+    <div class="pname" id="pName">—</div>
+    <div class="puw" id="pUw">—</div>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section">
+      <h3>일정</h3>
+      <div id="pSchedule"></div>
+    </div>
+    <div class="panel-section">
+      <h3>참여 정보</h3>
+      <label class="checkline"><input type="checkbox" id="fJoined"><span>이 건에 참여함</span></label>
+      <label class="field"><span class="flabel">참여가격 (원)</span><input type="number" id="fPrice" min="0" step="1" placeholder="예: 28000"></label>
+      <label class="field"><span class="flabel">신청수량 (주)</span><input type="number" id="fQty" min="0" step="1" placeholder="예: 357000"></label>
+      <label class="field">
+        <span class="flabel">확약여부</span>
+        <select id="fCommit">
+          <option value="">미지정</option>
+          <option value="미확약">미확약</option>
+          <option value="15일">15일</option>
+          <option value="1개월">1개월</option>
+          <option value="3개월">3개월</option>
+          <option value="6개월">6개월</option>
+        </select>
+      </label>
+      <div class="save-row">
+        <button class="save-btn" id="saveBtn">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// dealSizeM = 38커뮤니케이션 수요예측일정 기준 공모금액(백만원)
+const deals = [
+  { name: "덕산넵코어스(구.넵코어스)", uw: "대신증권", demand: ["2026-09-08","2026-09-14"], sub: ["2026-09-16","2026-09-17"], pay: "2026-09-21", list: null, dealSizeM: 37200 },
+  { name: "빅웨이브로보틱스", uw: "유진투자증권,미래에셋증권", demand: ["2026-09-07","2026-09-11"], sub: ["2026-09-16","2026-09-17"], pay: "2026-09-21", list: null, dealSizeM: 40000 },
+  { name: "글로벌테크놀로지", uw: "한국투자증권", demand: ["2026-09-07","2026-09-11"], sub: ["2026-09-16","2026-09-17"], pay: "2026-09-21", list: null, dealSizeM: 52000 },
+  { name: "와이즈플래닛컴퍼니", uw: "대신증권", demand: ["2026-09-04","2026-09-10"], sub: ["2026-09-14","2026-09-15"], pay: "2026-09-17", list: null, dealSizeM: 16000 },
+  { name: "KB스팩34호", uw: "KB증권", demand: ["2026-09-04","2026-09-07"], sub: ["2026-09-10","2026-09-11"], pay: "2026-09-15", list: null, dealSizeM: 14000 },
+  { name: "네오사피엔스", uw: "대신증권", demand: ["2026-09-02","2026-09-08"], sub: ["2026-09-10","2026-09-11"], pay: "2026-09-15", list: null, dealSizeM: 27600 },
+  { name: "브릴스", uw: "IBK투자증권", demand: ["2026-08-31","2026-09-04"], sub: ["2026-09-08","2026-09-09"], pay: "2026-09-11", list: null, dealSizeM: 19800 },
+  { name: "NH스팩34호", uw: "NH투자증권", demand: ["2026-08-24","2026-08-25"], sub: ["2026-09-01","2026-09-02"], pay: "2026-09-04", list: null, dealSizeM: 17000 },
+  { name: "스카이랩스", uw: "한국투자증권", demand: ["2026-08-14","2026-08-21"], sub: ["2026-08-26","2026-08-27"], pay: "2026-08-31", list: null, dealSizeM: 26000 },
+  { name: "니어스랩", uw: "삼성증권", demand: ["2026-08-03","2026-08-07"], sub: ["2026-08-12","2026-08-13"], pay: "2026-08-18", list: "2026-08-24", dealSizeM: 37492 },
+  { name: "해치텍", uw: "DB증권", demand: ["2026-08-03","2026-08-07"], sub: ["2026-08-12","2026-08-13"], pay: "2026-08-18", list: "2026-08-25", dealSizeM: 23000 },
+  { name: "기도산업", uw: "미래에셋증권,삼성증권", demand: ["2026-07-31","2026-08-06"], sub: ["2026-08-11","2026-08-12"], pay: "2026-08-14", list: "2026-08-21", dealSizeM: 48280 },
+  { name: "케이앤에스아이앤씨", uw: "IBK투자증권", demand: ["2026-07-27","2026-07-31"], sub: ["2026-08-04","2026-08-05"], pay: "2026-08-07", list: "2026-08-13", dealSizeM: 26400 },
+  { name: "딜리셔스", uw: "한국투자증권", demand: ["2026-07-23","2026-07-29"], sub: ["2026-08-03","2026-08-04"], pay: "2026-08-06", list: "2026-08-12", dealSizeM: 15400 },
+  { name: "인제니아테라퓨틱스", uw: "삼성증권", demand: ["2026-07-20","2026-07-24"], sub: ["2026-07-30","2026-07-31"], pay: "2026-08-04", list: "2026-08-18", dealSizeM: 60000 },
+  { name: "에이치엘지노믹스", uw: "KB증권,IBK투자증권", demand: ["2026-07-02","2026-07-08"], sub: ["2026-07-13","2026-07-14"], pay: "2026-07-16", list: "2026-07-24", dealSizeM: 55148 },
+  { name: "한국스팩16호", uw: "한국투자증권", demand: ["2026-06-17","2026-06-18"], sub: ["2026-06-22","2026-06-23"], pay: "2026-06-25", list: "2026-06-30", dealSizeM: 11000 },
+  { name: "레메디", uw: "KB증권", demand: ["2026-06-17","2026-06-23"], sub: ["2026-07-01","2026-07-02"], pay: "2026-07-06", list: "2026-07-13", dealSizeM: 24840 },
+  { name: "레몬헬스케어", uw: "KB증권", demand: ["2026-06-15","2026-06-19"], sub: ["2026-06-24","2026-06-25"], pay: "2026-06-29", list: "2026-07-06", dealSizeM: 20000 },
+  { name: "매드업", uw: "미래에셋증권", demand: ["2026-06-12","2026-06-18"], sub: ["2026-06-23","2026-06-24"], pay: "2026-06-26", list: "2026-07-01", dealSizeM: 16000 },
+];
+
+// DART OpenAPI(opendart.fss.or.kr)로 조회한 [발행조건확정]증권신고서(지분증권/증권예탁증권)
+// 원문을 직접 파싱한 값 — 확정공모가·수요예측 참여내역·가격분포·의무보유확약비율의
+// 법적 공시 원본이다. 아직 신고서가 없는 종목(수요예측 미완료 등)은 여기 없고,
+// "종목정보" 탭에서 "증권신고서 미확인"으로 표시된다.
+// update_dart_data.py가 이 마커 사이를 통째로 교체한다 — 수동으로 고쳐도
+// 스크립트가 다음 실행 때 덮어쓴다는 점을 알아둘 것.
+// AUTO-GENERATED:DART_DATA:START
+const dartData = {
+  "니어스랩": {
+    "offering": {
+      "offer_shares": 910000,
+      "offer_amount_expected": 27300000000,
+      "offer_amount_final": 37492000000,
+      "subscription": {
+        "inst_start": "2026년 08월 12일(수)",
+        "inst_end": "2026년 08월 13일(목)"
+      },
+      "payment_date": "2026년 08월 18일"
+    },
+    "demand_summary": {
+      "total_count": 1795,
+      "total_qty": 507434052,
+      "competition_rate": 743.49
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 28,
+        "count_pct": "1.56%",
+        "qty": 9305400,
+        "qty_pct": "1.83%"
+      },
+      {
+        "band": "41,200원 초과",
+        "count": 19,
+        "count_pct": "1.06%",
+        "qty": 5117700,
+        "qty_pct": "1.01%"
+      },
+      {
+        "band": "41,200원",
+        "count": 1685,
+        "count_pct": "93.87%",
+        "qty": 482664277,
+        "qty_pct": "95.12%"
+      },
+      {
+        "band": "30,000원 초과 ~ 41,200원 미만",
+        "count": 5,
+        "count_pct": "0.28%",
+        "qty": 281100,
+        "qty_pct": "0.06%"
+      },
+      {
+        "band": "30,000원",
+        "count": 57,
+        "count_pct": "3.18%",
+        "qty": 10064575,
+        "qty_pct": "1.98%"
+      },
+      {
+        "band": "30,000원 미만",
+        "count": 1,
+        "count_pct": "0.06%",
+        "qty": 1000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "합계",
+        "count": 1795,
+        "count_pct": "100.00%",
+        "qty": 507434052,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 2,
+        "qty": 70000
+      },
+      "3개월 확약": {
+        "count": 11,
+        "qty": 1527000
+      },
+      "1개월 확약": {
+        "count": 5,
+        "qty": 763500
+      },
+      "15일 확약": {
+        "count": 14,
+        "qty": 4034000
+      },
+      "미확약": {
+        "count": 1763,
+        "qty": 501039552
+      }
+    }
+  },
+  "해치텍": {
+    "offering": {
+      "offer_shares": 1000000,
+      "offer_amount_expected": 23000000000,
+      "offer_amount_final": 23000000000,
+      "subscription": {
+        "inst_start": "2026년 08월 12일(수)",
+        "inst_end": "2026년 08월 13일(목)"
+      },
+      "payment_date": "2026년 08월 18일"
+    },
+    "demand_summary": {
+      "total_count": 321,
+      "total_qty": 76435559,
+      "competition_rate": 101.91
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 11,
+        "count_pct": "3.4%",
+        "qty": 5257000,
+        "qty_pct": "6.9%"
+      },
+      {
+        "band": "28,000원(상단) 초과",
+        "count": 10,
+        "count_pct": "3.1%",
+        "qty": 2081000,
+        "qty_pct": "2.7%"
+      },
+      {
+        "band": "28,000원(상단)",
+        "count": 137,
+        "count_pct": "42.7%",
+        "qty": 36909071,
+        "qty_pct": "48.3%"
+      },
+      {
+        "band": "23,000원(하단) 초과 ~ 28,000원(상단) 미만",
+        "count": 1,
+        "count_pct": "0.3%",
+        "qty": 1588,
+        "qty_pct": "0.0%"
+      },
+      {
+        "band": "23,000(하단)",
+        "count": 93,
+        "count_pct": "29.0%",
+        "qty": 11184900,
+        "qty_pct": "14.6%"
+      },
+      {
+        "band": "23,000원(하단) 미만",
+        "count": 69,
+        "count_pct": "21.5%",
+        "qty": 21002000,
+        "qty_pct": "27.5%"
+      },
+      {
+        "band": "합계",
+        "count": 321,
+        "count_pct": "100.0%",
+        "qty": 76435559,
+        "qty_pct": "100.0%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 1,
+        "qty": 8000
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 36,
+        "qty": 11519000
+      },
+      "미확약": {
+        "count": 284,
+        "qty": 64908559
+      }
+    }
+  },
+  "기도산업": {
+    "offering": {
+      "offer_shares": 1700000,
+      "offer_amount_expected": 42160000000,
+      "offer_amount_final": 48280000000,
+      "subscription": {
+        "inst_start": "2026년 8월 11일(화)",
+        "inst_end": "2026년 8월 12일(수)"
+      },
+      "payment_date": "2026년 8월 14일"
+    },
+    "demand_summary": {
+      "total_count": 637,
+      "total_qty": 264723800,
+      "competition_rate": 213.31
+    },
+    "price_bands": [
+      {
+        "band": "가격미제시",
+        "count": 14,
+        "count_pct": "2.2%",
+        "qty": 12863400,
+        "qty_pct": "4.9%"
+      },
+      {
+        "band": "28,400원 초과",
+        "count": 7,
+        "count_pct": "1.1%",
+        "qty": 1553000,
+        "qty_pct": "0.6%"
+      },
+      {
+        "band": "28,400원(상단)",
+        "count": 442,
+        "count_pct": "69.4%",
+        "qty": 182788600,
+        "qty_pct": "69.0%"
+      },
+      {
+        "band": "24,800원 초과 ~ 28,400원 미만",
+        "count": 1,
+        "count_pct": "0.2%",
+        "qty": 555000,
+        "qty_pct": "0.2%"
+      },
+      {
+        "band": "24,800원(하단)",
+        "count": 165,
+        "count_pct": "25.9%",
+        "qty": 66143600,
+        "qty_pct": "25.0%"
+      },
+      {
+        "band": "24,800원 미만",
+        "count": 8,
+        "count_pct": "1.3%",
+        "qty": 820200,
+        "qty_pct": "0.3%"
+      },
+      {
+        "band": "합계",
+        "count": 637,
+        "count_pct": "100.0%",
+        "qty": 264723800,
+        "qty_pct": "100.0%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 1,
+        "qty": 7000
+      },
+      "미확약": {
+        "count": 636,
+        "qty": 264716800
+      }
+    }
+  },
+  "케이앤에스아이앤씨": {
+    "offering": {
+      "offer_shares": 2400000,
+      "offer_amount_expected": 26400000000,
+      "offer_amount_final": 26400000000,
+      "subscription": {
+        "inst_start": "2026년 08월 04일 (화)",
+        "inst_end": "2026년 08월 05일 (수)"
+      },
+      "payment_date": "2026년 08월 07일"
+    },
+    "demand_summary": {
+      "total_count": 2024,
+      "total_qty": 1672497000,
+      "competition_rate": 938.24
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 18,
+        "count_pct": "0.89%",
+        "qty": 20089000,
+        "qty_pct": "1.20%"
+      },
+      {
+        "band": "11,000원(상단) 초과",
+        "count": 25,
+        "count_pct": "1.24%",
+        "qty": 22981000,
+        "qty_pct": "1.37%"
+      },
+      {
+        "band": "11,000원(상단)",
+        "count": 1947,
+        "count_pct": "96.20%",
+        "qty": 1594318000,
+        "qty_pct": "95.33%"
+      },
+      {
+        "band": "9,000원(하단) 초과 ~ 11,000원(상단) 미만",
+        "count": 2,
+        "count_pct": "0.10%",
+        "qty": 152000,
+        "qty_pct": "0.01%"
+      },
+      {
+        "band": "9,000원(하단)",
+        "count": 32,
+        "count_pct": "1.58%",
+        "qty": 34957000,
+        "qty_pct": "2.09%"
+      },
+      {
+        "band": "9,000원(하단) 미만",
+        "count": null,
+        "count_pct": "0.00%",
+        "qty": null,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "합계",
+        "count": 2024,
+        "count_pct": "100.00%",
+        "qty": 1672497000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 13,
+        "qty": 7314000
+      },
+      "3개월 확약": {
+        "count": 4,
+        "qty": 142000
+      },
+      "1개월 확약": {
+        "count": 4,
+        "qty": 541500
+      },
+      "15일 확약": {
+        "count": 12,
+        "qty": 5034000
+      },
+      "미확약": {
+        "count": 1991,
+        "qty": 1659465500
+      }
+    }
+  },
+  "딜리셔스": {
+    "offering": {
+      "offer_shares": 2200000,
+      "offer_amount_expected": 11000000000,
+      "offer_amount_final": 15400000000,
+      "subscription": {
+        "inst_start": "2026년 08월 03일(월)",
+        "inst_end": "2026년 08월 04일(화)"
+      },
+      "payment_date": "2026년 08월 06일"
+    },
+    "demand_summary": {
+      "total_count": 441,
+      "total_qty": 303699500,
+      "competition_rate": 184.06
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 4,
+        "count_pct": "0.91%",
+        "qty": 4401000,
+        "qty_pct": "1.45%"
+      },
+      {
+        "band": "7000원(상단) 초과",
+        "count": 20,
+        "count_pct": "4.54%",
+        "qty": 8476000,
+        "qty_pct": "2.79%"
+      },
+      {
+        "band": "7000원(상단)",
+        "count": 241,
+        "count_pct": "54.65%",
+        "qty": 203753500,
+        "qty_pct": "67.09%"
+      },
+      {
+        "band": "5000원(하단) 초과 ~ 7000원(상단) 미만",
+        "count": 1,
+        "count_pct": "0.23%",
+        "qty": 183000,
+        "qty_pct": "0.06%"
+      },
+      {
+        "band": "5000(하단)",
+        "count": 158,
+        "count_pct": "35.83%",
+        "qty": 84203000,
+        "qty_pct": "27.73%"
+      },
+      {
+        "band": "5000원(하단) 미만",
+        "count": 17,
+        "count_pct": "3.85%",
+        "qty": 2683000,
+        "qty_pct": "0.88%"
+      },
+      {
+        "band": "합계",
+        "count": 441,
+        "count_pct": "100.00%",
+        "qty": 303699500,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 1,
+        "qty": 32000
+      },
+      "1개월 확약": {
+        "count": 1,
+        "qty": 10000
+      },
+      "15일 확약": {
+        "count": 3,
+        "qty": 266000
+      },
+      "미확약": {
+        "count": 436,
+        "qty": 303391500
+      }
+    }
+  },
+  "인제니아테라퓨틱스": {
+    "offering": {
+      "offer_shares": 5000000,
+      "offer_amount_final": 60000000000,
+      "offer_amount_expected": 60000000000,
+      "subscription": {
+        "inst_start": "2026년 7월 30일",
+        "inst_end": "2026년 7월 31일"
+      },
+      "payment_date": "2026년 8월 4일"
+    },
+    "demand_summary": {
+      "total_count": 307,
+      "total_qty": 189113466,
+      "competition_rate": 50.4
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 5,
+        "count_pct": "1.63%",
+        "qty": 4082000,
+        "qty_pct": "2.16%"
+      },
+      {
+        "band": "14,500원 초과",
+        "count": 10,
+        "count_pct": "3.26%",
+        "qty": 3159477,
+        "qty_pct": "1.67%"
+      },
+      {
+        "band": "14,500원",
+        "count": 129,
+        "count_pct": "42.02%",
+        "qty": 104219282,
+        "qty_pct": "55.11%"
+      },
+      {
+        "band": "12,000원 초과 ~ 14,500원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "12,000원",
+        "count": 72,
+        "count_pct": "23.45%",
+        "qty": 57947000,
+        "qty_pct": "30.64%"
+      },
+      {
+        "band": "12,000원 미만",
+        "count": 91,
+        "count_pct": "29.64%",
+        "qty": 19705707,
+        "qty_pct": "10.42%"
+      },
+      {
+        "band": "합계",
+        "count": 307,
+        "count_pct": "100.00%",
+        "qty": 189113466,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 3,
+        "qty": 45000
+      },
+      "1개월 확약": {
+        "count": 1,
+        "qty": 3750000
+      },
+      "15일 확약": {
+        "count": 24,
+        "qty": 418407
+      },
+      "미확약": {
+        "count": 279,
+        "qty": 184900059
+      }
+    }
+  },
+  "에이치엘지노믹스": {
+    "offering": {
+      "offer_shares": 2565000,
+      "offer_amount_final": 55147500000,
+      "offer_amount_expected": 47452500000,
+      "subscription": {
+        "inst_start": "2026.07.13",
+        "inst_end": "2026.07.14"
+      },
+      "payment_date": "2026.07.16"
+    },
+    "demand_summary": {
+      "total_count": 2148,
+      "total_qty": 1374549000,
+      "competition_rate": 714.52
+    },
+    "price_bands": [
+      {
+        "band": "가격미제시",
+        "count": 17,
+        "count_pct": "0.8%",
+        "qty": 14833000,
+        "qty_pct": "1.1%"
+      },
+      {
+        "band": "21,500원 초과",
+        "count": 62,
+        "count_pct": "2.9%",
+        "qty": 40879000,
+        "qty_pct": "3.0%"
+      },
+      {
+        "band": "21,500원 (상단)",
+        "count": 2054,
+        "count_pct": "95.6%",
+        "qty": 1303199000,
+        "qty_pct": "94.8%"
+      },
+      {
+        "band": "18,500원 초과 ~ 21,500원 미만",
+        "count": 3,
+        "count_pct": "0.1%",
+        "qty": 2974000,
+        "qty_pct": "0.2%"
+      },
+      {
+        "band": "18,500원 (하단)",
+        "count": 12,
+        "count_pct": "0.6%",
+        "qty": 12664000,
+        "qty_pct": "0.9%"
+      },
+      {
+        "band": "18,500원 미만",
+        "count": null,
+        "count_pct": "0.0%",
+        "qty": null,
+        "qty_pct": "0.0%"
+      },
+      {
+        "band": "합계",
+        "count": 2148,
+        "count_pct": "100.0%",
+        "qty": 1374549000,
+        "qty_pct": "100.0%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 12,
+        "qty": 11886000
+      },
+      "3개월 확약": {
+        "count": 4,
+        "qty": 300000
+      },
+      "1개월 확약": {
+        "count": 6,
+        "qty": 2340000
+      },
+      "15일 확약": {
+        "count": 67,
+        "qty": 11715000
+      },
+      "미확약": {
+        "count": 2059,
+        "qty": 1348308000
+      }
+    }
+  },
+  "레메디": {
+    "offering": {
+      "offer_shares": 1200000,
+      "offer_amount_expected": 21360000000,
+      "offer_amount_final": 24840000000,
+      "subscription": {
+        "inst_start": "2026년 07월 01일(수)",
+        "inst_end": "2026년 07월 02일(목)"
+      },
+      "payment_date": "2026년 07월 06일"
+    },
+    "demand_summary": {
+      "total_count": 2246,
+      "total_qty": 1031768000,
+      "competition_rate": 1146.41
+    },
+    "price_bands": [
+      {
+        "band": "20,700원 초과",
+        "count": 69,
+        "count_pct": "3.1%",
+        "qty": 25383000,
+        "qty_pct": "2.5%"
+      },
+      {
+        "band": "20,700원 (상단)",
+        "count": 2160,
+        "count_pct": "96.2%",
+        "qty": 997688000,
+        "qty_pct": "96.7%"
+      },
+      {
+        "band": "17,800원 초과 ~ 20,700원 미만",
+        "count": null,
+        "count_pct": "0.0%",
+        "qty": null,
+        "qty_pct": "0.0%"
+      },
+      {
+        "band": "17,800원 (하단)",
+        "count": null,
+        "count_pct": "0.0%",
+        "qty": null,
+        "qty_pct": "0.0%"
+      },
+      {
+        "band": "17,800원 미만",
+        "count": 1,
+        "count_pct": "0.0%",
+        "qty": 417000,
+        "qty_pct": "0.0%"
+      },
+      {
+        "band": "가격미제시",
+        "count": 16,
+        "count_pct": "0.7%",
+        "qty": 8280000,
+        "qty_pct": "0.8%"
+      },
+      {
+        "band": "합계",
+        "count": 2246,
+        "count_pct": "100.0%",
+        "qty": 1031768000,
+        "qty_pct": "100.0%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 24,
+        "qty": 7914000
+      },
+      "3개월 확약": {
+        "count": 58,
+        "qty": 19147000
+      },
+      "1개월 확약": {
+        "count": 95,
+        "qty": 45851000
+      },
+      "15일 확약": {
+        "count": 285,
+        "qty": 112101000
+      },
+      "미확약": {
+        "count": 1784,
+        "qty": 846755000
+      }
+    }
+  },
+  "레몬헬스케어": {
+    "offering": {
+      "offer_shares": 2000000,
+      "offer_amount_expected": 15000000000,
+      "offer_amount_final": 20000000000,
+      "subscription": {
+        "inst_start": "2026년 06월 24일(수)",
+        "inst_end": "2026년 06년 25일(목)"
+      },
+      "payment_date": "2026년 06월 29일"
+    },
+    "demand_summary": {
+      "total_count": 2233,
+      "total_qty": 1857004000,
+      "competition_rate": 1238.0
+    },
+    "price_bands": [
+      {
+        "band": "가격미제시",
+        "count": 15,
+        "count_pct": "0.68%",
+        "qty": 13096000,
+        "qty_pct": "0.71%"
+      },
+      {
+        "band": "10,000원 초과",
+        "count": 60,
+        "count_pct": "2.71%",
+        "qty": 42161000,
+        "qty_pct": "2.29%"
+      },
+      {
+        "band": "10,000원 (상단)",
+        "count": 2155,
+        "count_pct": "97.16%",
+        "qty": 1801744000,
+        "qty_pct": "97.71%"
+      },
+      {
+        "band": "7,500원 초과 10,000원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "7,500원 (하단)",
+        "count": 3,
+        "count_pct": "0.14%",
+        "qty": 3000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "7,500원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "합계",
+        "count": 2218,
+        "count_pct": "100.00%",
+        "qty": 1843908000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 16,
+        "qty": 16495000
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 13,
+        "qty": 12379000
+      },
+      "15일 확약": {
+        "count": 121,
+        "qty": 99551000
+      },
+      "미확약": {
+        "count": 2083,
+        "qty": 1728579000
+      }
+    }
+  },
+  "매드업": {
+    "offering": {
+      "offer_shares": 2000000,
+      "offer_amount_expected": 14000000000,
+      "offer_amount_final": 16000000000,
+      "subscription": {
+        "inst_start": "2026년 06월 23일(화)",
+        "inst_end": "2026년 06월 24일(수)"
+      },
+      "payment_date": "2026년 06월 26일"
+    },
+    "demand_summary": {
+      "total_count": 2392,
+      "total_qty": 2094429700,
+      "competition_rate": 1396.29
+    },
+    "price_bands": [
+      {
+        "band": "가격미제시",
+        "count": 25,
+        "count_pct": "1.0%",
+        "qty": 28171700,
+        "qty_pct": "1.3%"
+      },
+      {
+        "band": "8,000원 초과",
+        "count": 56,
+        "count_pct": "2.3%",
+        "qty": 49336100,
+        "qty_pct": "2.4%"
+      },
+      {
+        "band": "8,000원 (상단)",
+        "count": 2311,
+        "count_pct": "96.6%",
+        "qty": 2016921900,
+        "qty_pct": "96.3%"
+      },
+      {
+        "band": "7,000원 초과 8,000원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "7,000원 (하단)",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "7,000원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "합계",
+        "count": 2392,
+        "count_pct": "100.0%",
+        "qty": 2094429700,
+        "qty_pct": "100.0%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 20,
+        "qty": 21211700
+      },
+      "3개월 확약": {
+        "count": 109,
+        "qty": 98751200
+      },
+      "1개월 확약": {
+        "count": 93,
+        "qty": 80282100
+      },
+      "15일 확약": {
+        "count": 457,
+        "qty": 373459300
+      },
+      "미확약": {
+        "count": 1713,
+        "qty": 1520725400
+      }
+    }
+  }
+};
+// AUTO-GENERATED:DART_DATA:END
+
+const TYPE_META = {
+  "demand-start": { label: "수요예측 시작", color: "var(--ev-demand)" },
+  "demand-day3":  { label: "수요예측 3일차", color: "var(--ev-demand)" },
+  "demand-end":   { label: "수요예측 마감", color: "var(--ev-demand)" },
+  "sub-start":    { label: "청약 시작",     color: "var(--ev-sub)" },
+  "sub-end":      { label: "청약 마감",     color: "var(--ev-sub)" },
+  "pay":          { label: "납입일",        color: "var(--ev-pay)" },
+  "list":         { label: "상장일",        color: "var(--ev-list)" },
+  "lockup15":     { label: "락업 15일",     color: "var(--ev-lockup)" },
+  "lockup1m":     { label: "락업 1개월",    color: "var(--ev-lockup)" },
+  "lockup3m":     { label: "락업 3개월",    color: "var(--ev-lockup)" },
+  "lockup6m":     { label: "락업 6개월",    color: "var(--ev-lockup)" },
+};
+const LOCKUP_COMMIT_KEY = { "15일": "lockup15", "1개월": "lockup1m", "3개월": "lockup3m", "6개월": "lockup6m" };
+
+/* ---------- date helpers ---------- */
+const DAY = 86400000;
+function d(s){ return new Date(s + "T00:00:00"); }
+function isoKey(dt){ return dt.getFullYear() + "-" + String(dt.getMonth()+1).padStart(2,"0") + "-" + String(dt.getDate()).padStart(2,"0"); }
+function addDays(dt, n){ return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()+n); }
+function addMonths(dt, n){ return new Date(dt.getFullYear(), dt.getMonth()+n, dt.getDate()); }
+
+// 2026년 대한민국 법정공휴일(대체공휴일 포함) — 네이버달력 기준, 총 19일.
+// 딜 목록이 2026년 범위 안에 있어 이 해만 채워뒀다.
+const KR_HOLIDAYS_2026 = {
+  "2026-01-01": "신정",
+  "2026-02-16": "설날 연휴", "2026-02-17": "설날", "2026-02-18": "설날 연휴",
+  "2026-03-01": "삼일절", "2026-03-02": "대체공휴일",
+  "2026-05-05": "어린이날",
+  "2026-05-24": "부처님오신날", "2026-05-25": "대체공휴일",
+  "2026-06-06": "현충일",
+  "2026-08-15": "광복절", "2026-08-17": "대체공휴일",
+  "2026-09-24": "추석 연휴", "2026-09-25": "추석", "2026-09-26": "추석 연휴",
+  "2026-10-03": "개천절", "2026-10-05": "대체공휴일",
+  "2026-10-09": "한글날",
+  "2026-12-25": "성탄절",
+};
+function isHoliday(dt){ return KR_HOLIDAYS_2026[isoKey(dt)] || null; }
+function isNonBizDay(dt){ return dt.getDay() === 0 || dt.getDay() === 6 || !!isHoliday(dt); }
+
+// 시작일을 1일차로 세고(주말·공휴일은 건너뛰어) n번째 영업일을 구한다 — 회사에서
+// 대개 수요예측 3일차에 참여를 결정해서, 그 날짜를 캘린더에 따로 표시하기 위해 쓴다.
+function businessDayN(startDt, n){
+  let dt = startDt, count = isNonBizDay(dt) ? 0 : 1;
+  while (count < n) {
+    dt = addDays(dt, 1);
+    if (!isNonBizDay(dt)) count++;
+  }
+  return dt;
+}
+// 락업해제일(상장일+15일/1개월/3개월/6개월)은 순수 달력일 계산이라, 계산된
+// 날짜가 주말·공휴일(=거래소 휴장일)에 걸리면 그날 팔 수가 없다 — 그래서
+// 다음 영업일로 밀어서 보여준다(기도산업 15일 해제가 토요일에 걸렸던 게 실제
+// 사례). 확약 만기 자체는 그 날짜지만, "언제 팔 수 있나"를 보여주는 게
+// 이 캘린더의 목적이라 영업일로 조정한다.
+function nextBizDay(dt){
+  while (isNonBizDay(dt)) dt = addDays(dt, 1);
+  return dt;
+}
+const WD = ["일","월","화","수","목","금","토"];
+function fmt(s){
+  const dt = typeof s === "string" ? d(s) : s;
+  return (dt.getMonth()+1) + "." + dt.getDate() + "(" + WD[dt.getDay()] + ")";
+}
+function fmtRange(a, b){ return a === b ? fmt(a) : fmt(a) + " ~ " + fmt(b); }
+// 락업 6개월 등 해가 바뀌는 일정이 있어, 연도가 오늘과 다르면 명시적으로 붙인다.
+function fmtMaybeYear(s){
+  const dt = typeof s === "string" ? d(s) : s;
+  const base = fmt(dt);
+  return dt.getFullYear() !== today.getFullYear() ? dt.getFullYear() + "." + base : base;
+}
+// KST(UTC+9) 기준 오늘 — 아티팩트가 어떤 타임존에서 렌더링되든 한국 증시
+// 일정 기준의 오늘과 어긋나지 않도록, toISOString의 UTC 변환에 의존하지 않는다.
+function kstDateString(){
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const kst = new Date(utcMs + 9 * 3600000);
+  return kst.getFullYear() + "-" + String(kst.getMonth()+1).padStart(2,"0") + "-" + String(kst.getDate()).padStart(2,"0");
+}
+const today = d(kstDateString());
+document.getElementById("todayDate").textContent = fmt(today) + " " + today.getFullYear() + "년";
+
+/* ---------- 저장 토스트 ---------- 어디서 뭘 입력하든(단계별 표 셀, 배정 NAV,
+   캘린더 패널) 저장되면 같은 방식으로 짧게 알려준다. */
+let toastTimer = null;
+function showToast(text){
+  const el = document.getElementById("toast");
+  el.textContent = text;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 1500);
+}
+
+/* ---------- compact "사내 캘린더" 표기 (인쇄 / PPT 전용) ----------
+   회사에서 실제 쓰던 ★수요예측캘린더 엑셀 양식의 표기를 그대로 따른다:
+   "유형 종목명(주간사약칭)" 한 줄, 수요예측은 시작일만 적고 마감일이
+   다르면 "마지막날"만 덧붙이며, 청약은 시작일에만 적는다. */
+const UW_ABBR = {
+  "삼성증권": "삼성", "DB증권": "DB", "미래에셋증권": "미래", "IBK투자증권": "IBK",
+  "한국투자증권": "한투", "KB증권": "KB", "NH투자증권": "NH", "대신증권": "대신",
+  "유진투자증권": "유진",
+};
+function abbrUw(uw){
+  return uw.split(",").map(s => UW_ABBR[s.trim()] || s.trim()).join("·");
+}
+function compactLabel(dl, kind, suffix){
+  let s = kind + " " + dl.name + "(" + abbrUw(dl.uw) + ")";
+  if (suffix) s += " " + suffix;
+  return s;
+}
+function buildCompactEvents(dealsList){
+  const map = new Map();
+  const push = (dt, type, text) => {
+    const k = isoKey(dt);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push({ type, text });
+  };
+  dealsList.forEach(dl => {
+    const ds = d(dl.demand[0]), de = d(dl.demand[1]);
+    push(ds, "demand", compactLabel(dl, "수요예측"));
+    const day3 = businessDayN(ds, 3);
+    if (day3 <= de) push(day3, "demand", compactLabel(dl, "수요예측", "3일차"));
+    if (isoKey(de) !== isoKey(ds)) push(de, "demand", compactLabel(dl, "수요예측", "마지막날"));
+    push(d(dl.sub[0]), "sub", compactLabel(dl, "청약"));
+    push(d(dl.pay), "pay", compactLabel(dl, "납입"));
+    if (dl.list) {
+      const listD = d(dl.list);
+      push(listD, "list", compactLabel(dl, "상장"));
+      push(nextBizDay(addDays(listD, 15)), "lockup", compactLabel(dl, "매도가능일", "15일"));
+      push(nextBizDay(addMonths(listD, 1)), "lockup", compactLabel(dl, "매도가능일", "1개월"));
+      push(nextBizDay(addMonths(listD, 3)), "lockup", compactLabel(dl, "매도가능일", "3개월"));
+      push(nextBizDay(addMonths(listD, 6)), "lockup", compactLabel(dl, "매도가능일", "6개월"));
+    }
+  });
+  return map;
+}
+function currentFilteredDeals(){
+  return deals.filter(dl => filterMode !== "joined" || records[dl.name].joined);
+}
+
+/* ---------- participation records (localStorage) ---------- */
+const STORAGE_KEY = "ipoCalendarRecords_v1";
+const DEFAULT_JOINED = ["니어스랩","케이앤에스아이앤씨","딜리셔스","인제니아테라퓨틱스","에이치엘지노믹스"];
+function loadStoredRecords(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+function persistRecords(){
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); } catch(e) {}
+}
+const stored = loadStoredRecords();
+const records = {};
+deals.forEach(dl => {
+  const seed = {
+    // 수요예측 신청
+    applied: false, appliedDate: "", appliedNote: "",
+    // 수요예측 참여
+    joined: DEFAULT_JOINED.includes(dl.name), price: null, qty: null, commit: dl.name === "케이앤에스아이앤씨" ? "미확약" : "",
+    // 배정
+    allotDate: "", allotLink: "", allotShares: null, allotAmount: null,
+    // 청약
+    subQty: null, subDeposit: null,
+    // 납입
+    payAmount: null, payConfirmed: false,
+    // 상장
+    openPrice: null, closePrice: null,
+  };
+  records[dl.name] = Object.assign(seed, stored[dl.name] || {});
+});
+
+/* ---------- 기준 NAV (배정비중 계산용, 전역 설정) ---------- */
+const NAV_KEY = "ipoCalendarNav_v1";
+let navValue = (() => {
+  try { const v = localStorage.getItem(NAV_KEY); return v ? Number(v) : null; } catch(e) { return null; }
+})();
+function persistNav(){
+  try { localStorage.setItem(NAV_KEY, navValue == null ? "" : String(navValue)); } catch(e) {}
+}
+
+/* ---------- state ---------- */
+let viewMode = "month";   // "month" | "week"
+let filterMode = "all";   // "all" | "joined"
+let anchor = new Date(today);
+let printMode = false;    // true 동안은 압축 표기(print-line)로 렌더링해 인쇄물에서 글씨가 잘리지 않게 한다
+
+/* ---------- event generation ---------- */
+function buildEvents(){
+  const events = [];
+  deals.forEach((dl, idx) => {
+    if (filterMode === "joined" && !records[dl.name].joined) return;
+    const push = (dt, type) => { if (dt) events.push({ dealIdx: idx, date: dt, type }); };
+    const demandStart = d(dl.demand[0]), demandEnd = d(dl.demand[1]);
+    push(demandStart, "demand-start");
+    // 보통 수요예측 3일차(영업일 기준)에 참여를 결정하는데, 수요예측 기간이
+    // 짧아 3일차가 마감일을 넘어가는 딜(예: 스팩)은 표시하지 않는다.
+    const day3 = businessDayN(demandStart, 3);
+    if (day3 <= demandEnd) push(day3, "demand-day3");
+    push(demandEnd, "demand-end");
+    push(d(dl.sub[0]), "sub-start");
+    push(d(dl.sub[1]), "sub-end");
+    push(d(dl.pay), "pay");
+    if (dl.list) {
+      const listD = d(dl.list);
+      push(listD, "list");
+      push(nextBizDay(addDays(listD, 15)), "lockup15");
+      push(nextBizDay(addMonths(listD, 1)), "lockup1m");
+      push(nextBizDay(addMonths(listD, 3)), "lockup3m");
+      push(nextBizDay(addMonths(listD, 6)), "lockup6m");
+    }
+  });
+  return events;
+}
+function eventsByDay(events){
+  const map = new Map();
+  events.forEach(ev => {
+    const k = isoKey(ev.date);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(ev);
+  });
+  return map;
+}
+
+/* ---------- today digest ---------- */
+// 오늘 할 일 칩이 어느 단계 탭에 해당하는지 보고, 그 탭에 값이 채워졌으면
+// "완료"로 본다 — 예: 납입일 칩은 납입 탭에서 납입확인 체크(또는 납입금액
+// 입력)하면 완료 처리.
+function isEventDone(dealName, type){
+  const rec = records[dealName];
+  switch (type) {
+    case "demand-start": case "demand-day3": case "demand-end": return !!rec.joined;
+    case "sub-start": case "sub-end": return rec.subQty != null;
+    case "pay": return !!rec.payConfirmed || rec.payAmount != null;
+    case "list": return rec.closePrice != null;
+    default: return false; // 락업해제 등은 "완료" 개념이 없음
+  }
+}
+
+function digestChipHtml(ev){
+  const meta = TYPE_META[ev.type];
+  const dl = deals[ev.dealIdx];
+  return `<button class="chip" style="--chip-color:${meta.color}" data-deal="${ev.dealIdx}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
+}
+function digestDoneChipHtml(ev){
+  // "오늘 완료" 줄 자체가 이미 완료라는 뜻이라 체크마크는 중복 — 회색 처리만 남긴다.
+  const meta = TYPE_META[ev.type];
+  const dl = deals[ev.dealIdx];
+  return `<button class="chip done" style="--chip-color:${meta.color}" data-deal="${ev.dealIdx}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
+}
+
+function renderDigest(){
+  const all = buildEvents();
+  const todays = all.filter(ev => isoKey(ev.date) === isoKey(today));
+  const todo = todays.filter(ev => !isEventDone(deals[ev.dealIdx].name, ev.type));
+  const done = todays.filter(ev => isEventDone(deals[ev.dealIdx].name, ev.type));
+  const el = document.getElementById("digest");
+  const joinedCount = deals.filter(dl => records[dl.name].joined).length;
+
+  const todoHtml = todo.length ? todo.map(digestChipHtml).join("") : `<span class="none">오늘 일정 없음</span>`;
+  const doneRow = done.length ? `
+    <div class="digest-row done-row">
+      <span class="dl">오늘 완료</span>
+      <div class="chips">${done.map(digestDoneChipHtml).join("")}</div>
+    </div>` : "";
+
+  el.innerHTML = `
+    <div class="digest-row">
+      <span class="dl">오늘 할 일</span>
+      <div class="chips">${todoHtml}</div>
+      <div class="spacer"></div>
+      <span class="count">전체 <b>${deals.length}</b>건 · 참여 확정 <b>${joinedCount}</b>건</span>
+    </div>
+    ${doneRow}
+  `;
+}
+
+/* ---------- calendar render ---------- */
+function renderDow(){
+  document.getElementById("calDow").innerHTML = WD.map(w => `<div>${w}</div>`).join("");
+}
+
+function renderCell(dt, inCurrentPeriod, dayMap, compactMap){
+  const key = isoKey(dt);
+  const isToday = key === isoKey(today);
+  const holidayName = isHoliday(dt);
+
+  if (printMode) {
+    // 인쇄는 회사에서 쓰던 ★수요예측캘린더 양식 그대로: 칩이 아니라
+    // "유형 종목명(주간사)" 한 줄짜리 텍스트를 유형별 색으로만 표시한다.
+    const lines = (compactMap.get(key) || []).map(ev =>
+      `<div class="print-line" style="color:var(--ev-${ev.type})">${ev.text}</div>`
+    ).join("");
+    return `
+      <div class="cell ${inCurrentPeriod ? "" : "out"} ${isToday ? "is-today" : ""}">
+        <div class="daynum"><span class="num">${dt.getDate()}</span></div>
+        ${lines}
+      </div>
+    `;
+  }
+
+  // 예전엔 하루에 4개 이상이면 "+N개 더"로 접어뒀는데, 보기 안 좋다고 해서
+  // 없앴다 — 다 보여주고, 그만큼 그 주(week-row)가 필요한 만큼 늘어난다.
+  const evs = dayMap.get(key) || [];
+
+  // 전체 조회일 때 미참여 종목을 흐리게 구분하던 것 제거 — 참여/미참여
+  // 상관없이 동일하게 표시(참여만 보고 싶으면 "참여" 필터를 쓰면 됨).
+  const chips = evs.map(ev => {
+    const meta = TYPE_META[ev.type];
+    const dl = deals[ev.dealIdx];
+    return `<button class="chip" style="--chip-color:${meta.color}" data-deal="${ev.dealIdx}" title="${dl.name} · ${meta.label}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
+  }).join("");
+
+  return `
+    <div class="cell ${inCurrentPeriod ? "" : "out"} ${isToday ? "is-today" : ""} ${holidayName ? "holiday" : ""} ${dt.getDay() === 0 ? "sunday" : ""}">
+      <div class="daynum">
+        ${viewMode === "week" ? `<span class="wd">${WD[dt.getDay()]}</span>` : ""}
+        <span class="num">${dt.getMonth()+1}.${String(dt.getDate()).padStart(2,"0")}</span>
+        ${holidayName ? `<span class="holiday-name">${holidayName}</span>` : ""}
+      </div>
+      ${chips}
+    </div>
+  `;
+}
+
+function renderCalendar(){
+  const grid = document.getElementById("calGrid");
+  grid.className = "cal-grid " + viewMode;
+  const events = buildEvents();
+  const dayMap = eventsByDay(events);
+  const compactMap = printMode ? buildCompactEvents(currentFilteredDeals()) : null;
+  const periodLabel = document.getElementById("periodLabel");
+  let periodHasToday = false;
+
+  // 주 단위(week-row)로 묶어서 렌더링 — 인쇄 시 한 주가 페이지 경계에서
+  // 반으로 잘리지 않도록 week-row에 break-inside:avoid를 걸 수 있게 한다.
+  let weekRows = [];
+  if (viewMode === "month") {
+    const y = anchor.getFullYear(), m = anchor.getMonth();
+    const firstOfMonth = new Date(y, m, 1);
+    const startWeekday = firstOfMonth.getDay();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
+    const gridStart = addDays(firstOfMonth, -startWeekday);
+    for (let w = 0; w < totalCells / 7; w++) {
+      let rowCells = [];
+      for (let i = 0; i < 7; i++) {
+        const dt = addDays(gridStart, w * 7 + i);
+        rowCells.push(renderCell(dt, dt.getMonth() === m, dayMap, compactMap));
+      }
+      weekRows.push(rowCells);
+    }
+    periodLabel.textContent = y + "년 " + (m+1) + "월";
+    periodHasToday = y === today.getFullYear() && m === today.getMonth();
+  } else {
+    const weekStart = addDays(anchor, -anchor.getDay());
+    let rowCells = [];
+    for (let i = 0; i < 7; i++) {
+      const dt = addDays(weekStart, i);
+      rowCells.push(renderCell(dt, true, dayMap, compactMap));
+    }
+    weekRows.push(rowCells);
+    const weekEnd = addDays(weekStart, 6);
+    periodLabel.textContent = (weekStart.getMonth()+1) + "." + String(weekStart.getDate()).padStart(2,"0") + " ~ " + (weekEnd.getMonth()+1) + "." + String(weekEnd.getDate()).padStart(2,"0");
+    periodHasToday = today >= weekStart && today <= weekEnd;
+  }
+  grid.innerHTML = weekRows.map(rowCells => `<div class="week-row">${rowCells.join("")}</div>`).join("");
+  document.getElementById("printMonthBox").textContent = periodLabel.textContent;
+  if (!printMode && viewMode === "month") equalizeMonthRowHeights();
+  // "오늘로" 버튼은 이미 오늘이 보이는 달/주에서는 눌러도 아무 일도 안 일어나므로,
+  // 그럴 땐 비활성화해 눌러도 되는 상태인지 한눈에 알 수 있게 한다.
+  document.getElementById("todayJump").disabled = periodHasToday;
+}
+
+// 일정이 많은 날은 그 칸이 자연스럽게 늘어나는데, 주(week-row)마다 필요한
+// 높이가 달라서 그대로 두면 계단처럼 삐뚤빼뚤해 보인다. 그래서 일단 자연
+// 높이로 그린 뒤, 이번 달에서 가장 높은 주를 재서 모든 주에 똑같이
+// 맞춘다 — "+N개 더"로 접지 않으면서도 격자는 반듯하게 유지된다.
+function equalizeMonthRowHeights(){
+  const rows = Array.from(document.querySelectorAll("#calGrid .week-row"));
+  if (!rows.length) return;
+  rows.forEach(r => { r.style.height = ""; });
+  const maxH = Math.max(...rows.map(r => r.getBoundingClientRect().height));
+  rows.forEach(r => { r.style.height = maxH + "px"; });
+}
+
+function rerender(){
+  renderDigest();
+  renderCalendar();
+}
+
+/* ---------- side panel ---------- */
+const panel = document.getElementById("panel");
+const backdrop = document.getElementById("backdrop");
+let currentDealIdx = null;
+
+function openPanel(idx){
+  currentDealIdx = idx;
+  const dl = deals[idx];
+  const rec = records[dl.name];
+  document.getElementById("pName").textContent = dl.name;
+  document.getElementById("pUw").textContent = dl.uw;
+
+  const rows = [
+    ["demand-start", "수요예측 시작", dl.demand[0]],
+  ];
+  const demandDay3 = businessDayN(d(dl.demand[0]), 3);
+  if (demandDay3 <= d(dl.demand[1])) rows.push(["demand-day3", "수요예측 3일차", isoKey(demandDay3)]);
+  rows.push(
+    ["demand-end",   "수요예측 마감", dl.demand[1]],
+    ["sub-start",    "청약 시작",     dl.sub[0]],
+    ["sub-end",      "청약 마감",     dl.sub[1]],
+    ["pay",          "납입일",        dl.pay],
+  );
+  if (dl.list) {
+    const listD = d(dl.list);
+    rows.push(["list", "상장일", dl.list]);
+    rows.push(["lockup15", "락업해제 (15일)", isoKey(nextBizDay(addDays(listD,15)))]);
+    rows.push(["lockup1m", "락업해제 (1개월)", isoKey(nextBizDay(addMonths(listD,1)))]);
+    rows.push(["lockup3m", "락업해제 (3개월)", isoKey(nextBizDay(addMonths(listD,3)))]);
+    rows.push(["lockup6m", "락업해제 (6개월)", isoKey(nextBizDay(addMonths(listD,6)))]);
+  }
+  document.getElementById("pSchedule").innerHTML = rows.map(([type,label,dateStr]) => {
+    const meta = TYPE_META[type];
+    const isCurrentLockup = LOCKUP_COMMIT_KEY[rec.commit] === type;
+    return `<div class="sched-row ${isCurrentLockup ? "current-lockup" : ""}"><span class="k"><i style="background:${meta.color}"></i>${label}</span><span class="v">${fmtMaybeYear(dateStr)}</span></div>`;
+  }).join("") + (!dl.list ? `<div class="sched-row"><span class="k">상장일 · 락업해제</span><span class="v" style="font-family:var(--font-kr);color:var(--ink-faint)">상장일 미정</span></div>` : "");
+
+  document.getElementById("fJoined").checked = !!rec.joined;
+  document.getElementById("fPrice").value = rec.price != null ? rec.price : "";
+  document.getElementById("fQty").value = rec.qty != null ? rec.qty : "";
+  document.getElementById("fCommit").value = rec.commit || "";
+
+  panel.classList.add("show");
+  backdrop.classList.add("show");
+}
+function closePanel(){
+  panel.classList.remove("show");
+  backdrop.classList.remove("show");
+  currentDealIdx = null;
+}
+document.getElementById("panelClose").addEventListener("click", closePanel);
+backdrop.addEventListener("click", closePanel);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePanel(); });
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+  if (currentDealIdx == null) return;
+  const dl = deals[currentDealIdx];
+  const price = document.getElementById("fPrice").value;
+  const qty = document.getElementById("fQty").value;
+  // 다른 단계 탭(배정/청약/납입/상장)에서 이미 입력된 필드까지 통째로 지워지지
+  // 않도록 객체를 새로 만들지 않고 필드만 덮어쓴다.
+  Object.assign(records[dl.name], {
+    joined: document.getElementById("fJoined").checked,
+    price: price === "" ? null : Number(price),
+    qty: qty === "" ? null : Number(qty),
+    commit: document.getElementById("fCommit").value,
+  });
+  persistRecords();
+  showToast("저장되었습니다");
+  openPanel(currentDealIdx); // refresh current-lockup highlight
+  rerender();
+  renderStageTable("join"); // 캘린더 패널에서 고친 참여정보를 "수요예측 참여" 탭에도 반영
+});
+
+/* ---------- delegated chip / list-row clicks ---------- */
+document.addEventListener("click", e => {
+  const chip = e.target.closest(".chip[data-deal]");
+  if (chip) { openPanel(Number(chip.dataset.deal)); return; }
+});
+
+/* ================= 단계별 탭 (신청 → 참여 → 배정 → 청약 → 납입 → 상장) =================
+   각 탭은 종목×해당 단계 필드를 표(엑셀 느낌)로 보여주고, 셀에 바로 입력하면
+   change/blur 시점에 records에 저장된다. 컬럼 정의만 다른 동일한 렌더러를
+   6개 탭이 공유한다. */
+function fmtNum(n){ return n == null || n === "" ? "" : Number(n).toLocaleString("ko-KR"); }
+function pct(n){ return n == null || !isFinite(n) ? "—" : (n*100).toFixed(2) + "%"; }
+
+const STAGE_TABS = {
+  apply: {
+    columns: [
+      { field: "_name", label: "종목 / 주간사", type: "ref-name" },
+      { field: "_demand", label: "수요예측일", type: "ref", get: dl => fmtRange(dl.demand[0], dl.demand[1]) },
+      { field: "applied", label: "신청함", type: "checkbox" },
+      { field: "appliedDate", label: "신청일", type: "date" },
+      { field: "appliedNote", label: "담당자/비고", type: "text" },
+    ],
+  },
+  join: {
+    columns: [
+      { field: "_name", label: "종목 / 주간사", type: "ref-name" },
+      { field: "joined", label: "참여함", type: "checkbox" },
+      { field: "price", label: "참여가격(원)", type: "number" },
+      { field: "qty", label: "신청수량(주)", type: "number" },
+      { field: "commit", label: "확약여부", type: "select", options: ["","미확약","15일","1개월","3개월","6개월"] },
+    ],
+  },
+  allot: {
+    columns: [
+      { field: "_name", label: "종목 / 주간사", type: "ref-name" },
+      { field: "_size", label: "공모금액(백만원)", type: "ref", get: dl => fmtNum(dl.dealSizeM) },
+      { field: "allotDate", label: "배정공고일", type: "date", placeholderFrom: dl => dl.pay },
+      { field: "allotLink", label: "배정공고 링크", type: "text" },
+      { field: "allotShares", label: "배정주수", type: "number" },
+      { field: "allotAmount", label: "배정금액(원)", type: "number" },
+      { field: "_ratioSize", label: "배정비중(공모액대비)", type: "computed", get: (dl, rec) =>
+          pct(rec.allotAmount && dl.dealSizeM ? rec.allotAmount / (dl.dealSizeM * 1e6) : null) },
+      { field: "_ratioNav", label: "배정비중(NAV대비)", type: "computed", get: (dl, rec) =>
+          pct(rec.allotAmount && navValue ? rec.allotAmount / navValue : null) },
+    ],
+  },
+  sub: {
+    columns: [
+      { field: "_name", label: "종목 / 주간사", type: "ref-name" },
+      { field: "_sub", label: "청약일", type: "ref", get: dl => fmtRange(dl.sub[0], dl.sub[1]) },
+      { field: "subQty", label: "청약수량(주)", type: "number" },
+      { field: "subDeposit", label: "청약증거금(원)", type: "number" },
+    ],
+  },
+  pay: {
+    columns: [
+      { field: "_name", label: "종목 / 주간사", type: "ref-name" },
+      { field: "_pay", label: "납입일", type: "ref", get: dl => fmt(dl.pay) },
+      { field: "payAmount", label: "납입금액(원)", type: "number", placeholderFrom: (dl, rec) => rec.allotAmount },
+      { field: "payConfirmed", label: "납입확인", type: "checkbox" },
+    ],
+  },
+  list: {
+    columns: [
+      { field: "_name", label: "종목 / 주간사", type: "ref-name" },
+      { field: "_list", label: "상장일", type: "ref", get: dl => dl.list ? fmt(dl.list) : "미정" },
+      { field: "openPrice", label: "시초가(원)", type: "number" },
+      { field: "closePrice", label: "종가(원)", type: "number" },
+      { field: "_return", label: "참여가 대비 수익률", type: "computed", get: (dl, rec) =>
+          pct(rec.closePrice && rec.price ? (rec.closePrice - rec.price) / rec.price : null) },
+    ],
+  },
+};
+
+function renderStageCell(dl, idx, rec, col){
+  const v = col.field.startsWith("_") ? null : rec[col.field];
+  switch (col.type) {
+    case "ref-name":
+      return `<td><div class="stc-name">${dl.name}</div><div class="stc-uw">${dl.uw}</div></td>`;
+    case "ref":
+      return `<td class="stc-ref">${col.get(dl, rec)}</td>`;
+    case "computed":
+      return `<td class="stc-computed">${col.get(dl, rec)}</td>`;
+    case "checkbox":
+      return `<td><input type="checkbox" data-idx="${idx}" data-field="${col.field}" ${v ? "checked" : ""}></td>`;
+    case "select": {
+      const opts = col.options.map(o => `<option value="${o}" ${rec[col.field]===o?"selected":""}>${o||"미지정"}</option>`).join("");
+      return `<td><select data-idx="${idx}" data-field="${col.field}">${opts}</select></td>`;
+    }
+    case "date":
+      return `<td><input type="date" data-idx="${idx}" data-field="${col.field}" value="${v||""}"></td>`;
+    case "number": {
+      const ph = col.placeholderFrom ? col.placeholderFrom(dl, rec) : "";
+      return `<td><input type="number" data-idx="${idx}" data-field="${col.field}" value="${v!=null?v:""}" placeholder="${ph!=null&&ph!==""?ph:""}"></td>`;
+    }
+    default:
+      return `<td><input type="text" data-idx="${idx}" data-field="${col.field}" value="${v||""}"></td>`;
+  }
+}
+
+function renderStageTable(key){
+  const cfg = STAGE_TABS[key];
+  const container = document.getElementById("stage-" + key);
+  if (!container) return;
+  const head = cfg.columns.map(c => `<th>${c.label}</th>`).join("");
+  const rows = deals.map((dl, idx) => {
+    const rec = records[dl.name];
+    return `<tr>${cfg.columns.map(col => renderStageCell(dl, idx, rec, col)).join("")}</tr>`;
+  }).join("");
+  container.innerHTML = `<table class="stage-table"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderAllStageTables(){
+  Object.keys(STAGE_TABS).forEach(renderStageTable);
+}
+
+// 계산 열(배정비중, 수익률)만 그 자리에서 텍스트를 갱신한다 — 표 전체를
+// innerHTML로 다시 그리면 방금 만든 input이 DOM에서 분리돼서, 이어서 다른
+// 칸에 값을 넣어도 반영이 안 되는 문제(포커스 튐 포함)가 있었다.
+function refreshComputedCells(key, idx){
+  const cfg = STAGE_TABS[key];
+  if (!cfg.columns.some(c => c.type === "computed")) return;
+  const dl = deals[idx];
+  const rec = records[dl.name];
+  const row = document.querySelectorAll("#stage-" + key + " tbody tr")[idx];
+  if (!row) return;
+  cfg.columns.forEach((col, colIdx) => {
+    if (col.type === "computed") {
+      const cell = row.children[colIdx];
+      if (cell) cell.textContent = col.get(dl, rec);
+    }
+  });
+}
+function refreshAllComputedCells(key){
+  deals.forEach((dl, idx) => refreshComputedCells(key, idx));
+}
+
+// 입력칸 변경 → 해당 종목 records에 저장 → 계산 열만 갱신한다.
+document.addEventListener("change", e => {
+  const el = e.target;
+  const idx = el.dataset.idx;
+  if (idx == null) return;
+  const dl = deals[Number(idx)];
+  const field = el.dataset.field;
+  let value;
+  if (el.type === "checkbox") value = el.checked;
+  else if (el.type === "number") value = el.value === "" ? null : Number(el.value);
+  else value = el.value;
+  records[dl.name][field] = value;
+  persistRecords();
+  showToast("저장되었습니다");
+  const panel = el.closest(".tab-panel");
+  if (panel) {
+    const key = panel.id.replace("tab-", "");
+    if (STAGE_TABS[key]) refreshComputedCells(key, Number(idx));
+  }
+  rerender(); // 참여/확약 등은 캘린더 칩·필터에도 영향
+});
+
+document.getElementById("navInput").addEventListener("change", e => {
+  navValue = e.target.value === "" ? null : Number(e.target.value);
+  persistNav();
+  showToast("저장되었습니다");
+  refreshAllComputedCells("allot");
+});
+if (navValue != null) document.getElementById("navInput").value = navValue;
+
+/* ================= 종목정보(DART) 탭 =================
+   파이프라인 탭(신청~상장)과 달리 이 탭은 종목당 딸린 "참고자료"라 입력 폼이
+   아니라 38(38.co.kr)처럼 목록→상세 드릴다운 구조로 보여준다: 기본은 종목당
+   한 행짜리 목록(예전에 캘린더에 있던 "목록" 뷰를 이리로 옮겨 병합), 행을
+   클릭하면 그 종목의 전용 상세 페이지로 전환된다(아코디언이 아니라 화면 전환).
+   상세 페이지 맨 위에는 그 종목의 최신 증권신고서 DART 원문 링크를 둔다. */
+
+// DART 전자공시 뷰어 링크 — dsaf001/main.do?rcpNo={접수번호}.
+// AUTO-GENERATED:FILING_URL:START
+const DART_FILING_URL = {
+  "니어스랩": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260811000060",
+  "해치텍": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260810000663",
+  "기도산업": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260810000682",
+  "케이앤에스아이앤씨": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260803000165",
+  "딜리셔스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260731000443",
+  "인제니아테라퓨틱스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260728000400",
+  "에이치엘지노믹스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260710000294",
+  "레메디": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260626000241",
+  "레몬헬스케어": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260623000235",
+  "매드업": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260622000382"
+};
+// AUTO-GENERATED:FILING_URL:END
+
+// DART OpenAPI company.json(기업개요) 실제 응답을 그대로 옮김 — 대표자·설립일·
+// 주소·홈페이지 등은 DART 등록정보라 38의 "기업개요" 블록과 출처가 다를 수 있지만
+// 신뢰할 수 있는 공식 소스다. 매출액·순이익 등 재무수치는 별도 재무제표 API가
+// 필요해 이번엔 넣지 않았다(부정확한 값을 넣느니 비워두는 쪽을 택함).
+// AUTO-GENERATED:COMPANY_PROFILE:START
+const COMPANY_PROFILE = {
+  "니어스랩": {
+    "status": "000",
+    "message": "정상",
+    "corp_code": "01588897",
+    "corp_name": "(주)니어스랩",
+    "corp_name_eng": "Nearthlab Inc.",
+    "stock_name": "니어스랩",
+    "stock_code": "",
+    "ceo_nm": "최재혁",
+    "corp_cls": "E",
+    "jurir_no": "1314110342669",
+    "bizr_no": "1298700068",
+    "adres": "서울특별시 송파구 정의로8길 9 (문정동, AJ빌딩) 3층",
+    "hm_url": "www.nearthlab.com",
+    "ir_url": "",
+    "phn_no": "02-566-1580",
+    "fax_no": "02-6935-1574",
+    "induty_code": "58221",
+    "est_dt": "20150515",
+    "acc_mt": "12"
+  },
+  "해치텍": {
+    "status": "000",
+    "message": "정상",
+    "corp_code": "01947443",
+    "corp_name": "주식회사 해치텍",
+    "corp_name_eng": "HAECHITECH",
+    "stock_name": "해치텍",
+    "stock_code": "",
+    "ceo_nm": "최성민",
+    "corp_cls": "E",
+    "jurir_no": "1501110231617",
+    "bizr_no": "8558600699",
+    "adres": "충청북도 청주시 청원구 오창읍 연구단지로 40 (양청리, 충북테크노파크) 비동 307호",
+    "hm_url": "",
+    "ir_url": "",
+    "phn_no": "0437159023",
+    "fax_no": "",
+    "induty_code": "26112",
+    "est_dt": "20170214",
+    "acc_mt": "12"
+  },
+  "기도산업": {
+    "status": "000",
+    "message": "정상",
+    "corp_code": "00229085",
+    "corp_name": "(주)기도산업",
+    "corp_name_eng": "KIDO INDUSTRIAL CO., LTD",
+    "stock_name": "기도산업",
+    "stock_code": "",
+    "ceo_nm": "박 장 희",
+    "corp_cls": "E",
+    "jurir_no": "1101110278980",
+    "bizr_no": "1178115038",
+    "adres": "서울특별시 강서구 공항대로 395 (등촌동, 기도산업사옥)",
+    "hm_url": "www.kido.co.kr",
+    "ir_url": "",
+    "phn_no": "02)3660-3300",
+    "fax_no": "02)3662-2935",
+    "induty_code": "14199",
+    "est_dt": "19800820",
+    "acc_mt": "12"
+  },
+  "케이앤에스아이앤씨": {
+    "status": "000",
+    "message": "정상",
+    "corp_code": "00920731",
+    "corp_name": "(주)케이앤에스아이앤씨",
+    "corp_name_eng": "KNS Space and Defence Inc.",
+    "stock_name": "케이앤에스아이앤씨",
+    "stock_code": "487400",
+    "ceo_nm": "진병욱",
+    "corp_cls": "K",
+    "jurir_no": "1101112405896",
+    "bizr_no": "1108154705",
+    "adres": "대전광역시 유성구 유성대로 1476-55 &nbsp",
+    "hm_url": "www.kns-kr.com",
+    "ir_url": "",
+    "phn_no": "042-932-0351",
+    "fax_no": "042-932-0353",
+    "induty_code": "26429",
+    "est_dt": "20011226",
+    "acc_mt": "12"
+  },
+  "딜리셔스": {
+    "status": "000",
+    "message": "정상",
+    "corp_code": "01461730",
+    "corp_name": "(주)딜리셔스",
+    "corp_name_eng": "Dealicious Inc.",
+    "stock_name": "딜리셔스",
+    "stock_code": "483350",
+    "ceo_nm": "김준호, 정창한",
+    "corp_cls": "K",
+    "jurir_no": "1101114522169",
+    "bizr_no": "2068650285",
+    "adres": "서울특별시 종로구 대학로 57 홍익대학교대학로캠퍼스 5층",
+    "hm_url": "www.dealicious.kr/",
+    "ir_url": "",
+    "phn_no": "02-1661-1916",
+    "fax_no": "",
+    "induty_code": "47911",
+    "est_dt": "20110124",
+    "acc_mt": "12"
+  },
+  "인제니아테라퓨틱스": {
+    "status": "000",
+    "message": "정상",
+    "corp_code": "02031369",
+    "corp_name": "인제니아테라퓨틱스",
+    "corp_name_eng": "INGENIA Therapeutics Inc.",
+    "stock_name": "인제니아테라퓨틱스",
+    "stock_code": "950260",
+    "ceo_nm": "한상열",
+    "corp_cls": "K",
+    "jurir_no": "",
+    "bizr_no": "254900R9BPFJYHTHRX04",
+    "adres": "490 Arsenal Way, Suite 100B, Watertown",
+    "hm_url": "www.ingeniatx.com",
+    "ir_url": "",
+    "phn_no": "1-617-440-2500",
+    "fax_no": "",
+    "induty_code": "70113",
+    "est_dt": "20180322",
+    "acc_mt": "12"
+  },
+  "에이치엘지노믹스": {
+    "status": "000",
+    "message": "정상",
+    "corp_code": "00624244",
+    "corp_name": "에이치엘지노믹스(주)",
+    "corp_name_eng": "HL GENOMICS Co., Ltd.",
+    "stock_name": "에이치엘지노믹스",
+    "stock_code": "0156T0",
+    "ceo_nm": "김호진",
+    "corp_cls": "K",
+    "jurir_no": "1345110044624",
+    "bizr_no": "1358141887",
+    "adres": "경기도 용인시 처인구 원삼면 보개원삼로 1552",
+    "hm_url": "hlgenomics.com",
+    "ir_url": "",
+    "phn_no": "031-335-2080",
+    "fax_no": "031-335-1314",
+    "induty_code": "211",
+    "est_dt": "20001109",
+    "acc_mt": "12"
+  },
+  "레메디": {
+    "stock_code": "387690",
+    "ceo_nm": "조봉호",
+    "corp_cls": "K",
+    "adres": "강원특별자치도 춘천시 삭주로145번길 69-14, 2층 (후평동, 벤처비지니스 살롱)",
+    "hm_url": "www.remedihc.com",
+    "phn_no": "02-6930-5891",
+    "est_dt": "20120713"
+  },
+  "레몬헬스케어": {
+    "stock_code": "365660",
+    "ceo_nm": "홍병진",
+    "corp_cls": "K",
+    "adres": "서울특별시 금천구 가산디지털1로 145, 1005호(가산동, 에이스하이엔드타워3차) &nbsp",
+    "hm_url": "www.lemonhealthcare.com/",
+    "phn_no": "02-855-5815",
+    "est_dt": "20170630"
+  },
+  "매드업": {
+    "stock_code": "0039P0",
+    "ceo_nm": "이주민, 이동호",
+    "corp_cls": "K",
+    "adres": "서울특별시 서초구 서초대로74길 4, 20층",
+    "hm_url": "madup.com/",
+    "phn_no": "02-1522-1060",
+    "est_dt": "20150203"
+  }
+};
+// AUTO-GENERATED:COMPANY_PROFILE:END
+const CORP_CLS_LABEL = { Y: "유가증권(코스피)", K: "코스닥", N: "코넥스", E: "미상장(기타법인)" };
+function fmtEstDt(s){
+  return s && s.length === 8 ? `${s.slice(0,4)}.${s.slice(4,6)}.${s.slice(6,8)}` : "—";
+}
+
+let infoDetailIdx = null; // null이면 목록, 아니면 그 인덱스 종목의 상세 페이지
+
+function dartPricePerShare(off){
+  if (!off || !off.offer_shares || !off.offer_amount_final) return null;
+  return Math.round(off.offer_amount_final / off.offer_shares);
+}
+function pctNum(s){
+  if (s == null) return 0;
+  const n = parseFloat(String(s).replace("%", ""));
+  return isFinite(n) ? n : 0;
+}
+function miniBarHtml(segments){
+  return `<div class="miniband">` + segments
+    .filter(s => s.pct > 0)
+    .map(s => `<span style="width:${s.pct.toFixed(2)}%;background:${s.color}" title="${s.label} ${s.pct.toFixed(1)}%"></span>`)
+    .join("") + `</div>`;
+}
+// 가격분포 표는 항상 같은 순서로 나온다: [미제시, 상단초과, 상단, 중간구간, 하단, 하단미만, 합계]
+// (7개 종목 전부에서 확인됨) — 그 순서를 이용해 "상단 이상(=관심 높음)"과
+// "하단 이하(=관심 낮음)"를 하나의 막대로 압축해 보여준다.
+function priceBandBar(pb){
+  if (!pb || pb.length < 6) return `<span class="info-none">—</span>`;
+  const segs = [
+    { label: "미제시", pct: pctNum(pb[0].qty_pct), color: "var(--ink-faint)" },
+    { label: "상단 이상", pct: pctNum(pb[1].qty_pct) + pctNum(pb[2].qty_pct), color: "var(--accent)" },
+    { label: "중간구간", pct: pctNum(pb[3].qty_pct), color: "var(--ev-list)" },
+    { label: "하단 이하", pct: pctNum(pb[4].qty_pct) + pctNum(pb[5].qty_pct), color: "var(--ev-demand)" },
+  ];
+  return miniBarHtml(segs);
+}
+function lockupBar(lk){
+  if (!lk) return `<span class="info-none">—</span>`;
+  const committed = ["15일 확약","1개월 확약","3개월 확약","6개월 확약"].reduce((s,k) => s + (lk[k] ? lk[k].qty : 0), 0);
+  const uncommitted = lk["미확약"] ? lk["미확약"].qty : 0;
+  const total = committed + uncommitted || 1;
+  return miniBarHtml([
+    { label: "확약", pct: committed / total * 100, color: "var(--ev-lockup)" },
+    { label: "미확약", pct: uncommitted / total * 100, color: "var(--ink-faint)" },
+  ]);
+}
+// 목록: 옛 캘린더 "목록" 뷰(수요예측~상장 일정 + 공모금액)와 기존 종목정보
+// 표(확정공모가·경쟁률·가격분포·확약비율)를 한 표로 합쳤다. 수요예측 시작일
+// 순으로 정렬하고, 행을 클릭하면 상세 페이지로 전환된다.
+function renderInfoList(){
+  const container = document.getElementById("info-table");
+  const rows = deals
+    .slice()
+    .sort((a, b) => d(a.demand[0]) - d(b.demand[0]))
+    .map(dl => {
+      const idx = deals.indexOf(dl);
+      const rec = records[dl.name];
+      const dd = dartData[dl.name];
+      const price = dd ? dartPricePerShare(dd.offering) : null;
+      return `<tr class="info-list-row" data-deal="${idx}">
+        <td><div class="stc-name">${dl.name}</div><div class="stc-uw">${dl.uw}</div></td>
+        <td class="stc-ref">${fmtRange(dl.demand[0], dl.demand[1])}</td>
+        <td class="stc-ref">${fmtRange(dl.sub[0], dl.sub[1])}</td>
+        <td class="stc-ref">${fmt(dl.pay)}</td>
+        <td class="stc-ref">${dl.list ? fmt(dl.list) : "미정"}</td>
+        <td class="stc-ref">${fmtNum(dl.dealSizeM)}</td>
+        <td class="stc-ref">${price ? fmtNum(price) + "원" : "—"}</td>
+        <td class="stc-ref">${dd ? dd.demand_summary.competition_rate.toFixed(1) + " : 1" : "—"}</td>
+        <td>${dd ? priceBandBar(dd.price_bands) : `<span class="info-none">—</span>`}</td>
+        <td>${dd ? lockupBar(dd.lockup) : `<span class="info-none">—</span>`}</td>
+        <td>${rec.joined ? `<span style="color:var(--ink);font-weight:700">참여</span>` : `<span class="info-none">—</span>`}</td>
+      </tr>`;
+    }).join("");
+  container.innerHTML = `<table class="stage-table"><thead><tr>
+    <th>종목 / 주간사</th><th>수요예측일</th><th>청약일</th><th>납입일</th><th>상장일</th>
+    <th>공모금액(백만원)</th><th>확정공모가</th><th>경쟁률</th><th>가격분포</th><th>확약비율</th><th>참여</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// 상세: 38의 개별 종목 페이지(o=v)처럼, 그 종목 하나에 대한 모든 정보를
+// 한 화면 가득 보여준다. DART 원문 링크를 맨 위에 둬서 바로 들어갈 수 있게 한다.
+// 라벨/값 쌍을 38처럼 "라벨 값 라벨 값"이 두 개씩 한 행에 들어가는 표로 짠다.
+function infoGridHtml(pairs){
+  const rows = [];
+  for (let i = 0; i < pairs.length; i += 2) {
+    const [k1, v1] = pairs[i];
+    const p2 = pairs[i + 1];
+    rows.push(`<tr><th>${k1}</th><td>${v1}</td>${p2 ? `<th>${p2[0]}</th><td>${p2[1]}</td>` : `<th></th><td></td>`}</tr>`);
+  }
+  return `<table class="info-grid"><tbody>${rows.join("")}</tbody></table>`;
+}
+
+function renderInfoDetail(idx){
+  const dl = deals[idx];
+  const dd = dartData[dl.name];
+  const prof = COMPANY_PROFILE[dl.name];
+  const filingUrl = DART_FILING_URL[dl.name];
+
+  const filingBanner = filingUrl
+    ? `<a class="filing-link" href="${filingUrl}" target="_blank" rel="noopener">📄 증권신고서([발행조건확정]) 원문 보기 — DART 전자공시 ↗</a>`
+    : `<div class="filing-link filing-link-none">증권신고서 원문: 아직 확인되지 않았습니다 (수요예측 미완료 또는 미조회)</div>`;
+
+  let profileHtml = "";
+  if (prof) {
+    const profPairs = [
+      ["대표자", prof.ceo_nm || "—"],
+      ["시장구분", CORP_CLS_LABEL[prof.corp_cls] || "—"],
+      ["종목코드", prof.stock_code || "상장 전"],
+      ["설립일", fmtEstDt(prof.est_dt)],
+      ["본점소재지", prof.adres || "—"],
+      ["홈페이지", prof.hm_url ? `<a href="//${prof.hm_url.replace(/^https?:\/\//,"")}" target="_blank" rel="noopener">${prof.hm_url}</a>` : "—"],
+      ["연락처", prof.phn_no || "—"],
+    ];
+    profileHtml = `
+      <div class="info-section-title">기업개요</div>
+      ${infoGridHtml(profPairs)}
+      <div class="info-source">출처: DART 기업개요(company.json) · 매출액 등 재무수치는 별도 재무제표 확인이 필요해 아직 넣지 않았습니다.</div>
+    `;
+  }
+
+  const overviewPairs = [
+    ["수요예측일", fmtRange(dl.demand[0], dl.demand[1])],
+    ["청약일", fmtRange(dl.sub[0], dl.sub[1])],
+    ["납입일", fmt(dl.pay)],
+    ["상장일", dl.list ? fmt(dl.list) : "미정"],
+  ];
+  if (dd) {
+    const off = dd.offering;
+    const price = dartPricePerShare(off);
+    overviewPairs.push(
+      ["확정공모가", price ? fmtNum(price) + "원" : "—"],
+      ["공모금액(예정→확정)", `${off.offer_amount_expected != null ? fmtNum(Math.round(off.offer_amount_expected/1e6)) : "—"} → ${fmtNum(Math.round(off.offer_amount_final/1e6))} 백만원`],
+      ["기관 수요예측 접수", `${off.subscription?.inst_start || "—"} ~ ${off.subscription?.inst_end || "—"}`],
+    );
+  } else {
+    overviewPairs.push(["공모금액", fmtNum(dl.dealSizeM) + " 백만원 (38커뮤니케이션 기준)"]);
+  }
+
+  let demandBlock = "";
+  if (dd) {
+    const pbRows = (dd.price_bands || []).map(b =>
+      `<tr class="${b.band === "합계" ? "mt-total" : ""}"><td>${b.band}</td><td class="mt-num">${fmtNum(b.qty)}주</td><td class="mt-num">${b.qty_pct}</td></tr>`
+    ).join("");
+    const lkOrder = ["6개월 확약", "3개월 확약", "1개월 확약", "15일 확약", "미확약"];
+    const lkRows = lkOrder.filter(k => dd.lockup[k]).map(k =>
+      `<tr><td>${k}</td><td class="mt-num">${fmtNum(dd.lockup[k].count)}건</td><td class="mt-num">${fmtNum(dd.lockup[k].qty)}주</td></tr>`
+    ).join("");
+    // 38이 보여주는 "총 수량 대비 비율(%)"과 같은 개념 — 확약(15일+1개월+3개월+6개월)
+    // 수량 합을 전체 신청수량으로 나눈 값.
+    const committedQty = ["6개월 확약","3개월 확약","1개월 확약","15일 확약"].reduce((s,k) => s + (dd.lockup[k] ? dd.lockup[k].qty : 0), 0);
+    const commitRatio = dd.demand_summary.total_qty ? (committedQty / dd.demand_summary.total_qty * 100) : null;
+    demandBlock = `
+      <div class="info-section-title">수요예측 참여 결과</div>
+      ${infoGridHtml([
+        ["참여건수", fmtNum(dd.demand_summary.total_count) + "건"],
+        ["신청주식수", fmtNum(dd.demand_summary.total_qty) + "주"],
+        ["경쟁률", dd.demand_summary.competition_rate.toFixed(1) + " : 1"],
+        ["의무보유확약 비율(전체 대비)", commitRatio != null ? commitRatio.toFixed(2) + "%" : "—"],
+      ])}
+      <div class="info-detail-grid">
+        <div>
+          <h4>수요예측 신청가격 분포 (수량 기준)</h4>
+          <table class="mini-table"><thead><tr><th>구분</th><th class="mt-num">신청수량</th><th class="mt-num">비율</th></tr></thead><tbody>${pbRows}</tbody></table>
+        </div>
+        <div>
+          <h4>의무보유확약기간별 참여내역</h4>
+          <table class="mini-table"><thead><tr><th>확약기간</th><th class="mt-num">건수</th><th class="mt-num">신청수량</th></tr></thead><tbody>${lkRows}</tbody></table>
+        </div>
+      </div>
+      <div class="info-source">출처: DART 증권신고서([발행조건확정]) 원문 직접 파싱 · 38커뮤니케이션과 확정 수치가 다르면 이 문서를 우선합니다.</div>
+    `;
+  }
+
+  document.getElementById("info-table").innerHTML = `
+    <div class="info-detail-page">
+      <button class="info-back" id="infoBack">← 목록으로</button>
+      ${filingBanner}
+      <div class="info-detail-head">
+        <div class="info-detail-name">${dl.name}</div>
+        <div class="stc-uw">${dl.uw}</div>
+      </div>
+      ${profileHtml}
+      <div class="info-section-title">공모개요 · 청약일정</div>
+      ${infoGridHtml(overviewPairs)}
+      ${demandBlock}
+    </div>
+  `;
+}
+
+function renderInfoTab(){
+  if (infoDetailIdx != null) renderInfoDetail(infoDetailIdx);
+  else renderInfoList();
+}
+
+/* ---------- 탭 전환 / 종목정보 목록↔상세를 브라우저 히스토리에 반영 ----------
+   지금까지는 탭을 눌러도 URL·히스토리가 안 바뀌어서, 뒤로가기를 눌러도
+   "이전 화면"이 없어 아무 일도 안 일어나거나 아티팩트 밖으로 나가버렸다.
+   history.pushState/popstate로 탭 전환과 종목정보 목록↔상세 전환을 각각
+   히스토리 항목으로 남겨서, 뒤로가기가 실제 "이전 페이지"처럼 동작하게 한다.
+   (월별/주별 달력 안에서 이전·다음 달 넘기는 것까지는 히스토리에 안 남긴다 —
+   그건 "페이지 이동"이라기보다 같은 화면 안에서 훑어보는 동작이라서다.) */
+function applyAppState(state){
+  const key = (state && state.tab) || "calendar";
+  document.querySelectorAll(".tabbtn").forEach(b => b.classList.toggle("active", b.dataset.tab === key));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === "tab-" + key));
+  infoDetailIdx = state && state.infoDetailIdx != null ? state.infoDetailIdx : null;
+  if (STAGE_TABS[key]) renderStageTable(key);
+  if (key === "info") renderInfoTab();
+}
+function navigateTo(state){
+  applyAppState(state);
+  history.pushState(state, "", location.href);
+}
+window.addEventListener("popstate", e => applyAppState(e.state));
+history.replaceState({ tab: "calendar", infoDetailIdx: null }, "", location.href);
+
+document.addEventListener("click", e => {
+  if (e.target.closest("#infoBack")) { navigateTo({ tab: "info", infoDetailIdx: null }); return; }
+  const row = e.target.closest(".info-list-row[data-deal]");
+  if (row) { navigateTo({ tab: "info", infoDetailIdx: Number(row.dataset.deal) }); return; }
+});
+
+/* ---------- tabs ---------- */
+document.getElementById("tabbar").addEventListener("click", e => {
+  const btn = e.target.closest(".tabbtn[data-tab]");
+  if (!btn) return;
+  navigateTo({ tab: btn.dataset.tab, infoDetailIdx });
+});
+
+/* ---------- controls ---------- */
+document.getElementById("prevBtn").addEventListener("click", () => {
+  anchor = viewMode === "month" ? new Date(anchor.getFullYear(), anchor.getMonth()-1, 1) : addDays(anchor, -7);
+  renderCalendar();
+});
+document.getElementById("nextBtn").addEventListener("click", () => {
+  anchor = viewMode === "month" ? new Date(anchor.getFullYear(), anchor.getMonth()+1, 1) : addDays(anchor, 7);
+  renderCalendar();
+});
+document.getElementById("todayJump").addEventListener("click", () => {
+  anchor = new Date(today);
+  renderCalendar();
+});
+document.getElementById("viewSeg").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-view]");
+  if (!btn) return;
+  viewMode = btn.dataset.view;
+  document.querySelectorAll("#viewSeg button").forEach(b => b.classList.toggle("active", b === btn));
+  renderCalendar();
+});
+document.getElementById("filterSeg").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-filter]");
+  if (!btn) return;
+  filterMode = btn.dataset.filter;
+  document.querySelectorAll("#filterSeg button").forEach(b => b.classList.toggle("active", b === btn));
+  rerender();
+});
+
+/* ---------- print ---------- */
+// beforeprint/afterprint는 인쇄 버튼뿐 아니라 브라우저 자체 인쇄(Ctrl+P)에도
+// 걸리므로, 어느 경로로 인쇄하든 그 순간엔 칩 개수 제한을 풀고 인쇄가 끝나면
+// 화면 상태를 원래대로 되돌린다.
+//
+// "무조건 한 장에 들어와야 한다"는 요구를 만족시키기 위해, 인쇄 직전에
+// 실제 렌더된 높이를 재서 폰트·행높이를 역산한다 — 그 달에 주가 5주든
+// 6주든, 어느 하루에 일정이 몇 개가 몰리든 항상 A4 가로 한 장 안에
+// 들어오도록 폰트를 필요한 만큼 줄인다(내용이 잘리는 대신 작아짐).
+const PX_PER_MM = 96 / 25.4;
+const PRINT_MARGIN_MM = 6;
+// 크롬 등 브라우저는 "머리글과 바닥글"(날짜·URL·페이지 번호) 옵션이 기본으로
+// 켜져 있으면 @page margin과 별개로 위아래에 자체 여백을 더 먹는다 — 그
+// 몫까지 감안해 실제 사용 가능 높이를 넉넉히 줄여 잡는다. (사용자가 인쇄
+// 대화상자의 "추가 설정 > 머리글과 바닥글"을 꺼주면 더 여유가 생긴다.)
+const PRINT_SAFETY_MM = 20;
+const PAGE_H_PX = (210 - PRINT_MARGIN_MM * 2 - PRINT_SAFETY_MM) * PX_PER_MM;
+
+function fitPrintToOnePage(){
+  const root = document.documentElement;
+  const y = anchor.getFullYear(), m = anchor.getMonth() + 1;
+  const startWeekday = new Date(y, m - 1, 1).getDay();
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const nWeeks = Math.ceil((startWeekday + daysInMonth) / 7);
+
+  let fontPx = 10, daynumPx = 14;
+  for (let pass = 0; pass < 4; pass++) {
+    root.style.setProperty("--print-font", fontPx + "px");
+    root.style.setProperty("--print-daynum", daynumPx + "px");
+    root.style.setProperty("--print-row-h", "auto");
+    void document.getElementById("calGrid").offsetHeight; // reflow
+
+    const headerH = document.getElementById("printHeader").getBoundingClientRect().height;
+    const dowH = document.getElementById("calDow").getBoundingClientRect().height;
+    const rows = Array.from(document.querySelectorAll("#calGrid .week-row"));
+    const maxRowH = rows.length ? Math.max(...rows.map(r => r.getBoundingClientRect().height)) : 0;
+    const totalH = headerH + dowH + maxRowH * nWeeks + 8; // 여유분
+
+    if (totalH <= PAGE_H_PX || pass === 3) {
+      const gridBudget = Math.max(PAGE_H_PX - headerH - dowH - 4, nWeeks * 20);
+      root.style.setProperty("--print-row-h", Math.floor(gridBudget / nWeeks) + "px");
+      break;
+    }
+    const scale = (PAGE_H_PX / totalH) * 0.96;
+    fontPx = Math.max(5, fontPx * scale);
+    daynumPx = Math.max(7.5, daynumPx * scale);
+  }
+}
+
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+window.addEventListener("beforeprint", () => {
+  printMode = true;
+  renderCalendar();
+  fitPrintToOnePage();
+});
+window.addEventListener("afterprint", () => {
+  printMode = false;
+  const root = document.documentElement;
+  root.style.removeProperty("--print-font");
+  root.style.removeProperty("--print-daynum");
+  root.style.removeProperty("--print-row-h");
+  renderCalendar();
+});
+
+/* ================= PPT 다운로드 =================
+   claude.ai 아티팩트 샌드박스 안에서는 python-pptx 같은 걸 쓸 수 없어서,
+   .pptx(=OOXML을 담은 ZIP)를 이 파일 안에서 직접 바이트 단위로 조립한다.
+   구조는 최소 구성(슬라이드마스터 1개·레이아웃 1개·테마 1개)만 두고,
+   압축은 안 걸고 그냥 저장(STORE)하는 방식이라 별도 라이브러리가 필요 없다.
+   ------------------------------------------------------------------ */
+
+// ---- crc32 + 최소 ZIP(STORE) 라이터 ----
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes){
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function makeZip(files){ // files: [{name, data: Uint8Array}]
+  const enc = new TextEncoder();
+  const localChunks = [], centralChunks = [];
+  let offset = 0;
+  for (const f of files) {
+    const nameBytes = enc.encode(f.name);
+    const data = f.data;
+    const crc = crc32(data);
+    const size = data.length;
+
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true);
+    lh.setUint16(4, 20, true);
+    lh.setUint16(6, 0, true);
+    lh.setUint16(8, 0, true);
+    lh.setUint16(10, 0, true);
+    lh.setUint16(12, 0x21, true);
+    lh.setUint32(14, crc, true);
+    lh.setUint32(18, size, true);
+    lh.setUint32(22, size, true);
+    lh.setUint16(26, nameBytes.length, true);
+    lh.setUint16(28, 0, true);
+    localChunks.push(new Uint8Array(lh.buffer), nameBytes, data);
+
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true);
+    ch.setUint16(4, 20, true);
+    ch.setUint16(6, 20, true);
+    ch.setUint16(8, 0, true);
+    ch.setUint16(10, 0, true);
+    ch.setUint16(12, 0, true);
+    ch.setUint16(14, 0x21, true);
+    ch.setUint32(16, crc, true);
+    ch.setUint32(20, size, true);
+    ch.setUint32(24, size, true);
+    ch.setUint16(28, nameBytes.length, true);
+    ch.setUint16(30, 0, true);
+    ch.setUint16(32, 0, true);
+    ch.setUint16(34, 0, true);
+    ch.setUint16(36, 0, true);
+    ch.setUint32(38, 0, true);
+    ch.setUint32(42, offset, true);
+    centralChunks.push(new Uint8Array(ch.buffer), nameBytes);
+
+    offset += 30 + nameBytes.length + size;
+  }
+  const centralStart = offset;
+  const centralSize = centralChunks.reduce((s, c) => s + c.length, 0);
+
+  const eocd = new DataView(new ArrayBuffer(22));
+  eocd.setUint32(0, 0x06054b50, true);
+  eocd.setUint16(8, files.length, true);
+  eocd.setUint16(10, files.length, true);
+  eocd.setUint32(12, centralSize, true);
+  eocd.setUint32(16, centralStart, true);
+
+  const all = [...localChunks, ...centralChunks, new Uint8Array(eocd.buffer)];
+  const total = all.reduce((s, c) => s + c.length, 0);
+  const out = new Uint8Array(total);
+  let pos = 0;
+  for (const c of all) { out.set(c, pos); pos += c.length; }
+  return out;
+}
+
+// ---- OOXML(pptx) 최소 템플릿 ----
+const EMU_PER_IN = 914400;
+const IN = v => Math.round(v * EMU_PER_IN);
+const SLIDE_W = 12192000, SLIDE_H = 6858000; // 13.333 x 7.5in, 표준 와이드스크린
+
+function xmlEsc(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+let _shapeId = 1;
+function nextShapeId(){ return ++_shapeId; }
+
+function rectShapeXml(x,y,cx,cy,fillHex,lineHex,dash){
+  const fillXml = fillHex ? `<a:solidFill><a:srgbClr val="${fillHex}"/></a:solidFill>` : "<a:noFill/>";
+  const lineXml = lineHex ? `<a:ln w="9525"><a:solidFill><a:srgbClr val="${lineHex}"/></a:solidFill>${dash ? `<a:prstDash val="${dash}"/>` : ""}</a:ln>` : "";
+  const id = nextShapeId();
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="Shape ${id}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>`
+    + `<p:spPr><a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>`
+    + `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${fillXml}${lineXml}</p:spPr>`
+    + `<p:txBody><a:bodyPr/><a:lstStyle/><a:p/></p:txBody></p:sp>`;
+}
+// paragraphs: [[ {text,size,bold,color,align} ... ]]
+function textShapeXml(x,y,cx,cy,paragraphs,{fillHex,lineHex,anchor,autofit=true,wrap=true}={}){
+  const fillXml = fillHex ? `<a:solidFill><a:srgbClr val="${fillHex}"/></a:solidFill>` : "<a:noFill/>";
+  const lineXml = lineHex ? `<a:ln w="9525"><a:solidFill><a:srgbClr val="${lineHex}"/></a:solidFill></a:ln>` : "";
+  const anchorAttr = anchor ? ` anchor="${anchor}"` : "";
+  const wrapAttr = wrap ? ` wrap="square"` : ` wrap="none"`;
+  const autofitXml = autofit ? "<a:normAutofit/>" : "";
+  const body = paragraphs.map(runs => {
+    let algn = null;
+    const runsXml = runs.map(r => {
+      algn = r.align || algn;
+      const bAttr = r.bold ? ` b="1"` : "";
+      return `<a:r><a:rPr sz="${Math.round(r.size*100)}"${bAttr} dirty="0">`
+        + `<a:solidFill><a:srgbClr val="${r.color}"/></a:solidFill>`
+        + `<a:latin typeface="맑은 고딕"/><a:ea typeface="맑은 고딕"/></a:rPr>`
+        + `<a:t>${xmlEsc(r.text)}</a:t></a:r>`;
+    }).join("");
+    const pPr = algn ? `<a:pPr algn="${algn}"/>` : "";
+    return `<a:p>${pPr}${runsXml}</a:p>`;
+  }).join("");
+  const id = nextShapeId();
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="TextBox ${id}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>`
+    + `<p:spPr><a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>`
+    + `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${fillXml}${lineXml}</p:spPr>`
+    + `<p:txBody><a:bodyPr${wrapAttr}${anchorAttr} lIns="45720" tIns="27432" rIns="45720" bIns="27432">${autofitXml}</a:bodyPr>`
+    + `<a:lstStyle/>${body}</p:txBody></p:sp>`;
+}
+
+function buildSlideXml(year, month, dayMap){
+  _shapeId = 1;
+  const shapes = [];
+  const GRID_LEFT = IN(0.3), GRID_TOP = IN(1.25), GRID_WIDTH = IN(12.73);
+  const COL_W = Math.floor(GRID_WIDTH / 7);
+  const HEADER_H = IN(0.35);
+
+  shapes.push(textShapeXml(IN(0.3), IN(0.2), IN(3.2), IN(0.9),
+    [[{text:`${month}월 ${year}`, size:32, bold:true, color:"14171F"}]],
+    {fillHex:"FFF3B0", lineHex:"14171F", anchor:"ctr"}));
+  shapes.push(textShapeXml(IN(3.7), IN(0.2), IN(9.3), IN(0.9),
+    [[{text:"수요예측 마지막날 5시 마감, 첫날 청약, 납입: 12시 이전", size:13, bold:true, color:"14171F"}]],
+    {anchor:"ctr"}));
+
+  WD.forEach((wd, i) => {
+    const color = i===0 ? "A8371F" : (i===6 ? "2F5D85" : "14171F");
+    shapes.push(textShapeXml(GRID_LEFT + i*COL_W, GRID_TOP, COL_W, HEADER_H,
+      [[{text:wd, size:12, bold:true, color, align:"ctr"}]],
+      {fillHex:"F2F3F5", lineHex:"B9BEC6", anchor:"ctr", autofit:false}));
+  });
+
+  const firstOfMonth = new Date(year, month-1, 1);
+  const startWeekday = firstOfMonth.getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
+  const nWeeks = totalCells / 7;
+  const GRID_BODY_TOP = GRID_TOP + HEADER_H;
+  const GRID_BODY_H = SLIDE_H - GRID_BODY_TOP - IN(0.15);
+  const ROW_H = Math.floor(GRID_BODY_H / nWeeks);
+
+  for (let w = 0; w < nWeeks; w++) {
+    for (let c = 0; c < 7; c++) {
+      const dayNum = w*7 + c - startWeekday + 1;
+      const x = GRID_LEFT + c*COL_W, y = GRID_BODY_TOP + w*ROW_H;
+      if (dayNum < 1 || dayNum > daysInMonth) {
+        shapes.push(rectShapeXml(x, y, COL_W, ROW_H, "F4F5F7", "B9BEC6", "dash"));
+        continue;
+      }
+      const dt = new Date(year, month-1, dayNum);
+      const evs = dayMap.get(isoKey(dt)) || [];
+      const lineSize = evs.length <= 4 ? 9 : (evs.length <= 6 ? 8 : 7);
+      const paras = [[{text:String(dayNum), size:16, bold:true, color:"A8371F"}]];
+      evs.forEach(ev => paras.push([{text: ev.text, size: lineSize, bold:false, color: EV_HEX[ev.type]}]));
+      shapes.push(textShapeXml(x, y, COL_W, ROW_H, paras, {fillHex:"FFFFFF", lineHex:"B9BEC6"}));
+    }
+  }
+
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">`
+    + `<p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/>`
+    + shapes.join("") + `</p:spTree></p:cSld></p:sld>`;
+}
+const EV_HEX = { demand:"2F5D85", sub:"8A6118", pay:"A8371F", list:"2E6B4C", lockup:"6A4A8C" };
+
+const PPTX_CONTENT_TYPES = n => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
+  + `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`
+  + `<Default Extension="xml" ContentType="application/xml"/>`
+  + `<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>`
+  + `<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>`
+  + `<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>`
+  + `<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>`
+  + Array.from({length:n}, (_,i)=>`<Override PartName="/ppt/slides/slide${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join("")
+  + `</Types>`;
+const PPTX_ROOT_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+  + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>`
+  + `</Relationships>`;
+const PPTX_PRESENTATION = n => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">`
+  + `<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>`
+  + `<p:sldIdLst>${Array.from({length:n},(_,i)=>`<p:sldId id="${256+i}" r:id="rId${3+i}"/>`).join("")}</p:sldIdLst>`
+  + `<p:sldSz cx="${SLIDE_W}" cy="${SLIDE_H}"/><p:notesSz cx="6858000" cy="9144000"/></p:presentation>`;
+const PPTX_PRESENTATION_RELS = n => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+  + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>`
+  + `<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>`
+  + Array.from({length:n},(_,i)=>`<Relationship Id="rId${3+i}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${i+1}.xml"/>`).join("")
+  + `</Relationships>`;
+const PPTX_SLIDE_MASTER = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<p:sldMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">`
+  + `<p:cSld><p:bg><p:bgRef idx="1001"><a:schemeClr val="bg1"/></p:bgRef></p:bg>`
+  + `<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld>`
+  + `<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/>`
+  + `<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst>`
+  + `<p:txStyles><p:titleStyle><a:lvl1pPr><a:defRPr/></a:lvl1pPr></p:titleStyle><p:bodyStyle><a:lvl1pPr><a:defRPr/></a:lvl1pPr></p:bodyStyle><p:otherStyle><a:lvl1pPr><a:defRPr/></a:lvl1pPr></p:otherStyle></p:txStyles>`
+  + `</p:sldMaster>`;
+const PPTX_SLIDE_MASTER_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+  + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>`
+  + `<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="../theme/theme1.xml"/>`
+  + `</Relationships>`;
+const PPTX_SLIDE_LAYOUT = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" type="blank" preserve="1">`
+  + `<p:cSld name="Blank"><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld>`
+  + `<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`;
+const PPTX_SLIDE_LAYOUT_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+  + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="../slideMasters/slideMaster1.xml"/>`
+  + `</Relationships>`;
+const PPTX_THEME = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Calendar"><a:themeElements>`
+  + `<a:clrScheme name="Calendar"><a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1>`
+  + `<a:dk2><a:srgbClr val="14171F"/></a:dk2><a:lt2><a:srgbClr val="F2F3F5"/></a:lt2>`
+  + `<a:accent1><a:srgbClr val="A8761F"/></a:accent1><a:accent2><a:srgbClr val="2F5D85"/></a:accent2>`
+  + `<a:accent3><a:srgbClr val="A8371F"/></a:accent3><a:accent4><a:srgbClr val="2E6B4C"/></a:accent4>`
+  + `<a:accent5><a:srgbClr val="6A4A8C"/></a:accent5><a:accent6><a:srgbClr val="B9BEC6"/></a:accent6>`
+  + `<a:hlink><a:srgbClr val="0563C1"/></a:hlink><a:folHlink><a:srgbClr val="954F72"/></a:folHlink></a:clrScheme>`
+  + `<a:fontScheme name="Calendar"><a:majorFont><a:latin typeface="Malgun Gothic"/><a:ea typeface="맑은 고딕"/><a:cs typeface=""/></a:majorFont>`
+  + `<a:minorFont><a:latin typeface="Malgun Gothic"/><a:ea typeface="맑은 고딕"/><a:cs typeface=""/></a:minorFont></a:fontScheme>`
+  + `<a:fmtScheme name="Calendar"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst>`
+  + `<a:lnStyleLst><a:ln w="6350"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="12700"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="19050"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst>`
+  + `<a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst>`
+  + `<a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst>`
+  + `</a:fmtScheme></a:themeElements></a:theme>`;
+const PPTX_SLIDE_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+  + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>`
+  + `</Relationships>`;
+
+function buildPptxBytes(months){ // months: [[year,month], ...]
+  const enc = new TextEncoder();
+  const n = months.length;
+  const compactMap = buildCompactEvents(currentFilteredDeals());
+  const files = [
+    { name: "[Content_Types].xml", data: enc.encode(PPTX_CONTENT_TYPES(n)) },
+    { name: "_rels/.rels", data: enc.encode(PPTX_ROOT_RELS) },
+    { name: "ppt/presentation.xml", data: enc.encode(PPTX_PRESENTATION(n)) },
+    { name: "ppt/_rels/presentation.xml.rels", data: enc.encode(PPTX_PRESENTATION_RELS(n)) },
+    { name: "ppt/slideMasters/slideMaster1.xml", data: enc.encode(PPTX_SLIDE_MASTER) },
+    { name: "ppt/slideMasters/_rels/slideMaster1.xml.rels", data: enc.encode(PPTX_SLIDE_MASTER_RELS) },
+    { name: "ppt/slideLayouts/slideLayout1.xml", data: enc.encode(PPTX_SLIDE_LAYOUT) },
+    { name: "ppt/slideLayouts/_rels/slideLayout1.xml.rels", data: enc.encode(PPTX_SLIDE_LAYOUT_RELS) },
+    { name: "ppt/theme/theme1.xml", data: enc.encode(PPTX_THEME) },
+  ];
+  months.forEach(([year, month], i) => {
+    files.push({ name: `ppt/slides/slide${i+1}.xml`, data: enc.encode(buildSlideXml(year, month, compactMap)) });
+    files.push({ name: `ppt/slides/_rels/slide${i+1}.xml.rels`, data: enc.encode(PPTX_SLIDE_RELS) });
+  });
+  return makeZip(files);
+}
+
+function showPptStatus(kind, text){
+  const el = document.getElementById("pptStatus");
+  el.className = "ppt-status show " + kind;
+  el.textContent = text;
+  if (kind === "ok") setTimeout(() => el.classList.remove("show"), 4000);
+}
+// claude.use()/downloads.save()가 어떤 이유로 응답 없이 멈춰버리면(reject도
+// resolve도 안 하면) 버튼이 "생성 중…" 상태로 영원히 멈춰서 사용자 입장에선
+// 그냥 "안 된다"로만 보인다 — 그런 무한 대기를 막기 위해 시간제한을 둔다.
+function withTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error(label + " 응답 시간 초과"), { code: "timeout" })), ms)),
+  ]);
+}
+
+document.getElementById("pptBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("pptBtn");
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = "생성 중…";
+  try {
+    const year = anchor.getFullYear(), month = anchor.getMonth() + 1;
+    const bytes = buildPptxBytes([[year, month]]);
+    console.log("PPT export: claude global?", typeof claude, "has use()?", typeof claude !== "undefined" && !!claude.use);
+    // 알림창(alert)은 샌드박스 안에서 막혀 조용히 무시될 수 있어, 버튼 아래
+    // 상태 메시지로 결과를 항상 눈에 보이게 띄운다.
+    if (typeof claude === "undefined" || !claude.use) {
+      showPptStatus("err", "이 화면(로컬 미리보기 등)에서는 다운로드 기능을 쓸 수 없습니다. 실제 아티팩트 링크에서 눌러주세요.");
+      return;
+    }
+    const downloads = await withTimeout(claude.use("downloads"), 8000, "다운로드 기능 초기화");
+    console.log("PPT export: downloads namespace =", downloads);
+    if (!downloads) {
+      showPptStatus("err", "이 화면에서는 파일 다운로드가 지원되지 않습니다. (capability not granted)");
+      return;
+    }
+    const filename = `공모주캘린더_${year}년${String(month).padStart(2,"0")}월.pptx`;
+    await withTimeout(downloads.save({ filename, data: bytes.buffer }), 20000, "파일 저장");
+    showPptStatus("ok", `${year}년 ${month}월 PPT를 저장했습니다.`);
+  } catch (e) {
+    console.error("PPT export failed:", e);
+    const code = e && e.code;
+    if (code === "declined") {
+      showPptStatus("info", "다운로드를 취소했습니다.");
+    } else if (code === "extension_not_enabled") {
+      showPptStatus("err", "이 화면에서는 .pptx 다운로드가 아직 활성화되어 있지 않습니다 (계정/워크스페이스 설정 문제로 보입니다 — 대신 '이미지로 다운로드'를 써보세요).");
+    } else if (code === "too_large") {
+      showPptStatus("err", "파일이 너무 커서(16MB 초과) 저장할 수 없습니다.");
+    } else if (code) {
+      showPptStatus("err", `PPT 저장에 실패했습니다 (${code}): ${e.message || ""}`);
+    } else {
+      showPptStatus("err", "PPT 생성 중 문제가 발생했습니다: " + (e && e.message ? e.message : String(e)));
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
+});
+
+/* ================= 이미지(PNG) 다운로드 =================
+   .pptx는 "확장 형식"이라 계정/워크스페이스에서 활성화가 안 되어 있으면
+   막힐 수 있다(extension_not_enabled). png는 항상 허용되는 기본 형식이라,
+   그 경우에도 쓸 수 있는 대체 수단으로 캔버스에 같은 달력을 그려 제공한다. */
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxY){
+  const words = text.split(" ");
+  let line = "", curY = y, lines = 0;
+  for (let n = 0; n < words.length; n++) {
+    const test = line + words[n] + " ";
+    if (ctx.measureText(test).width > maxWidth && n > 0) {
+      if (curY <= maxY) ctx.fillText(line, x, curY);
+      line = words[n] + " ";
+      curY += lineHeight;
+      lines++;
+    } else {
+      line = test;
+    }
+  }
+  if (curY <= maxY) ctx.fillText(line, x, curY);
+  lines++;
+  return lines;
+}
+
+function drawCalendarCanvas(year, month){
+  const SCALE = 2;
+  const W = 1400, H = 787;
+  const canvas = document.createElement("canvas");
+  canvas.width = W * SCALE; canvas.height = H * SCALE;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(SCALE, SCALE);
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = "alphabetic";
+
+  ctx.fillStyle = "#fff3b0";
+  ctx.fillRect(20, 16, 230, 58);
+  ctx.strokeStyle = "#14171f"; ctx.lineWidth = 2;
+  ctx.strokeRect(20, 16, 230, 58);
+  ctx.fillStyle = "#14171f";
+  ctx.font = "bold 28px \"Malgun Gothic\",\"맑은 고딕\",sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(`${month}월 ${year}`, 35, 52);
+
+  ctx.font = "bold 13px \"Malgun Gothic\",sans-serif";
+  ctx.fillText("수요예측 마지막날 5시 마감, 첫날 청약, 납입: 12시 이전", 262, 40);
+  ctx.strokeStyle = "#14171f"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(262, 68); ctx.lineTo(W - 20, 68); ctx.stroke();
+
+  const gridLeft = 20, gridTop = 92, gridWidth = W - 40;
+  const colW = gridWidth / 7, headerH = 26;
+  const DOWL = ["일","월","화","수","목","금","토"];
+  DOWL.forEach((wd, i) => {
+    const x = gridLeft + i * colW;
+    ctx.fillStyle = "#f2f3f5"; ctx.fillRect(x, gridTop, colW, headerH);
+    ctx.strokeStyle = "#b9bec6"; ctx.lineWidth = 1; ctx.strokeRect(x, gridTop, colW, headerH);
+    ctx.fillStyle = i === 0 ? "#a8371f" : (i === 6 ? "#2f5d85" : "#14171f");
+    ctx.font = "bold 12px \"Malgun Gothic\",sans-serif";
+    ctx.fillText(wd, x + 8, gridTop + headerH / 2 + 4);
+  });
+
+  const firstOfMonth = new Date(year, month - 1, 1);
+  const startWeekday = firstOfMonth.getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const nWeeks = Math.ceil((startWeekday + daysInMonth) / 7);
+  const bodyTop = gridTop + headerH;
+  const bodyH = H - bodyTop - 16;
+  const rowH = bodyH / nWeeks;
+  const compactMap = buildCompactEvents(currentFilteredDeals());
+  const EV_COLOR = { demand:"#2f5d85", sub:"#8a6118", pay:"#a8371f", list:"#2e6b4c", lockup:"#6a4a8c" };
+
+  for (let w = 0; w < nWeeks; w++) {
+    for (let c = 0; c < 7; c++) {
+      const dayNum = w*7 + c - startWeekday + 1;
+      const x = gridLeft + c*colW, y = bodyTop + w*rowH;
+      ctx.strokeStyle = "#b9bec6"; ctx.lineWidth = 1;
+      if (dayNum < 1 || dayNum > daysInMonth) {
+        ctx.fillStyle = "#f4f5f7"; ctx.fillRect(x, y, colW, rowH);
+        ctx.strokeRect(x, y, colW, rowH);
+        continue;
+      }
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(x, y, colW, rowH);
+      ctx.strokeRect(x, y, colW, rowH);
+      const dt = new Date(year, month - 1, dayNum);
+      const evs = compactMap.get(isoKey(dt)) || [];
+      ctx.fillStyle = "#a8371f";
+      ctx.font = "bold 13px \"Malgun Gothic\",sans-serif";
+      ctx.fillText(String(dayNum), x + 6, y + 15);
+
+      let ly = y + 29;
+      const maxY = y + rowH - 4;
+      const lineSize = evs.length <= 4 ? 10.5 : (evs.length <= 7 ? 9 : 7.5);
+      const lineHeight = lineSize + 3;
+      ctx.font = `${lineSize}px "Malgun Gothic",sans-serif`;
+      for (const ev of evs) {
+        if (ly > maxY) break;
+        ctx.fillStyle = EV_COLOR[ev.type];
+        const nLines = wrapCanvasText(ctx, ev.text, x + 6, ly, colW - 10, lineHeight, maxY);
+        ly += nLines * lineHeight;
+      }
+    }
+  }
+  return canvas;
+}
+
+document.getElementById("pngBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("pngBtn");
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = "생성 중…";
+  try {
+    const year = anchor.getFullYear(), month = anchor.getMonth() + 1;
+    const canvas = drawCalendarCanvas(year, month);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    if (typeof claude === "undefined" || !claude.use) {
+      showPptStatus("err", "이 화면(로컬 미리보기 등)에서는 다운로드 기능을 쓸 수 없습니다. 실제 아티팩트 링크에서 눌러주세요.");
+      return;
+    }
+    const downloads = await withTimeout(claude.use("downloads"), 8000, "다운로드 기능 초기화");
+    if (!downloads) {
+      showPptStatus("err", "이 화면에서는 파일 다운로드가 지원되지 않습니다.");
+      return;
+    }
+    const filename = `공모주캘린더_${year}년${String(month).padStart(2,"0")}월.png`;
+    await withTimeout(downloads.save({ filename, data: blob }), 20000, "파일 저장");
+    showPptStatus("ok", `${year}년 ${month}월 캘린더 이미지를 저장했습니다.`);
+  } catch (e) {
+    console.error("PNG export failed:", e);
+    const code = e && e.code;
+    if (code === "declined") showPptStatus("info", "다운로드를 취소했습니다.");
+    else showPptStatus("err", "이미지 생성 중 문제가 발생했습니다: " + (e && e.message ? e.message : String(e)));
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
+});
+
+/* ---------- init ---------- */
+renderDow();
+rerender();
+renderAllStageTables();
+renderInfoTab();
+</script>
