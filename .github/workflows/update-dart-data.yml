@@ -1,4 +1,4 @@
-name: DART 데이터 갱신
+name: 공모주 캘린더 자동 갱신
 
 on:
   schedule:
@@ -19,8 +19,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run DART update
-        id: update
+      - name: Run calendar update (38.co.kr 딜 목록/일정)
+        id: calendar
+        run: |
+          set +e
+          python update_calendar_data.py
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Run DART update (종목 상세정보)
+        id: dart
         env:
           DART_API_KEY: ${{ secrets.DART_API_KEY }}
         run: |
@@ -30,10 +38,10 @@ jobs:
           exit 0
 
       - name: Commit and push if changed
-        if: steps.update.outputs.exit_code == '0'
+        if: steps.calendar.outputs.exit_code == '0' || steps.dart.outputs.exit_code == '0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "DART 데이터 자동 갱신 ($(date -u +%Y-%m-%d))"
+          git commit -m "공모주 캘린더 자동 갱신 ($(date -u +%Y-%m-%d))"
           git push
