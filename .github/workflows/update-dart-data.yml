@@ -39,11 +39,30 @@ jobs:
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
           exit 0
 
+      - name: Stamp last-updated date
+        run: |
+          python - <<'PY'
+          import re, datetime, zoneinfo
+          path = "ipo_calendar.html"
+          kst = datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d")
+          html = open(path, encoding="utf-8").read()
+          html = re.sub(
+              r'(// AUTO-GENERATED:LAST_UPDATED:START\nconst LAST_UPDATED_KST = ")[^"]*(";)',
+              lambda m: m.group(1) + kst + m.group(2),
+              html,
+          )
+          open(path, "w", encoding="utf-8").write(html)
+          PY
+
       - name: Commit and push if changed
         if: steps.calendar.outputs.exit_code == '0' || steps.dart.outputs.exit_code == '0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "공모주 캘린더 자동 갱신 ($(date -u +%Y-%m-%d))"
-          git push
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 커밋 생략"
+          else
+            git commit -m "공모주 캘린더 자동 갱신 ($(date -u +%Y-%m-%d))"
+            git push
+          fi

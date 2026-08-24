@@ -53,6 +53,7 @@
   .title-block h1 { margin: 0 0 6px; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; text-wrap: balance; }
   .title-block p { margin: 0; color: var(--ink-dim); font-size: 12.5px; }
   .title-block p b { color: var(--ink); font-weight: 600; }
+  .badges { display: flex; gap: 10px; }
   .today-badge {
     font-family: var(--font-mono); font-variant-numeric: tabular-nums;
     background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
@@ -60,6 +61,7 @@
   }
   .today-badge .label { display: block; font-family: var(--font-kr); font-size: 11px; color: var(--ink-faint); margin-bottom: 2px; }
   .today-badge .date { font-size: 16px; font-weight: 700; color: var(--accent); }
+  .today-badge.updated .date { color: var(--ink-dim); }
 
   /* ---- today digest ---- */
   .digest {
@@ -467,9 +469,15 @@
     <div class="title-block">
       <h1>공모주 캘린더</h1>
     </div>
-    <div class="today-badge">
-      <span class="label">오늘</span>
-      <span class="date" id="todayDate">—</span>
+    <div class="badges">
+      <div class="today-badge updated">
+        <span class="label">최근 업데이트</span>
+        <span class="date" id="lastUpdatedDate">—</span>
+      </div>
+      <div class="today-badge">
+        <span class="label">오늘</span>
+        <span class="date" id="todayDate">—</span>
+      </div>
     </div>
   </header>
 
@@ -637,6 +645,13 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// GitHub Actions가 매 실행마다(변경 유무와 무관하게) 이 마커 사이를
+// 그날 KST 날짜로 덮어써서, 화면의 "최근 업데이트" 배지가 데이터가
+// 언제까지 확인됐는지 보여준다.
+// AUTO-GENERATED:LAST_UPDATED:START
+const LAST_UPDATED_KST = "2026-08-24";
+// AUTO-GENERATED:LAST_UPDATED:END
+
 // dealSizeM = 38커뮤니케이션 수요예측일정 기준 공모금액(백만원)
 // update_calendar_data.py가 이 마커 사이를 통째로 교체한다 — 수동으로 고쳐도
 // 스크립트가 다음 실행 때 덮어쓴다는 점을 알아둘 것.
@@ -1659,6 +1674,7 @@ function kstDateString(){
 }
 const today = d(kstDateString());
 document.getElementById("todayDate").textContent = fmt(today) + " " + today.getFullYear() + "년";
+document.getElementById("lastUpdatedDate").textContent = fmtMaybeYear(LAST_UPDATED_KST);
 
 /* ---------- 저장 토스트 ---------- 어디서 뭘 입력하든(단계별 표 셀, 배정 NAV,
    캘린더 패널) 저장되면 같은 방식으로 짧게 알려준다. */
