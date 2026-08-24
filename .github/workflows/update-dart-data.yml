@@ -44,11 +44,13 @@ jobs:
           python - <<'PY'
           import re, datetime, zoneinfo
           path = "ipo_calendar.html"
-          kst = datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d")
+          WD = ["월", "화", "수", "목", "금", "토", "일"]  # Python weekday(): Mon=0..Sun=6
+          now = datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Seoul"))
+          stamp = f"{now.month}.{now.day}({WD[now.weekday()]}) {now.strftime('%H:%M')}"
           html = open(path, encoding="utf-8").read()
           html = re.sub(
               r'(// AUTO-GENERATED:LAST_UPDATED:START\nconst LAST_UPDATED_KST = ")[^"]*(";)',
-              lambda m: m.group(1) + kst + m.group(2),
+              lambda m: m.group(1) + stamp + m.group(2),
               html,
           )
           open(path, "w", encoding="utf-8").write(html)
