@@ -39,6 +39,16 @@ jobs:
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
           exit 0
 
+      - name: Run mezzanine update (CB·BW·EB 시장 전역 스캔)
+        id: mezz
+        env:
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+        run: |
+          set +e
+          python update_mezzanine_data.py
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
       - name: Stamp last-updated date
         run: |
           python - <<'PY'

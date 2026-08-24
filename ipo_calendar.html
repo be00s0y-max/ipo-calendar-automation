@@ -22,6 +22,7 @@
     --ev-list: #8b93a1;
     --ev-lockup: #b0b6c0;
     --ev-custom: #3d8b6f;
+    --ev-mezz: #8a5a2f;
     --cell-out: #f8f9fb;
     --backdrop: rgba(20,23,31,0.45);
 
@@ -314,6 +315,14 @@
   }
   .chip.custom:hover { background: color-mix(in srgb, var(--chip-color) 12%, var(--surface)); }
   .chip.custom::before { border-radius: 2px; }
+  /* 메자닌 칩은 공모주 칩 아래, 얇은 구분선을 두고 별도 구획에 쌓는다. */
+  .cell .mezz-group { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--border); }
+  .cell .mezz-group:empty { display: none; }
+  .chip.mezz { background: color-mix(in srgb, var(--chip-color) 10%, var(--surface)); }
+  .chip.mezz .mkind {
+    flex: 0 0 auto; font-size: 9px; font-weight: 800; color: var(--accent-ink);
+    background: var(--chip-color); border-radius: 3px; padding: 0 4px; letter-spacing: 0.02em;
+  }
   .chip.done { opacity: 0.55; background: var(--surface-3); color: var(--ink-faint); }
   .chip.done::before { background: var(--ink-faint); }
   .cal-grid.week .chip { font-size: 12px; padding: 5px 8px; }
@@ -423,6 +432,7 @@
       --ev-list: #2e6b4c;
       --ev-lockup: #6a4a8c;
       --ev-custom: #1f7a52;
+      --ev-mezz: #8a5a2f;
       --cell-out: #f4f5f7;
       --cal-yellow: #fff3b0;
       /* JS가 인쇄 직전(beforeprint) 실제 렌더 높이를 재서 이 값들을 채운다 —
@@ -544,6 +554,7 @@
       <span><i style="background:var(--ev-list)"></i>상장</span>
       <span><i style="background:var(--ev-lockup)"></i>락업해제 (15일·1개월·3개월·6개월)</span>
       <span><i style="background:var(--ev-custom)"></i>내 일정</span>
+      <span><i style="background:var(--ev-mezz)"></i>메자닌(CB·BW·EB, 칸 아래쪽)</span>
     </div>
   </div>
 
@@ -719,6 +730,24 @@ const deals = [
   { name: "멜콘(구.에스앤에프솔루션)", uw: "대신증권", demand: ["2026-09-16","2026-09-22"], sub: ["2026-10-01", "2026-10-02"], pay: "2026-10-07", list: null, dealSizeM: 26750 },
 ];
 // AUTO-GENERATED:DEALS:END
+
+// 메자닌(CB/전환사채·BW/신주인수권부사채·EB/교환사채) — 시장 전역에서 새로
+// 나온 발행결정 공시를 update_mezzanine_data.py가 찾아서 채운다. deals와
+// 달리 정해진 종목 리스트가 없어 회사명이 겹칠 수 있으니, name만으로는
+// 못 찾고 별도 배열로 관리한다.
+// AUTO-GENERATED:MEZZ_DEALS:START
+const mezzDeals = [
+  {"name": "엔투텍", "kind": "CB", "round": "18", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 12000000000, "board_date": "2026-08-20", "sub_date": "2026-08-20", "pay_date": "2026-09-10", "maturity_date": "2029-09-10", "coupon_rate": "4", "ytm_rate": "4", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1519, "conv_period_start": "2027-09-10", "conv_period_end": "2029-08-10", "refixing": "아니오", "rcept_no": "20260820000442"},
+  {"name": "넥스턴앤롤코리아", "kind": "CB", "round": "9", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 11000000000, "board_date": "2026-08-20", "sub_date": "2026-08-20", "pay_date": "2026-08-28", "maturity_date": "2029-08-28", "coupon_rate": "1.00", "ytm_rate": "4.00", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 2500, "conv_period_start": "2027-08-28", "conv_period_end": "2029-07-28", "refixing": "아니오", "rcept_no": "20260820000407"},
+  {"name": "넥스턴앤롤코리아", "kind": "CB", "round": "10", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 9000000000, "board_date": "2026-08-20", "sub_date": "2026-08-20", "pay_date": "2026-08-28", "maturity_date": "2029-08-28", "coupon_rate": "2.00", "ytm_rate": "6.00", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 2500, "conv_period_start": "2027-08-28", "conv_period_end": "2029-07-28", "refixing": "아니오", "rcept_no": "20260820000411"},
+  {"name": "핑거", "kind": "CB", "round": "8", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 30000000000, "board_date": "2026-08-21", "sub_date": "2026-08-21", "pay_date": "2026-08-31", "maturity_date": "2029-08-31", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 10860, "conv_period_start": "2027-08-31", "conv_period_end": "2029-07-31", "refixing": "아니오", "rcept_no": "20260821000597"},
+  {"name": "KX하이텍", "kind": "CB", "round": "14", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 11000000000, "board_date": "2026-08-19", "sub_date": "2026-08-27", "pay_date": "2026-08-27", "maturity_date": "2031-08-27", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1264, "conv_period_start": "2027-08-27", "conv_period_end": "2031-07-27", "refixing": "아니오", "rcept_no": "20260819000309"},
+  {"name": "동방", "kind": "CB", "round": "118", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 12000000000, "board_date": "2026-08-20", "sub_date": "2026-08-28", "pay_date": "2026-08-28", "maturity_date": "2031-08-28", "coupon_rate": "0.0", "ytm_rate": "1.5", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 2213, "conv_period_start": "2027-08-28", "conv_period_end": "2031-07-28", "refixing": "아니오", "rcept_no": "20260820000396"},
+  {"name": "아이엠티", "kind": "CB", "round": "6", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-08-20", "sub_date": "2026-08-28", "pay_date": "2026-08-28", "maturity_date": "2031-08-28", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 12661, "conv_period_start": "2027-08-28", "conv_period_end": "2031-07-28", "refixing": "아니오", "rcept_no": "20260820000313"},
+  {"name": "이오플로우", "kind": "CB", "round": "6", "bondName": "무기명식 무보증 사모 전환사채\n(채권형 신종자본증권)", "amount": 2000000000, "board_date": "2026-08-18", "sub_date": "2026-09-09", "pay_date": "2026-09-09", "maturity_date": "2056-09-08", "coupon_rate": "0.00", "ytm_rate": "5.00", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 6000, "conv_period_start": "2027-09-09", "conv_period_end": "2056-06-08", "refixing": "아니오", "rcept_no": "20260818000256"},
+  {"name": "엔투텍", "kind": "CB", "round": "19", "bondName": "무기명식 무보증 공모 전환사채", "amount": 2999000000, "board_date": "2026-08-20", "sub_date": "2026-09-10", "pay_date": "2029-09-10", "maturity_date": "2029-09-10", "coupon_rate": "4", "ytm_rate": "4", "method": "공모", "underwriter": null, "conv_rate": "100", "conv_price": 1519, "conv_period_start": "2026-10-10", "conv_period_end": "2029-08-10", "refixing": "아니오", "rcept_no": "20260820000443"},
+];
+// AUTO-GENERATED:MEZZ_DEALS:END
 
 // DART OpenAPI(opendart.fss.or.kr)로 조회한 [발행조건확정]증권신고서(지분증권/증권예탁증권)
 // 원문을 직접 파싱한 값 — 확정공모가·수요예측 참여내역·가격분포·의무보유확약비율의
@@ -1856,6 +1885,36 @@ function eventsByDay(events){
   return map;
 }
 
+/* ---------- 메자닌(CB/BW/EB) ----------
+   deals(공모주)와 완전히 별도 배열 — 캘린더 칸 안에서도 위(공모주)/아래(메자닌)
+   구획을 나눠서 보여준다. 이사회결의일·납입일 두 시점만 캘린더에 올리고,
+   만기·전환청구기간 등 나머지 조건은 칩 title(툴팁)로만 노출한다(너무 먼
+   미래 일정이라 캘린더가 붐비는 걸 피하려고). */
+function buildMezzEvents(){
+  const events = [];
+  mezzDeals.forEach((dl, idx) => {
+    const push = (dt, type) => { if (dt) events.push({ dealIdx: idx, date: d(dt), type }); };
+    push(dl.board_date, "board");
+    push(dl.pay_date, "pay");
+  });
+  return events;
+}
+function fmtEok(amount){
+  if (amount == null) return "";
+  return (amount / 1e8).toFixed(1).replace(/\.0$/, "") + "억";
+}
+function mezzChipHtml(ev){
+  const dl = mezzDeals[ev.dealIdx];
+  const label = ev.type === "board" ? "발행결정" : "납입";
+  const amt = fmtEok(dl.amount);
+  const tail = [dl.kind + " " + dl.round + "회", amt, label].filter(Boolean).join(" · ");
+  return `<button class="chip mezz" style="--chip-color:var(--ev-mezz)" data-mezz="${ev.dealIdx}" title="${dl.name} ${tail}"><span class="mkind">${dl.kind}</span>${dl.name}<span class="clabel">${label}</span></button>`;
+}
+function mezzChipsHtml(evs){
+  if (!evs || !evs.length) return "";
+  return `<div class="mezz-group">${evs.map(mezzChipHtml).join("")}</div>`;
+}
+
 /* ---------- today digest ---------- */
 // 오늘 할 일 칩이 어느 단계 탭에 해당하는지 보고, 그 탭에 값이 채워졌으면
 // "완료"로 본다 — 예: 납입일 칩은 납입 탭에서 납입확인 체크(또는 납입금액
@@ -1914,7 +1973,7 @@ function renderDow(){
   document.getElementById("calDow").innerHTML = WD.map(w => `<div>${w}</div>`).join("");
 }
 
-function renderCell(dt, inCurrentPeriod, dayMap, compactMap){
+function renderCell(dt, inCurrentPeriod, dayMap, compactMap, mezzDayMap){
   const key = isoKey(dt);
   const isToday = key === isoKey(today);
   const holidayName = isHoliday(dt);
@@ -1953,6 +2012,7 @@ function renderCell(dt, inCurrentPeriod, dayMap, compactMap){
         ${holidayName ? `<span class="holiday-name">${holidayName}</span>` : ""}
       </div>
       ${chips}
+      ${mezzChipsHtml(mezzDayMap.get(key))}
     </div>
   `;
 }
@@ -1962,6 +2022,7 @@ function renderCalendar(){
   grid.className = "cal-grid " + viewMode;
   const events = buildEvents();
   const dayMap = eventsByDay(events);
+  const mezzDayMap = eventsByDay(buildMezzEvents());
   const compactMap = printMode ? buildCompactEvents(currentFilteredDeals()) : null;
   const periodLabel = document.getElementById("periodLabel");
   let periodHasToday = false;
@@ -1980,7 +2041,7 @@ function renderCalendar(){
       let rowCells = [];
       for (let i = 0; i < 7; i++) {
         const dt = addDays(gridStart, w * 7 + i);
-        rowCells.push(renderCell(dt, dt.getMonth() === m, dayMap, compactMap));
+        rowCells.push(renderCell(dt, dt.getMonth() === m, dayMap, compactMap, mezzDayMap));
       }
       weekRows.push(rowCells);
     }
@@ -1991,7 +2052,7 @@ function renderCalendar(){
     let rowCells = [];
     for (let i = 0; i < 7; i++) {
       const dt = addDays(weekStart, i);
-      rowCells.push(renderCell(dt, true, dayMap, compactMap));
+      rowCells.push(renderCell(dt, true, dayMap, compactMap, mezzDayMap));
     }
     weekRows.push(rowCells);
     const weekEnd = addDays(weekStart, 6);
