@@ -21,6 +21,7 @@
     --ev-pay: #234b8c;
     --ev-list: #8b93a1;
     --ev-lockup: #b0b6c0;
+    --ev-custom: #3d8b6f;
     --cell-out: #f8f9fb;
     --backdrop: rgba(20,23,31,0.45);
 
@@ -307,6 +308,12 @@
   .chip:hover { background: color-mix(in srgb, var(--chip-color) 28%, var(--surface)); }
   .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--chip-color); flex: 0 0 auto; }
   .chip .clabel { color: var(--ink-faint); font-weight: 500; flex: 0 0 auto; }
+  /* 딜 칩은 채워진 배경, 내 일정 칩은 점선 테두리로 한눈에 구분되게 한다. */
+  .chip.custom {
+    background: var(--surface); border: 1px dashed var(--chip-color);
+  }
+  .chip.custom:hover { background: color-mix(in srgb, var(--chip-color) 12%, var(--surface)); }
+  .chip.custom::before { border-radius: 2px; }
   .chip.done { opacity: 0.55; background: var(--surface-3); color: var(--ink-faint); }
   .chip.done::before { background: var(--ink-faint); }
   .cal-grid.week .chip { font-size: 12px; padding: 5px 8px; }
@@ -415,6 +422,7 @@
       --ev-pay: #a8371f;
       --ev-list: #2e6b4c;
       --ev-lockup: #6a4a8c;
+      --ev-custom: #1f7a52;
       --cell-out: #f4f5f7;
       --cal-yellow: #fff3b0;
       /* JS가 인쇄 직전(beforeprint) 실제 렌더 높이를 재서 이 값들을 채운다 —
@@ -513,6 +521,7 @@
         <button data-filter="all" class="active">전체</button>
         <button data-filter="joined">참여</button>
       </div>
+      <button class="today-jump" id="addEventBtn">+ 내 일정</button>
       <button class="today-jump" id="printBtn">인쇄</button>
       <button class="today-jump" id="pptBtn">PPT 다운로드</button>
       <button class="today-jump" id="pngBtn">이미지로 다운로드</button>
@@ -534,6 +543,7 @@
       <span><i style="background:var(--ev-pay)"></i>납입</span>
       <span><i style="background:var(--ev-list)"></i>상장</span>
       <span><i style="background:var(--ev-lockup)"></i>락업해제 (15일·1개월·3개월·6개월)</span>
+      <span><i style="background:var(--ev-custom)"></i>내 일정</span>
     </div>
   </div>
 
@@ -638,6 +648,32 @@
       <div class="save-row">
         <button class="save-btn" id="saveBtn">저장</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="backdrop" id="ceBackdrop"></div>
+<div class="panel" id="cePanel">
+  <div class="panel-head">
+    <button class="panel-close" id="cePanelClose">✕</button>
+    <div class="pname">내 일정</div>
+    <div class="puw">이 링크를 보는 모두에게 공유됩니다. 자동 갱신되는 딜 데이터와는 별도로 보관돼요.</div>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section">
+      <h3>새 일정 추가</h3>
+      <label class="field"><span class="flabel">제목</span><input type="text" id="ceTitle" placeholder="예: 팀 미팅"></label>
+      <label class="field"><span class="flabel">시작일</span><input type="date" id="ceStart"></label>
+      <label class="field"><span class="flabel">종료일 (선택, 하루짜리면 비워두세요)</span><input type="date" id="ceEnd"></label>
+      <label class="field"><span class="flabel">메모 (선택)</span><input type="text" id="ceMemo" placeholder="예: 3층 회의실"></label>
+      <div class="save-row">
+        <button class="save-btn" id="ceSaveBtn">추가</button>
+      </div>
+      <div id="ceStatus" style="font-size:11.5px;color:var(--ink-faint);margin-top:8px"></div>
+    </div>
+    <div class="panel-section">
+      <h3>등록된 일정</h3>
+      <div id="ceList"></div>
     </div>
   </div>
 </div>
@@ -1907,7 +1943,7 @@ function renderCell(dt, inCurrentPeriod, dayMap, compactMap){
     const meta = TYPE_META[ev.type];
     const dl = deals[ev.dealIdx];
     return `<button class="chip" style="--chip-color:${meta.color}" data-deal="${ev.dealIdx}" title="${dl.name} · ${meta.label}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
-  }).join("");
+  }).join("") + customChipsHtml(key);
 
   return `
     <div class="cell ${inCurrentPeriod ? "" : "out"} ${isToday ? "is-today" : ""} ${holidayName ? "holiday" : ""} ${dt.getDay() === 0 ? "sunday" : ""}">
@@ -2066,6 +2102,136 @@ document.addEventListener("click", e => {
   const chip = e.target.closest(".chip[data-deal]");
   if (chip) { openPanel(Number(chip.dataset.deal)); return; }
 });
+
+/* ---------- 내 일정 (커스텀 이벤트) ----------
+   딜 데이터(deals)는 GitHub Actions가 주기적으로 통째로 덮어쓰기 때문에,
+   여기 추가하는 일정은 별도 파일(custom-events.json)에 담아 artifact 파일
+   저장 기능으로 이 아티팩트를 보는 모두에게 공유되도록 저장한다 — 참여
+   정보(records)처럼 브라우저 로컬에만 남기지 않는다. */
+let customEvents = [];
+let ceCanWrite = true;
+
+function customChipsHtml(key){
+  return customEvents
+    .filter(ce => key >= ce.start && key <= (ce.end || ce.start))
+    .map(ce => `<button class="chip custom" style="--chip-color:var(--ev-custom)" data-ce="${ce.id}" title="${ce.title}${ce.memo ? " · " + ce.memo : ""}">${ce.title}</button>`)
+    .join("");
+}
+
+async function loadCustomEvents(){
+  try {
+    const res = await fetch("custom-events.json", { cache: "no-store" });
+    if (res.ok) customEvents = await res.json();
+  } catch (e) { /* 아직 저장된 적 없음(첫 사용) 또는 오프라인 — 빈 목록으로 시작 */ }
+  renderCeList();
+  rerender();
+}
+
+function renderCeList(){
+  const el = document.getElementById("ceList");
+  if (!customEvents.length) { el.innerHTML = `<span class="none">등록된 일정이 없습니다</span>`; return; }
+  el.innerHTML = customEvents
+    .slice()
+    .sort((a, b) => a.start.localeCompare(b.start))
+    .map(ce => `
+      <div class="sched-row">
+        <span class="k"><i style="background:var(--ev-custom)"></i>${ce.title}</span>
+        <span class="v">${fmtMaybeYear(ce.start)}${ce.end && ce.end !== ce.start ? " ~ " + fmtMaybeYear(ce.end) : ""}
+          <button class="panel-close" style="position:static;width:22px;height:22px;margin-left:6px" data-ce-del="${ce.id}" title="삭제">✕</button>
+        </span>
+      </div>
+    `).join("");
+}
+
+async function saveCustomEvents(){
+  const status = document.getElementById("ceStatus");
+  if (!ceCanWrite) { status.textContent = "이 화면에서는 저장할 수 없어요 (읽기 전용 보기)."; return false; }
+  try {
+    const artifact = (window.claude && window.claude.use) ? await window.claude.use("artifact") : null;
+    if (!artifact) { status.textContent = "이 화면에서는 공유 저장 기능을 쓸 수 없어요."; ceCanWrite = false; return false; }
+    await artifact.publish({ "custom-events.json": JSON.stringify(customEvents) });
+    status.textContent = "";
+    return true;
+  } catch (err) {
+    if (err && (err.code === "not_writer" || err.code === "not_granted" || err.code === "capability_disabled")) {
+      ceCanWrite = false;
+      status.textContent = "이 화면에서는 저장할 수 없어요 (읽기 전용 보기).";
+    } else if (err && err.code === "rate_limited") {
+      status.textContent = "저장이 너무 잦아요 — 잠시 후 다시 시도해주세요.";
+    } else {
+      status.textContent = "저장에 실패했어요. 잠시 후 다시 시도해주세요.";
+    }
+    return false;
+  }
+}
+
+function openCePanel(){
+  document.getElementById("ceTitle").value = "";
+  document.getElementById("ceStart").value = isoKey(today);
+  document.getElementById("ceEnd").value = "";
+  document.getElementById("ceMemo").value = "";
+  document.getElementById("ceStatus").textContent = "";
+  renderCeList();
+  document.getElementById("cePanel").classList.add("show");
+  document.getElementById("ceBackdrop").classList.add("show");
+}
+function closeCePanel(){
+  document.getElementById("cePanel").classList.remove("show");
+  document.getElementById("ceBackdrop").classList.remove("show");
+}
+document.getElementById("addEventBtn").addEventListener("click", openCePanel);
+document.getElementById("cePanelClose").addEventListener("click", closeCePanel);
+document.getElementById("ceBackdrop").addEventListener("click", closeCePanel);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeCePanel(); });
+
+document.getElementById("ceSaveBtn").addEventListener("click", async () => {
+  const title = document.getElementById("ceTitle").value.trim();
+  const start = document.getElementById("ceStart").value;
+  const end = document.getElementById("ceEnd").value;
+  const memo = document.getElementById("ceMemo").value.trim();
+  const status = document.getElementById("ceStatus");
+  if (!title || !start) { status.textContent = "제목과 시작일은 필수예요."; return; }
+  if (end && end < start) { status.textContent = "종료일이 시작일보다 빠를 수 없어요."; return; }
+  const entry = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2)),
+    title, start, end: end || start, memo,
+  };
+  const prev = customEvents.slice();
+  customEvents.push(entry);
+  renderCeList();
+  rerender();
+  status.textContent = "저장 중…";
+  const ok = await saveCustomEvents();
+  if (ok) {
+    showToast("일정이 추가되었습니다");
+    document.getElementById("ceTitle").value = "";
+    document.getElementById("ceMemo").value = "";
+  } else {
+    customEvents = prev; // 저장 실패 시 되돌림
+    renderCeList();
+    rerender();
+  }
+});
+
+document.getElementById("ceList").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-ce-del]");
+  if (!btn) return;
+  const id = btn.dataset.ceDel;
+  const prev = customEvents.slice();
+  customEvents = customEvents.filter(ce => ce.id !== id);
+  renderCeList();
+  rerender();
+  const ok = await saveCustomEvents();
+  if (ok) { showToast("일정이 삭제되었습니다"); }
+  else { customEvents = prev; renderCeList(); rerender(); }
+});
+
+document.addEventListener("click", e => {
+  const ceChip = e.target.closest(".chip[data-ce]");
+  if (ceChip) { openCePanel(); return; }
+});
+
+loadCustomEvents();
 
 /* ================= 단계별 탭 (신청 → 참여 → 배정 → 청약 → 납입 → 상장) =================
    각 탭은 종목×해당 단계 필드를 표(엑셀 느낌)로 보여주고, 셀에 바로 입력하면
