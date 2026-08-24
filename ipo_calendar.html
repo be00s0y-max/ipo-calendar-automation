@@ -111,10 +111,19 @@
   .ppt-status.info { color: var(--ink-dim); }
 
   /* ---- tabs ---- */
-  .tabbar {
-    display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--border);
-    overflow-x: auto;
+  .tabbar-row {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+    margin-bottom: 24px; border-bottom: 1px solid var(--border);
   }
+  .tabbar {
+    display: flex; gap: 2px; overflow-x: auto; border-bottom: none;
+  }
+  .global-search {
+    flex: 0 0 auto; width: 220px; margin-bottom: 6px; padding: 7px 10px;
+    border-radius: 7px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--ink); font-size: 12.5px; font-family: var(--font-kr);
+  }
+  .global-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   .tabbtn {
     border: none; background: none; color: var(--ink-faint); font-size: 13.5px; font-weight: 700;
     padding: 10px 16px; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent;
@@ -445,7 +454,7 @@
 
     body { font-size: 11px; }
     .wrap { max-width: none; padding: 0; }
-    .today-badge, .digest, .controls, footer, .backdrop, .panel, .ppt-status, .legend, .tabbar { display: none !important; }
+    .today-badge, .digest, .controls, footer, .backdrop, .panel, .ppt-status, .legend, .tabbar-row { display: none !important; }
     .tab-panel { display: none !important; }
     .tab-panel#tab-calendar { display: block !important; }
 
@@ -501,16 +510,20 @@
 
   <div class="digest" id="digest"></div>
 
-  <div class="tabbar" id="tabbar">
-    <button class="tabbtn active" data-tab="calendar">캘린더</button>
-    <button class="tabbtn" data-tab="info">종목정보</button>
-    <span class="tab-divider"></span>
-    <button class="tabbtn" data-tab="apply">수요예측 신청</button>
-    <button class="tabbtn" data-tab="join">수요예측 참여</button>
-    <button class="tabbtn" data-tab="allot">배정</button>
-    <button class="tabbtn" data-tab="sub">청약</button>
-    <button class="tabbtn" data-tab="pay">납입</button>
-    <button class="tabbtn" data-tab="list">상장</button>
+  <div class="tabbar-row">
+    <div class="tabbar" id="tabbar">
+      <button class="tabbtn active" data-tab="calendar">캘린더</button>
+      <button class="tabbtn" data-tab="info">종목정보</button>
+      <button class="tabbtn" data-tab="mezz">메자닌</button>
+      <span class="tab-divider"></span>
+      <button class="tabbtn" data-tab="apply">수요예측 신청</button>
+      <button class="tabbtn" data-tab="join">수요예측 참여</button>
+      <button class="tabbtn" data-tab="allot">배정</button>
+      <button class="tabbtn" data-tab="sub">청약</button>
+      <button class="tabbtn" data-tab="pay">납입</button>
+      <button class="tabbtn" data-tab="list">상장</button>
+    </div>
+    <input type="text" id="globalSearch" class="global-search" placeholder="종목명 검색 (종목정보·메자닌)">
   </div>
 
   <div class="tab-panel active" id="tab-calendar">
@@ -577,6 +590,14 @@
       확정 수치가 38커뮤니케이션과 다르면 <b>이 문서(DART, 법적 공시)를 우선</b>합니다 — 38은 아직 신고서가 없는 종목의 일정 확인용으로만 씁니다.</p>
     </div>
     <div class="stage-table-wrap" id="info-table"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-mezz">
+    <div class="stage-head">
+      <h2>메자닌 <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— DART 발행결정 공시 기준</span></h2>
+      <p>전환사채(CB)·신주인수권부사채(BW)·교환사채(EB) 발행결정 공시를 시장 전역에서 찾아 모은 목록입니다. 공모주와 달리 참여 트래킹 대상이 아니라 참고용 정보입니다 — 조기상환청구권(풋옵션) 행사일은 DART에 없어 아직 포함하지 못했습니다.</p>
+    </div>
+    <div class="stage-table-wrap" id="mezz-table"></div>
   </div>
 
   <div class="tab-panel" id="tab-apply">
@@ -1850,6 +1871,7 @@ function persistNav(){
 let viewMode = "month";   // "month" | "week"
 let filterMode = "all";   // "all" | "joined"
 let showMezz = true;      // 메자닌(CB/BW/EB) 칩 표시 여부
+let searchQuery = "";     // 종목정보·메자닌 탭 공용 종목명 검색어
 let anchor = new Date(today);
 let printMode = false;    // true 동안은 압축 표기(print-line)로 렌더링해 인쇄물에서 글씨가 잘리지 않게 한다
 
@@ -1903,6 +1925,9 @@ function buildMezzEvents(){
     push(dl.pay_date, "pay");
   });
   return events;
+}
+function matchesSearch(name){
+  return !searchQuery || (name || "").toLowerCase().includes(searchQuery.toLowerCase());
 }
 function fmtEok(amount){
   if (amount == null) return "";
@@ -2717,6 +2742,7 @@ function renderInfoList(){
   const container = document.getElementById("info-table");
   const rows = deals
     .slice()
+    .filter(dl => matchesSearch(dl.name))
     .sort((a, b) => d(a.demand[0]) - d(b.demand[0]))
     .map(dl => {
       const idx = deals.indexOf(dl);
@@ -2737,9 +2763,54 @@ function renderInfoList(){
         <td>${rec.joined ? `<span style="color:var(--ink);font-weight:700">참여</span>` : `<span class="info-none">—</span>`}</td>
       </tr>`;
     }).join("");
+  if (!rows) { container.innerHTML = `<div class="info-none" style="padding:16px">"${searchQuery}" 검색 결과가 없습니다.</div>`; return; }
   container.innerHTML = `<table class="stage-table"><thead><tr>
     <th>종목 / 주간사</th><th>수요예측일</th><th>청약일</th><th>납입일</th><th>상장일</th>
     <th>공모금액(백만원)</th><th>확정공모가</th><th>경쟁률</th><th>가격분포</th><th>확약비율</th><th>참여</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ---------- 메자닌(CB/BW/EB) 종목정보 ----------
+   IPO 종목정보 탭과 달리 상세 페이지는 없다 — mezzDeals 필드가 이미 평평해서
+   (참여내역·가격분포처럼 별도로 펼쳐볼 서브데이터가 없음) 목록 표 하나로 충분. */
+function mezzRateCell(coupon, ytm){
+  if (coupon == null && ytm == null) return "—";
+  if (coupon === ytm) return `연 ${coupon}%`;
+  return `표면 ${coupon ?? "—"}% · 만기 ${ytm ?? "—"}%`;
+}
+function renderMezzTab(){
+  const container = document.getElementById("mezz-table");
+  const rows = mezzDeals
+    .slice()
+    .filter(dl => matchesSearch(dl.name))
+    .sort((a, b) => (b.pay_date || b.board_date || "").localeCompare(a.pay_date || a.board_date || ""))
+    .map(dl => {
+      const convStr = dl.conv_price
+        ? `${fmtNum(dl.conv_price)}원${dl.conv_period_start ? ` (${fmtMaybeYear(dl.conv_period_start)}~${fmtMaybeYear(dl.conv_period_end)})` : ""}`
+        : "—";
+      const filingUrl = dl.rcept_no ? `https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${dl.rcept_no}` : null;
+      return `<tr>
+        <td><div class="stc-name">${dl.name}</div><div class="stc-uw">${dl.round}회 ${dl.kind}${dl.underwriter ? " · " + dl.underwriter : ""}</div></td>
+        <td class="stc-ref">${dl.board_date ? fmtMaybeYear(dl.board_date) : "—"}</td>
+        <td class="stc-ref">${dl.pay_date ? fmtMaybeYear(dl.pay_date) : "—"}</td>
+        <td class="stc-ref">${dl.maturity_date ? fmtMaybeYear(dl.maturity_date) : "—"}</td>
+        <td class="stc-ref">${fmtEok(dl.amount) || "—"}</td>
+        <td class="stc-ref">${mezzRateCell(dl.coupon_rate, dl.ytm_rate)}</td>
+        <td class="stc-ref">${convStr}</td>
+        <td class="stc-ref">${dl.method || "—"}</td>
+        <td class="stc-ref">${dl.refixing === "예" ? "있음" : (dl.refixing === "아니오" ? "없음" : "—")}</td>
+        <td>${filingUrl ? `<a href="${filingUrl}" target="_blank" rel="noopener" style="color:var(--accent)">원문</a>` : `<span class="info-none">—</span>`}</td>
+      </tr>`;
+    }).join("");
+  if (!rows) {
+    container.innerHTML = mezzDeals.length
+      ? `<div class="info-none" style="padding:16px">"${searchQuery}" 검색 결과가 없습니다.</div>`
+      : `<div class="info-none" style="padding:16px">아직 잡힌 메자닌 딜이 없습니다.</div>`;
+    return;
+  }
+  container.innerHTML = `<table class="stage-table"><thead><tr>
+    <th>종목 / 회차·종류</th><th>이사회결의일</th><th>납입일</th><th>만기일</th>
+    <th>발행금액</th><th>이자율</th><th>전환·행사·교환가액</th><th>방식</th><th>리픽싱</th><th>원문</th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -2872,6 +2943,7 @@ function applyAppState(state){
   infoDetailIdx = state && state.infoDetailIdx != null ? state.infoDetailIdx : null;
   if (STAGE_TABS[key]) renderStageTable(key);
   if (key === "info") renderInfoTab();
+  if (key === "mezz") renderMezzTab();
 }
 function navigateTo(state){
   applyAppState(state);
@@ -2926,6 +2998,11 @@ document.getElementById("mezzSeg").addEventListener("click", e => {
   showMezz = btn.dataset.mezz === "show";
   document.querySelectorAll("#mezzSeg button").forEach(b => b.classList.toggle("active", b === btn));
   rerender();
+});
+document.getElementById("globalSearch").addEventListener("input", e => {
+  searchQuery = e.target.value.trim();
+  renderInfoTab();
+  renderMezzTab();
 });
 
 /* ---------- print ---------- */
