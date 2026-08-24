@@ -57,7 +57,12 @@ jobs:
           PY
 
       - name: Commit and push if changed
-        if: steps.calendar.outputs.exit_code == '0' || steps.dart.outputs.exit_code == '0'
+        # 예전엔 calendar/dart 스크립트의 exit code로 이 스텝 실행 여부를 걸렀는데,
+        # 두 스크립트 다 "새 소식 없음"을 알리려고 일부러 0이 아닌 코드로 끝나는
+        # 경우가 있어서 — 실제로 뭔가 바뀐 날(예: 최근 업데이트 시각 스탬프만
+        # 바뀐 날)에도 이 스텝 자체가 스킵돼버리는 문제가 있었다. 아래
+        # `git diff --cached --quiet` 체크가 이미 "진짜 바뀐 게 있는지"를
+        # 훨씬 정확하게 판단하므로, 이 스텝은 항상 실행하고 그 체크에 맡긴다.
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
