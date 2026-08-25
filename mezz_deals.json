@@ -39,7 +39,7 @@
     "conv_period_start": "2027-09-10",
     "conv_period_end": "2029-08-10",
     "refixing": "아니오",
-    "rcept_no": "20260820000442"
+    "rcept_no": "20260825000349"
   },
   "01105621_CB_19": {
     "name": "엔투텍",
@@ -49,7 +49,7 @@
     "amount": 2999000000,
     "board_date": "2026-08-20",
     "sub_date": "2026-09-10",
-    "pay_date": "2029-09-10",
+    "pay_date": "2026-09-10",
     "maturity_date": "2029-09-10",
     "coupon_rate": "4",
     "ytm_rate": "4",
@@ -60,7 +60,7 @@
     "conv_period_start": "2026-10-10",
     "conv_period_end": "2029-08-10",
     "refixing": "아니오",
-    "rcept_no": "20260820000443"
+    "rcept_no": "20260825000352"
   },
   "00416414_CB_9": {
     "name": "넥스턴앤롤코리아",
