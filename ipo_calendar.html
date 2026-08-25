@@ -770,7 +770,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "8.25(화) 17:13";
+const LAST_UPDATED_KST = "8.26(수) 08:53";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -778,6 +778,13 @@ const LAST_UPDATED_KST = "8.25(화) 17:13";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "8.26(수) 08:53",
+    "items": [
+      "수요예측 결과 반영 1건 — 스카이랩스",
+      "확정 증권신고서 공시 1건 — 스카이랩스"
+    ]
+  },
   {
     "at": "8.25(화) 16:26",
     "items": [
@@ -1750,6 +1757,96 @@ const dartData = {
       "미확약": {
         "count": 1713,
         "qty": 1520725400
+      }
+    }
+  },
+  "스카이랩스": {
+    "offering": {
+      "offer_shares": 2000000,
+      "offer_amount_expected": 26000000000,
+      "offer_amount_final": 20000000000,
+      "subscription": {
+        "inst_start": "2026년 08월 26일(수)",
+        "inst_end": "2026년 08월 27일(목)"
+      },
+      "payment_date": "2026년 08월 31일"
+    },
+    "demand_summary": {
+      "total_count": 246,
+      "total_qty": 95112000,
+      "competition_rate": 63.41
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 1,
+        "count_pct": "0.41%",
+        "qty": 4000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "16,000원(상단) 초과",
+        "count": 6,
+        "count_pct": "2.44%",
+        "qty": 1099000,
+        "qty_pct": "1.16%"
+      },
+      {
+        "band": "16,000원(상단)",
+        "count": 67,
+        "count_pct": "27.24%",
+        "qty": 23865000,
+        "qty_pct": "25.09%"
+      },
+      {
+        "band": "13,000원(하단) 초과 ~ 16,000원(상단) 미만",
+        "count": 2,
+        "count_pct": "0.81%",
+        "qty": 27000,
+        "qty_pct": "0.03%"
+      },
+      {
+        "band": "13,000원(하단)",
+        "count": 74,
+        "count_pct": "30.08%",
+        "qty": 12943000,
+        "qty_pct": "13.61%"
+      },
+      {
+        "band": "13,000원(하단) 미만",
+        "count": 96,
+        "count_pct": "39.02%",
+        "qty": 57174000,
+        "qty_pct": "60.11%"
+      },
+      {
+        "band": "합계",
+        "count": 246,
+        "count_pct": "100.00%",
+        "qty": 95112000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 3,
+        "qty": 155000
+      },
+      "15일 확약": {
+        "count": 2,
+        "qty": 9000
+      },
+      "미확약": {
+        "count": 241,
+        "qty": 94948000
       }
     }
   }
@@ -2825,7 +2922,8 @@ const DART_FILING_URL = {
   "에이치엘지노믹스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260710000294",
   "레메디": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260626000241",
   "레몬헬스케어": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260623000235",
-  "매드업": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260622000382"
+  "매드업": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260622000382",
+  "스카이랩스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260825000417"
 };
 // AUTO-GENERATED:FILING_URL:END
 
@@ -3008,6 +3106,15 @@ const COMPANY_PROFILE = {
     "hm_url": "madup.com/",
     "phn_no": "02-1522-1060",
     "est_dt": "20150203"
+  },
+  "스카이랩스": {
+    "stock_code": "",
+    "ceo_nm": "이병환 ",
+    "corp_cls": "E",
+    "adres": "경기도 성남시 분당구 판교로255번길 58 (삼평동) 씨즈타워 703호",
+    "hm_url": "",
+    "phn_no": "031-8092-3290",
+    "est_dt": "20150908"
   }
 };
 // AUTO-GENERATED:COMPANY_PROFILE:END

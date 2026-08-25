@@ -898,5 +898,95 @@
         "qty": 1520725400
       }
     }
+  },
+  "스카이랩스": {
+    "offering": {
+      "offer_shares": 2000000,
+      "offer_amount_expected": 26000000000,
+      "offer_amount_final": 20000000000,
+      "subscription": {
+        "inst_start": "2026년 08월 26일(수)",
+        "inst_end": "2026년 08월 27일(목)"
+      },
+      "payment_date": "2026년 08월 31일"
+    },
+    "demand_summary": {
+      "total_count": 246,
+      "total_qty": 95112000,
+      "competition_rate": 63.41
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 1,
+        "count_pct": "0.41%",
+        "qty": 4000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "16,000원(상단) 초과",
+        "count": 6,
+        "count_pct": "2.44%",
+        "qty": 1099000,
+        "qty_pct": "1.16%"
+      },
+      {
+        "band": "16,000원(상단)",
+        "count": 67,
+        "count_pct": "27.24%",
+        "qty": 23865000,
+        "qty_pct": "25.09%"
+      },
+      {
+        "band": "13,000원(하단) 초과 ~ 16,000원(상단) 미만",
+        "count": 2,
+        "count_pct": "0.81%",
+        "qty": 27000,
+        "qty_pct": "0.03%"
+      },
+      {
+        "band": "13,000원(하단)",
+        "count": 74,
+        "count_pct": "30.08%",
+        "qty": 12943000,
+        "qty_pct": "13.61%"
+      },
+      {
+        "band": "13,000원(하단) 미만",
+        "count": 96,
+        "count_pct": "39.02%",
+        "qty": 57174000,
+        "qty_pct": "60.11%"
+      },
+      {
+        "band": "합계",
+        "count": 246,
+        "count_pct": "100.00%",
+        "qty": 95112000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 3,
+        "qty": 155000
+      },
+      "15일 확약": {
+        "count": 2,
+        "qty": 9000
+      },
+      "미확약": {
+        "count": 241,
+        "qty": 94948000
+      }
+    }
   }
 }
