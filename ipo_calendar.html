@@ -579,7 +579,8 @@
 
   <footer>
     <b>락업해제일</b>은 상장일 기준 15일·1개월·3개월·6개월 네 가지를 모두 표시했습니다 — 계산된 날짜가 주말·공휴일(거래소 휴장일)이면 다음 영업일로 옮겨서 표시합니다(그날은 매도할 수 없으니까요). 실제 확약 기간은 종목 상세 패널에서 지정할 수 있고, 지정하면 해당 구간에 "확약" 표시가 붙습니다.<br>
-    <b>참여 정보(참여가격·수량·확약여부)</b>는 종목 카드를 클릭해 입력·저장하며, <b>이 브라우저에만</b> 저장됩니다(localStorage) — 다른 기기·브라우저에서는 보이지 않고, 캐시를 지우면 사라집니다. "내 일정"만 예외로, 이 링크를 보는 모두에게 공유됩니다.<br>
+    <b>참여 정보(참여가격·수량·확약여부·배정·기준 NAV)</b>와 <b>내 일정</b>은 이 링크를 보는 <b>모든 기기에 공유 저장</b>됩니다 — 입력 후 잠깐(2~3초) 있으면 자동으로 올라가고, 다른 기기에서 열면 그대로 보입니다. 인터넷이 끊겼거나 읽기 전용으로 열린 경우엔 그 기기에만 저장되고 안내 문구가 뜹니다.<br>
+    <b>엑셀 다운로드</b>는 위 참여 정보와 DART 공모정보를 <b>IPO&amp;SPAC_운용현황</b>의 IPO(연도) 시트와 같은 열 구성으로 내보냅니다 — 받은 파일을 그 시트에 그대로 붙여넣으면 됩니다.<br>
     공모주 신규 딜/일정은 <b>38.co.kr</b>, 확정 조건(확정공모가·수요예측 참여내역 등)과 메자닌(CB·BW·EB) 발행 조건은 <b>금융감독원 DART</b> 공시를 매 영업일 아침 8시·오후 3시(KST) 두 번 자동 조회해 반영합니다. 투자 권유가 아니며, 법적 공시 원문과 다르면 DART 원문이 우선합니다.
   </footer>
 
@@ -1850,8 +1851,20 @@ function currentFilteredDeals(){
   return deals.filter(dl => filterMode !== "joined" || records[dl.name].joined);
 }
 
-/* ---------- participation records (localStorage) ---------- */
+/* ---------- participation records ----------
+   저장은 두 겹이다:
+     1) localStorage — 즉시 저장. 오프라인·로컬 미리보기에서도 동작하고,
+        공유 저장이 실패해도 최소한 이 기기에서는 안 잃는다.
+     2) records.json (아티팩트 공유 파일) — 이 링크를 보는 모든 기기에서
+        같은 값이 보이게 하는 진짜 저장소. 입력할 때마다 올리면 너무 잦아서
+        마지막 입력 후 잠깐 쉬었다가(디바운스) 한 번에 올린다.
+
+   덮어쓰기 사고를 막으려고 updatedAt(저장 시각)을 같이 들고 다닌다 —
+   이 기기의 localStorage가 서버 것보다 더 최신이면 서버 것을 안 덮어쓴다.
+   (예: 비행기에서 입력하고 나중에 켰을 때 옛날 값이 밀고 들어오는 상황) */
 const STORAGE_KEY = "ipoCalendarRecords_v1";
+const STAMP_KEY = "ipoCalendarRecordsAt_v1";
+const SHARED_RECORDS_FILE = "records.json";
 const DEFAULT_JOINED = ["니어스랩","케이앤에스아이앤씨","딜리셔스","인제니아테라퓨틱스","에이치엘지노믹스"];
 function loadStoredRecords(){
   try {
@@ -1859,8 +1872,83 @@ function loadStoredRecords(){
     return raw ? JSON.parse(raw) : {};
   } catch(e) { return {}; }
 }
+function localStamp(){
+  try { return Number(localStorage.getItem(STAMP_KEY)) || 0; } catch(e) { return 0; }
+}
+let recordsUpdatedAt = localStamp();
+
 function persistRecords(){
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); } catch(e) {}
+  recordsUpdatedAt = Date.now();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    localStorage.setItem(STAMP_KEY, String(recordsUpdatedAt));
+  } catch(e) {}
+  scheduleRecordsSync();
+}
+
+/* ---- 공유 저장(아티팩트 파일) ---- */
+let recordsCanWrite = true;   // 읽기 전용 보기에서 false로 내려간다
+let recordsSyncTimer = null;
+let recordsSyncWarned = false;
+
+function scheduleRecordsSync(){
+  if (!recordsCanWrite) return;
+  clearTimeout(recordsSyncTimer);
+  // 표 셀을 연달아 고칠 때 매번 올리지 않도록, 손을 뗀 뒤 2.5초 후 한 번만.
+  recordsSyncTimer = setTimeout(syncRecordsNow, 2500);
+}
+
+async function syncRecordsNow(){
+  if (!recordsCanWrite) return;
+  try {
+    const artifact = (window.claude && window.claude.use) ? await window.claude.use("artifact") : null;
+    if (!artifact) { recordsCanWrite = false; return; }
+    const payload = JSON.stringify({ updatedAt: recordsUpdatedAt, nav: navValue, records });
+    await artifact.publish({ [SHARED_RECORDS_FILE]: payload });
+  } catch (err) {
+    const code = err && err.code;
+    if (code === "conflict") return;   // 다른 기기가 먼저 저장 — 그쪽이 이김, 곧 새로고침됨
+    if (code === "not_writer" || code === "not_granted" || code === "capability_disabled") {
+      recordsCanWrite = false;
+      if (!recordsSyncWarned) {
+        recordsSyncWarned = true;
+        showToast("이 화면에서는 이 기기에만 저장됩니다");
+      }
+      return;
+    }
+    if (code === "rate_limited") { scheduleRecordsSync(); return; }  // 잠시 뒤 재시도
+    console.error("records sync failed:", err);
+  }
+}
+
+// 시작할 때 공유 저장본을 읽어와서, 이 기기 값보다 최신이면 덮어쓴다.
+async function loadSharedRecords(){
+  try {
+    const res = await fetch(SHARED_RECORDS_FILE, { cache: "no-store" });
+    if (!res.ok) return;                       // 아직 한 번도 저장 안 된 상태
+    const data = await res.json();
+    if (!data || !data.records) return;
+    if ((data.updatedAt || 0) < recordsUpdatedAt) return;  // 이 기기가 더 최신 → 유지
+
+    Object.keys(data.records).forEach(name => {
+      // deals에 없는(지나간) 종목도 그대로 남겨둬야 나중에 안 사라진다.
+      records[name] = Object.assign(records[name] || {}, data.records[name]);
+    });
+    if (data.nav != null) {
+      navValue = data.nav;
+      const navInput = document.getElementById("navInput");
+      if (navInput) navInput.value = navValue;
+    }
+    recordsUpdatedAt = data.updatedAt || recordsUpdatedAt;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      localStorage.setItem(STAMP_KEY, String(recordsUpdatedAt));
+    } catch(e) {}
+
+    rerender();
+    if (STAGE_TABS) Object.keys(STAGE_TABS).forEach(renderStageTable);
+    renderInfoTab();
+  } catch (e) { /* 로컬 미리보기 등 — localStorage 값 그대로 사용 */ }
 }
 const stored = loadStoredRecords();
 const records = {};
@@ -1888,7 +1976,13 @@ let navValue = (() => {
   try { const v = localStorage.getItem(NAV_KEY); return v ? Number(v) : null; } catch(e) { return null; }
 })();
 function persistNav(){
-  try { localStorage.setItem(NAV_KEY, navValue == null ? "" : String(navValue)); } catch(e) {}
+  // NAV도 records.json에 같이 실어 보낸다(기기마다 다르면 배정비중이 달라지니까).
+  recordsUpdatedAt = Date.now();
+  try {
+    localStorage.setItem(NAV_KEY, navValue == null ? "" : String(navValue));
+    localStorage.setItem(STAMP_KEY, String(recordsUpdatedAt));
+  } catch(e) {}
+  scheduleRecordsSync();
 }
 
 /* ---------- state ---------- */
@@ -2374,6 +2468,7 @@ document.addEventListener("click", e => {
 });
 
 loadCustomEvents();
+loadSharedRecords();
 
 /* ================= 단계별 탭 (신청 → 참여 → 배정 → 청약 → 납입 → 상장) =================
    각 탭은 종목×해당 단계 필드를 표(엑셀 느낌)로 보여주고, 셀에 바로 입력하면
