@@ -324,6 +324,7 @@
   .cell .mezz-group { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--border); }
   .cell .mezz-group:empty { display: none; }
   .chip.mezz { background: color-mix(in srgb, var(--chip-color) 10%, var(--surface)); }
+  .chip.mezz.put { border: 1px dashed var(--chip-color); }
   .chip.mezz .mkind {
     flex: 0 0 auto; font-size: 9px; font-weight: 800; color: var(--accent-ink);
     background: var(--chip-color); border-radius: 3px; padding: 0 4px; letter-spacing: 0.02em;
@@ -564,7 +565,7 @@
       <span><i style="background:var(--ev-list)"></i>상장</span>
       <span><i style="background:var(--ev-lockup)"></i>락업해제 (15일·1개월·3개월·6개월)</span>
       <span><i style="background:var(--ev-custom)"></i>내 일정</span>
-      <span><i style="background:var(--ev-mezz)"></i>메자닌(CB·BW·EB, 칸 아래쪽)</span>
+      <span><i style="background:var(--ev-mezz)"></i>메자닌(CB·BW·EB, 칸 아래쪽 — 점선 테두리는 풋옵션 행사일)</span>
     </div>
   </div>
 
@@ -589,7 +590,7 @@
   <div class="tab-panel" id="tab-mezz">
     <div class="stage-head">
       <h2>메자닌 <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— DART 발행결정 공시 기준</span></h2>
-      <p>전환사채(CB)·신주인수권부사채(BW)·교환사채(EB) 발행결정 공시를 시장 전역에서 찾아 모은 목록입니다. 공모주와 달리 참여 트래킹 대상이 아니라 참고용 정보입니다 — 조기상환청구권(풋옵션) 행사일은 DART에 없어 아직 포함하지 못했습니다.</p>
+      <p>전환사채(CB)·신주인수권부사채(BW)·교환사채(EB) 발행결정 공시를 시장 전역에서 찾아 모은 목록입니다. 공모주와 달리 참여 트래킹 대상이 아니라 참고용 정보입니다. 조기상환청구권(풋옵션) 일정은 DART에 없어 예탁결제원(KSD) SEIBRO에서 따로 가져오는데, 발행 직후엔 KSD 등록 전이라 "미확인"으로 보일 수 있고(며칠 뒤 자동으로 채워짐), 애초에 풋옵션이 없는 종목은 "만기까지 없음"으로 표시됩니다.</p>
       <input type="text" id="mezzSearch" class="tab-search" placeholder="종목명 검색">
     </div>
     <div class="stage-table-wrap" id="mezz-table"></div>
@@ -1927,6 +1928,9 @@ function buildMezzEvents(){
     const push = (dt, type) => { if (dt) events.push({ dealIdx: idx, date: d(dt), type }); };
     push(dl.board_date, "board");
     push(dl.pay_date, "pay");
+    // 조기상환청구권(풋옵션) 행사시작일 — update_put_schedule.py가 KSD SEIBRO에서
+    // 채워준다. 매달/매분기 반복되는 종목도 있어 "다음 도래일" 하나만 올린다.
+    push(dl.put_start, "put");
   });
   return events;
 }
@@ -1937,12 +1941,15 @@ function fmtEok(amount){
   if (amount == null) return "";
   return (amount / 1e8).toFixed(1).replace(/\.0$/, "") + "억";
 }
+const MEZZ_TYPE_LABEL = { board: "발행결정", pay: "납입", put: "풋옵션 행사" };
 function mezzChipHtml(ev){
   const dl = mezzDeals[ev.dealIdx];
-  const label = ev.type === "board" ? "발행결정" : "납입";
+  const label = MEZZ_TYPE_LABEL[ev.type] || ev.type;
   const amt = fmtEok(dl.amount);
-  const tail = [dl.kind + " " + dl.round + "회", amt, label].filter(Boolean).join(" · ");
-  return `<button class="chip mezz" style="--chip-color:var(--ev-mezz)" data-mezz="${ev.dealIdx}" title="${dl.name} ${tail}"><span class="mkind">${dl.kind}</span>${dl.name}<span class="clabel">${label}</span></button>`;
+  const tail = ev.type === "put"
+    ? [dl.kind + " " + dl.round + "회", `~${fmtMaybeYear(dl.put_end)} 행사`, dl.put_redemption ? `상환 ${fmtMaybeYear(dl.put_redemption)}` : null].filter(Boolean).join(" · ")
+    : [dl.kind + " " + dl.round + "회", amt, label].filter(Boolean).join(" · ");
+  return `<button class="chip mezz${ev.type === "put" ? " put" : ""}" style="--chip-color:var(--ev-mezz)" data-mezz="${ev.dealIdx}" title="${dl.name} ${tail}"><span class="mkind">${dl.kind}</span>${dl.name}<span class="clabel">${label}</span></button>`;
 }
 function mezzChipsHtml(evs){
   if (!showMezz || !evs || !evs.length) return "";
@@ -2793,6 +2800,9 @@ function renderMezzTab(){
         ? `${fmtNum(dl.conv_price)}원${dl.conv_period_start ? ` (${fmtMaybeYear(dl.conv_period_start)}~${fmtMaybeYear(dl.conv_period_end)})` : ""}`
         : "—";
       const filingUrl = dl.rcept_no ? `https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${dl.rcept_no}` : null;
+      const putStr = dl.put_start
+        ? `${fmtMaybeYear(dl.put_start)}~${fmtMaybeYear(dl.put_end)}${dl.put_redemption ? ` (상환 ${fmtMaybeYear(dl.put_redemption)})` : ""}`
+        : `<span class="info-none">${"put_start" in dl ? "만기까지 없음" : "미확인"}</span>`;
       return `<tr>
         <td><div class="stc-name">${dl.name}</div><div class="stc-uw">${dl.round}회 ${dl.kind}${dl.underwriter ? " · " + dl.underwriter : ""}</div></td>
         <td class="stc-ref">${dl.board_date ? fmtMaybeYear(dl.board_date) : "—"}</td>
@@ -2803,6 +2813,7 @@ function renderMezzTab(){
         <td class="stc-ref">${convStr}</td>
         <td class="stc-ref">${dl.method || "—"}</td>
         <td class="stc-ref">${dl.refixing === "예" ? "있음" : (dl.refixing === "아니오" ? "없음" : "—")}</td>
+        <td class="stc-ref">${putStr}</td>
         <td>${filingUrl ? `<a href="${filingUrl}" target="_blank" rel="noopener" style="color:var(--accent)">원문</a>` : `<span class="info-none">—</span>`}</td>
       </tr>`;
     }).join("");
@@ -2814,7 +2825,7 @@ function renderMezzTab(){
   }
   container.innerHTML = `<table class="stage-table"><thead><tr>
     <th>종목 / 회차·종류</th><th>이사회결의일</th><th>납입일</th><th>만기일</th>
-    <th>발행금액</th><th>이자율</th><th>전환·행사·교환가액</th><th>방식</th><th>리픽싱</th><th>원문</th>
+    <th>발행금액</th><th>이자율</th><th>전환·행사·교환가액</th><th>방식</th><th>리픽싱</th><th>다음 풋옵션</th><th>원문</th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 

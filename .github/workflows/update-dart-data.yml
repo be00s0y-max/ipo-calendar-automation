@@ -49,6 +49,14 @@ jobs:
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
           exit 0
 
+      - name: Run put-schedule update (KSD SEIBRO 조기상환 일정)
+        id: put
+        run: |
+          set +e
+          python update_put_schedule.py
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
       - name: Stamp last-updated date
         run: |
           python - <<'PY'
