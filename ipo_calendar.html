@@ -551,7 +551,7 @@
       </div>
       <button class="today-jump" id="addEventBtn">+ 내 일정</button>
       <button class="today-jump" id="printBtn">인쇄</button>
-      <button class="today-jump" id="xlsxBtn">엑셀 다운로드</button>
+      <button class="today-jump" id="xlsxBtn">엑셀용 CSV 다운로드</button>
       <button class="today-jump" id="pptBtn">PPT 다운로드</button>
       <button class="today-jump" id="pngBtn">이미지로 다운로드</button>
     </div>
@@ -580,7 +580,7 @@
   <footer>
     <b>락업해제일</b>은 상장일 기준 15일·1개월·3개월·6개월 네 가지를 모두 표시했습니다 — 계산된 날짜가 주말·공휴일(거래소 휴장일)이면 다음 영업일로 옮겨서 표시합니다(그날은 매도할 수 없으니까요). 실제 확약 기간은 종목 상세 패널에서 지정할 수 있고, 지정하면 해당 구간에 "확약" 표시가 붙습니다.<br>
     <b>참여 정보(참여가격·수량·확약여부·배정·기준 NAV)</b>와 <b>내 일정</b>은 이 링크를 보는 <b>모든 기기에 공유 저장</b>됩니다 — 입력 후 잠깐(2~3초) 있으면 자동으로 올라가고, 다른 기기에서 열면 그대로 보입니다. 인터넷이 끊겼거나 읽기 전용으로 열린 경우엔 그 기기에만 저장되고 안내 문구가 뜹니다.<br>
-    <b>엑셀 다운로드</b>는 위 참여 정보와 DART 공모정보를 <b>IPO&amp;SPAC_운용현황</b>의 IPO(연도) 시트와 같은 열 구성으로 내보냅니다 — 받은 파일을 그 시트에 그대로 붙여넣으면 됩니다.<br>
+    <b>엑셀용 CSV 다운로드</b>는 위 참여 정보와 DART 공모정보를 <b>IPO&amp;SPAC_운용현황</b>의 IPO(연도) 시트와 같은 열 구성(A~AI)으로 내보냅니다 — 받은 파일을 엑셀로 열어 5행부터 복사한 뒤 그 시트에 붙여넣으면 됩니다. 시초가·배정비중·매매수익률은 값이 아니라 수식으로 들어가 있어, 나중에 시초가나 매매금액을 채우면 자동으로 계산됩니다.<br>
     공모주 신규 딜/일정은 <b>38.co.kr</b>, 확정 조건(확정공모가·수요예측 참여내역 등)과 메자닌(CB·BW·EB) 발행 조건은 <b>금융감독원 DART</b> 공시를 매 영업일 아침 8시·오후 3시(KST) 두 번 자동 조회해 반영합니다. 투자 권유가 아니며, 법적 공시 원문과 다르면 DART 원문이 우선합니다.
   </footer>
 
@@ -3723,117 +3723,68 @@ const XLSX_HEADERS = {
   AA: "배정주수", AB: "배정금액", AC: "배정비중\n(공모액)", AD: "NAV", AE: "배정비중\n(NAV)",
   AF: "매매금액", AG: "매매수익률", AH: "기여수익률", AI: "비고",
 };
-// 스타일 인덱스: 0=기본 1=머리글 2=날짜 3=백분율 4=천단위 5=소수2자리
-const STYLE = { s: 0, n: 4, n2: 5, pct: 3, date: 2 };
+// 엑셀 파일(.xlsx)은 아티팩트 다운로드에서 허용되지 않는 확장자라(허용:
+// csv/pptx/docx/pdf …), CSV로 내보낸다. 어차피 목적이 "회사 엑셀 파일에
+// 붙여넣기"라서 서식은 붙여넣는 시트 것을 따라가고, 열 순서·수식만 맞으면 된다.
+// 숫자 서식(날짜·백분율)도 그 시트에 이미 걸려 있으므로 값만 보내면 된다.
 
-function xlsxCell(ref, cell){
-  if (cell.f) {
-    return `<c r="${ref}" s="${STYLE[cell.t] || 0}"><f>${xmlEsc(cell.f)}</f></c>`;
-  }
-  const v = cell.v;
-  if (v === null || v === undefined || v === "") return "";
-  const st = STYLE[cell.t] != null ? STYLE[cell.t] : 0;
-  if (typeof v === "number") return `<c r="${ref}" s="${st}"><v>${v}</v></c>`;
-  return `<c r="${ref}" s="${st}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+// 엑셀 날짜 일련번호 → "YYYY-MM-DD" (CSV로 내보낼 때 사람이 읽는 형태로)
+function serialToIso(serial){
+  const ms = Date.UTC(1899, 11, 30) + serial * 86400000;
+  const dt = new Date(ms);
+  return dt.getUTCFullYear() + "-" +
+         String(dt.getUTCMonth() + 1).padStart(2, "0") + "-" +
+         String(dt.getUTCDate()).padStart(2, "0");
 }
 
-function buildXlsxBytes(){
-  const enc = new TextEncoder();
+// 줄바꿈·캐리지리턴은 escape 문자 대신 코드로 만든다 — 이 파일이 여러 도구를
+// 거치면서 백슬래시가 뭉개진 적이 있어서, 아예 escape를 안 쓰는 편이 안전하다.
+const LF = String.fromCharCode(10);
+const CR = String.fromCharCode(13);
+
+function csvEsc(v){
+  const s = String(v);
+  // 쉼표·따옴표·줄바꿈이 있으면 큰따옴표로 감싸고, 안의 따옴표는 두 번 써서 escape.
+  const needsQuote = s.indexOf(",") >= 0 || s.indexOf('"') >= 0 ||
+                     s.indexOf(LF) >= 0 || s.indexOf(CR) >= 0;
+  return needsQuote ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function csvCell(cell){
+  if (!cell) return "";
+  if (cell.f) return "=" + cell.f;          // 엑셀이 열 때 수식으로 인식한다
+  const v = cell.v;
+  if (v === null || v === undefined || v === "") return "";
+  if (cell.t === "date" && typeof v === "number") return serialToIso(v);
+  return v;
+}
+
+function buildCsvBytes(){
   const rows = currentFilteredDeals()
     .slice()
     .sort((a, b) => d(a.demand[0]) - d(b.demand[0]));
 
-  const sheetRows = [];
-
-  // 3행: 머리글 / 4행: M~P 아래 "(수량)" 부기 — 원본 파일과 동일한 배치
-  sheetRows.push(`<row r="3" ht="34" customHeight="1">` +
-    XLSX_COLS.map(c => XLSX_HEADERS[c] != null
-      ? `<c r="${c}3" s="1" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(XLSX_HEADERS[c])}</t></is></c>` : "").join("") +
-    `</row>`);
-  sheetRows.push(`<row r="4">` +
-    ["M","N","O","P"].map(c => `<c r="${c}4" s="1" t="inlineStr"><is><t>(수량)</t></is></c>`).join("") +
-    `</row>`);
+  const lines = [];
+  // 원본 시트와 행 번호까지 똑같이 맞춘다: 1~2행 비움 / 3행 머리글 /
+  // 4행 "(수량)" 부기 / 5행부터 데이터.
+  // 행 번호를 맞추는 게 중요한 이유 — 수식이 G17, AB17처럼 자기 행을 가리키는데,
+  // 머리글이 1행부터 시작해버리면 열었을 때 엉뚱한 행을 가리키게 된다.
+  // (상대참조라 나중에 다른 행에 붙여넣으면 엑셀이 알아서 따라 옮겨준다.)
+  lines.push("");
+  lines.push("");
+  lines.push(XLSX_COLS.map(c => csvEsc(XLSX_HEADERS[c] != null ? XLSX_HEADERS[c] : "")).join(","));
+  lines.push(XLSX_COLS.map(c => ["M","N","O","P"].includes(c) ? "(수량)" : "").join(","));
 
   rows.forEach((dl, i) => {
-    const rn = 5 + i;
-    const cells = xlsxRowFor(dl, rn);
-    sheetRows.push(`<row r="${rn}">` +
-      XLSX_COLS.map(c => xlsxCell(`${c}${rn}`, cells[c] || {})).join("") + `</row>`);
+    const cells = xlsxRowFor(dl, 5 + i);     // 수식의 행 번호를 원본 시트(5행~)에 맞춘다
+    lines.push(XLSX_COLS.map(c => csvEsc(csvCell(cells[c]))).join(","));
   });
 
-  const colWidths = [
-    [1,1,13],[2,2,20],[3,3,9],[4,4,7],[5,7,10],[8,8,11],[9,10,10],[11,16,9],
-    [17,18,11],[19,19,9],[20,23,12],[24,24,11],[25,25,7],[26,26,11],
-    [27,28,13],[29,29,12],[30,30,15],[31,31,12],[32,32,13],[33,35,12],
-  ].map(([a,b,w]) => `<col min="${a}" max="${b}" width="${w}" customWidth="1"/>`).join("");
-
-  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<sheetViews><sheetView workbookViewId="0" tabSelected="1"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
-<sheetFormatPr defaultRowHeight="15"/>
-<cols>${colWidths}</cols>
-<sheetData>${sheetRows.join("")}</sheetData>
-</worksheet>`;
-
-  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<numFmts count="3">
-<numFmt numFmtId="164" formatCode="yyyy\\-mm\\-dd"/>
-<numFmt numFmtId="165" formatCode="0.00%"/>
-<numFmt numFmtId="166" formatCode="#,##0"/>
-</numFmts>
-<fonts count="2">
-<font><sz val="10"/><name val="Arial"/></font>
-<font><b/><sz val="10"/><name val="Arial"/></font>
-</fonts>
-<fills count="3">
-<fill><patternFill patternType="none"/></fill>
-<fill><patternFill patternType="gray125"/></fill>
-<fill><patternFill patternType="solid"><fgColor rgb="FFDCE6F1"/><bgColor indexed="64"/></patternFill></fill>
-</fills>
-<borders count="2">
-<border><left/><right/><top/><bottom/><diagonal/></border>
-<border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border>
-</borders>
-<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="6">
-<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
-<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
-<xf numFmtId="166" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
-<xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
-</cellXfs>
-<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
-</styleSheet>`;
-
-  const sheetName = `IPO(${String(today.getFullYear()).slice(2)})`;
-  const files = [
-    { name: "[Content_Types].xml", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-<Default Extension="xml" ContentType="application/xml"/>
-<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-</Types>`) },
-    { name: "_rels/.rels", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
-</Relationships>`) },
-    { name: "xl/workbook.xml", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-<sheets><sheet name="${xmlEsc(sheetName)}" sheetId="1" r:id="rId1"/></sheets>
-</workbook>`) },
-    { name: "xl/_rels/workbook.xml.rels", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-</Relationships>`) },
-    { name: "xl/styles.xml", data: enc.encode(styles) },
-    { name: "xl/worksheets/sheet1.xml", data: enc.encode(sheet) },
-  ];
-  return makeZip(files);
+  // 엑셀이 한글을 깨지 않고 열도록 UTF-8 BOM(FEFF)을 앞에 붙인다.
+  const BOM = String.fromCharCode(0xFEFF);
+  const EOL = CR + LF;
+  const text = BOM + lines.join(EOL) + EOL;
+  return new TextEncoder().encode(text);
 }
 
 document.getElementById("xlsxBtn").addEventListener("click", async () => {
@@ -3841,7 +3792,7 @@ document.getElementById("xlsxBtn").addEventListener("click", async () => {
   const original = btn.textContent;
   btn.disabled = true; btn.textContent = "생성 중…";
   try {
-    const bytes = buildXlsxBytes();
+    const bytes = buildCsvBytes();
     if (typeof claude === "undefined" || !claude.use) {
       showPptStatus("err", "이 화면(로컬 미리보기 등)에서는 다운로드 기능을 쓸 수 없습니다. 실제 아티팩트 링크에서 눌러주세요.");
       return;
@@ -3851,16 +3802,16 @@ document.getElementById("xlsxBtn").addEventListener("click", async () => {
       showPptStatus("err", "이 화면에서는 파일 다운로드가 지원되지 않습니다. (capability not granted)");
       return;
     }
-    const filename = `IPO운용현황_${isoKey(today)}.xlsx`;
+    const filename = `IPO운용현황_${isoKey(today)}.csv`;
     await withTimeout(downloads.save({ filename, data: bytes.buffer }), 20000, "파일 저장");
-    showPptStatus("ok", `엑셀을 저장했습니다 — IPO&SPAC_운용현황의 IPO(${String(today.getFullYear()).slice(2)}) 시트에 그대로 붙여넣으면 됩니다.`);
+    showPptStatus("ok", `저장했습니다 — 엑셀로 열어서 5행부터 복사한 뒤 IPO&SPAC_운용현황의 IPO(${String(today.getFullYear()).slice(2)}) 시트에 붙여넣으면 됩니다.`);
   } catch (e) {
     console.error("XLSX export failed:", e);
     const code = e && e.code;
     if (code === "declined") showPptStatus("info", "다운로드를 취소했습니다.");
     else if (code === "too_large") showPptStatus("err", "파일이 너무 커서(16MB 초과) 저장할 수 없습니다.");
-    else if (code) showPptStatus("err", `엑셀 저장에 실패했습니다 (${code}): ${e.message || ""}`);
-    else showPptStatus("err", "엑셀 생성 중 문제가 발생했습니다: " + (e && e.message ? e.message : String(e)));
+    else if (code) showPptStatus("err", `저장에 실패했습니다 (${code}): ${e.message || ""}`);
+    else showPptStatus("err", "파일 생성 중 문제가 발생했습니다: " + (e && e.message ? e.message : String(e)));
   } finally {
     btn.disabled = false; btn.textContent = original;
   }
