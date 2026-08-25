@@ -17,6 +17,7 @@
     --accent-ink: #ffffff;
     --today-ring: #b3401f;
     --ev-demand: #234b8c;
+    --ev-allot: #7a3f8c;
     --ev-sub: #6b7280;
     --ev-pay: #234b8c;
     --ev-list: #8b93a1;
@@ -168,6 +169,12 @@
   .stc-uw { font-size: 11px; color: var(--ink-faint); }
   .stc-ref { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-dim); }
   .stc-computed { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-dim); font-weight: 700; }
+  .stc-hint { font-size: 11px; color: var(--ink-faint); margin-top: 3px; white-space: nowrap; }
+  .stc-link { font-size: 12px; color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); white-space: nowrap; }
+  .stc-link:hover { border-bottom-color: var(--accent); }
+  .uw-set { font-size: 11px; font-family: var(--font-kr); color: var(--ink-faint); background: none;
+            border: 1px dashed var(--border); border-radius: 5px; padding: 2px 6px; cursor: pointer; white-space: nowrap; }
+  .uw-set:hover { color: var(--accent); border-color: var(--accent); }
   table.stage-table input[type=text], table.stage-table input[type=number], table.stage-table input[type=date], table.stage-table select {
     width: 100%; min-width: 90px; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--border);
     background: var(--surface); color: var(--ink); font-size: 12.5px; font-family: var(--font-mono);
@@ -440,6 +447,7 @@
       --accent-ink: #ffffff;
       --today-ring: #a8371f;
       --ev-demand: #2f5d85;
+      --ev-allot: #6a4a8c;
       --ev-sub: #8a6118;
       --ev-pay: #a8371f;
       --ev-list: #2e6b4c;
@@ -568,6 +576,7 @@
     <div class="cal-grid month" id="calGrid"></div>
     <div class="legend">
       <span><i style="background:var(--ev-demand)"></i>수요예측</span>
+      <span><i style="background:var(--ev-allot)"></i>배정공고 (미입력 시 수요예측 마감 다음 영업일로 표시)</span>
       <span><i style="background:var(--ev-sub)"></i>청약</span>
       <span><i style="background:var(--ev-pay)"></i>납입</span>
       <span><i style="background:var(--ev-list)"></i>상장</span>
@@ -1714,6 +1723,7 @@ const TYPE_META = {
   "demand-start": { label: "수요예측 시작", color: "var(--ev-demand)" },
   "demand-day3":  { label: "수요예측 3일차", color: "var(--ev-demand)" },
   "demand-end":   { label: "수요예측 마감", color: "var(--ev-demand)" },
+  "allot":        { label: "배정공고",      color: "var(--ev-allot)" },
   "sub-start":    { label: "청약 시작",     color: "var(--ev-sub)" },
   "sub-end":      { label: "청약 마감",     color: "var(--ev-sub)" },
   "pay":          { label: "납입일",        color: "var(--ev-pay)" },
@@ -1911,7 +1921,7 @@ async function syncRecordsNow(){
   try {
     const artifact = await getArtifactNs();
     if (!artifact) { failRecordsSync("no-namespace"); return; }
-    const payload = JSON.stringify({ updatedAt: recordsUpdatedAt, nav: navValue, records });
+    const payload = JSON.stringify({ updatedAt: recordsUpdatedAt, nav: navValue, records, uwLinks });
     await artifact.publish({ [SHARED_RECORDS_FILE]: payload });
     // 성공 — 다음에 실패하면 다시 알려줄 수 있게 경고 플래그를 푼다.
     recordsSyncWarned = false;
@@ -1951,6 +1961,10 @@ async function loadSharedRecords(){
       navValue = data.nav;
       const navInput = document.getElementById("navInput");
       if (navInput) navInput.value = navValue;
+    }
+    if (data.uwLinks) {
+      uwLinks = Object.assign(uwLinks, data.uwLinks);
+      try { localStorage.setItem(UW_LINKS_KEY, JSON.stringify(uwLinks)); } catch(e) {}
     }
     recordsUpdatedAt = data.updatedAt || recordsUpdatedAt;
     try {
@@ -2010,6 +2024,20 @@ let anchor = new Date(today);
 let printMode = false;    // true 동안은 압축 표기(print-line)로 렌더링해 인쇄물에서 글씨가 잘리지 않게 한다
 
 /* ---------- event generation ---------- */
+/* 배정공고일.
+   확정 공모가 공시(증권신고서 정정)와 기관 배정 통보는 관행상 수요예측 마감
+   다음 영업일에 나온다. 그래서 기본값은 그 날짜로 잡아두고, 실제 통보받은
+   날짜를 배정 탭에 입력하면 그 값이 우선한다(입력값 > 관행 추정). */
+function allotDateFor(dl){
+  const typed = records[dl.name] && records[dl.name].allotDate;
+  if (typed) return d(typed);
+  if (!dl.demand || !dl.demand[1]) return null;
+  return nextBizDay(addDays(d(dl.demand[1]), 1));
+}
+function isAllotEstimated(dl){
+  return !(records[dl.name] && records[dl.name].allotDate);
+}
+
 function buildEvents(){
   const events = [];
   deals.forEach((dl, idx) => {
@@ -2022,6 +2050,7 @@ function buildEvents(){
     const day3 = businessDayN(demandStart, 3);
     if (day3 <= demandEnd) push(day3, "demand-day3");
     push(demandEnd, "demand-end");
+    push(allotDateFor(dl), "allot");
     push(d(dl.sub[0]), "sub-start");
     push(d(dl.sub[1]), "sub-end");
     push(d(dl.pay), "pay");
@@ -2093,6 +2122,7 @@ function isEventDone(dealName, type){
   const rec = records[dealName];
   switch (type) {
     case "demand-start": case "demand-day3": case "demand-end": return !!rec.joined;
+    case "allot": return rec.allotShares != null || rec.allotAmount != null;
     case "sub-start": case "sub-end": return rec.subQty != null;
     case "pay": return !!rec.payConfirmed || rec.payAmount != null;
     case "list": return rec.closePrice != null;
@@ -2289,8 +2319,10 @@ function openPanel(idx){
   ];
   const demandDay3 = businessDayN(d(dl.demand[0]), 3);
   if (demandDay3 <= d(dl.demand[1])) rows.push(["demand-day3", "수요예측 3일차", isoKey(demandDay3)]);
+  rows.push(["demand-end", "수요예측 마감", dl.demand[1]]);
+  const allotD = allotDateFor(dl);
+  if (allotD) rows.push(["allot", "배정공고" + (isAllotEstimated(dl) ? " (예정)" : ""), isoKey(allotD)]);
   rows.push(
-    ["demand-end",   "수요예측 마감", dl.demand[1]],
     ["sub-start",    "청약 시작",     dl.sub[0]],
     ["sub-end",      "청약 마감",     dl.sub[1]],
     ["pay",          "납입일",        dl.pay],
@@ -2515,7 +2547,12 @@ const STAGE_TABS = {
     columns: [
       { field: "_name", label: "종목 / 주간사", type: "ref-name" },
       { field: "_size", label: "공모금액(백만원)", type: "ref", get: dl => fmtNum(dl.dealSizeM) },
-      { field: "allotDate", label: "배정공고일", type: "date", placeholderFrom: dl => dl.pay },
+      // 비워두면 수요예측 마감 다음 영업일이 힌트로 뜬다 — 그게 통상 공고일.
+      { field: "allotDate", label: "배정공고일", type: "date",
+        hintFrom: dl => { const a = allotDateFor(dl); return a ? `예정 ${fmt(a)}` : ""; } },
+      // ref 로 둔 이유: computed 열은 값이 바뀔 때 textContent로 덮어써서
+      // 링크(<a>)가 문자열로 깨진다. ref는 표를 그릴 때 한 번만 렌더된다.
+      { field: "_docs", label: "배정확인서", type: "ref", get: dl => allotDocsHtml(dl) },
       { field: "allotLink", label: "배정공고 링크", type: "text" },
       { field: "allotShares", label: "배정주수", type: "number" },
       { field: "allotAmount", label: "배정금액(원)", type: "number" },
@@ -2553,6 +2590,54 @@ const STAGE_TABS = {
   },
 };
 
+/* ---------- 주관사 배정확인서 링크 ----------
+   배정확인서는 주관사 기관 수요예측 시스템에 로그인해서 출력한다. 증권사마다
+   주소가 달라서 종목이 아니라 "주관사"에 붙는 값이다(같은 주관사면 항상 같은 주소).
+
+   아래 표는 실제로 열어서 기관 참여신청/결과조회 화면인 걸 확인한 것만 넣었다.
+   나머지는 로그인 뒤에야 주소가 확정되는 곳이라 비워뒀고, 표에서 "＋주소 넣기"를
+   눌러 직접 넣으면 저장되고 다른 기기에도 같이 넘어간다. */
+const UW_IPO_URL_SEED = {
+  "한국투자증권": "https://securities.koreainvestment.com/main/research/corporate/ipo/PartList.jsp",
+  "대신증권":     "https://www.daishin.com/g.ds?p=1049&v=698&m=1563&next_ftnc_cod=U",
+  "미래에셋증권": "https://securities.miraeasset.com/bbs/board/message/list.do?categoryId=43",
+  "KB증권":       "https://www.kbsec.com/go.able?linkcd=s060901010000",
+};
+const UW_LINKS_KEY = "ipoCalendarUwLinks_v1";
+let uwLinks = (() => {
+  try { return JSON.parse(localStorage.getItem(UW_LINKS_KEY) || "{}"); } catch(e) { return {}; }
+})();
+function uwUrlFor(uw){ return uwLinks[uw] || UW_IPO_URL_SEED[uw] || ""; }
+function saveUwLinks(){
+  try { localStorage.setItem(UW_LINKS_KEY, JSON.stringify(uwLinks)); } catch(e) {}
+  persistRecords();          // 같은 payload로 다른 기기까지 동기화된다
+}
+
+/* 배정 탭의 "배정확인서" 칸 — 주관사가 여럿이면(공동주관) 각각 건다. */
+function allotDocsHtml(dl){
+  return (dl.uw || "").split(",").map(s => s.trim()).filter(Boolean).map(uw => {
+    const url = uwUrlFor(uw);
+    return url
+      ? `<a class="stc-link" href="${url}" target="_blank" rel="noopener" title="${uw} 기관 수요예측 시스템">${shortUw(uw)}</a>`
+      : `<button class="uw-set" data-uw="${uw}" title="${uw} 배정확인서 출력 주소를 넣어두면 다음부터 바로 열립니다">${shortUw(uw)} ＋주소</button>`;
+  }).join(" ");
+}
+
+// 주소를 넣으면 그 주관사의 모든 종목에 한 번에 적용된다.
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".uw-set");
+  if (!btn) return;
+  const uw = btn.dataset.uw;
+  const url = prompt(`${uw} 배정확인서를 출력하는 페이지 주소를 붙여넣어 주세요.\n(로그인 후 주소창에 뜨는 그 주소)`, "");
+  if (url == null) return;
+  const v = url.trim();
+  if (v && !/^https?:\/\//i.test(v)) { showToast("http:// 또는 https:// 로 시작하는 주소여야 합니다"); return; }
+  if (v) uwLinks[uw] = v; else delete uwLinks[uw];
+  saveUwLinks();
+  renderStageTable("allot");
+  showToast(v ? `${uw} 주소를 저장했습니다` : `${uw} 주소를 지웠습니다`);
+});
+
 function renderStageCell(dl, idx, rec, col){
   const v = col.field.startsWith("_") ? null : rec[col.field];
   switch (col.type) {
@@ -2568,8 +2653,12 @@ function renderStageCell(dl, idx, rec, col){
       const opts = col.options.map(o => `<option value="${o}" ${rec[col.field]===o?"selected":""}>${o||"미지정"}</option>`).join("");
       return `<td><select data-idx="${idx}" data-field="${col.field}">${opts}</select></td>`;
     }
-    case "date":
-      return `<td><input type="date" data-idx="${idx}" data-field="${col.field}" value="${v||""}"></td>`;
+    case "date": {
+      // date 입력칸은 placeholder가 안 먹어서, 추천 날짜는 입력칸 밑에 힌트로 깐다.
+      const hint = col.hintFrom ? col.hintFrom(dl, rec) : "";
+      return `<td><input type="date" data-idx="${idx}" data-field="${col.field}" value="${v||""}">`
+           + (hint && !v ? `<div class="stc-hint">${hint}</div>` : "") + `</td>`;
+    }
     case "number": {
       const ph = col.placeholderFrom ? col.placeholderFrom(dl, rec) : "";
       return `<td><input type="number" data-idx="${idx}" data-field="${col.field}" value="${v!=null?v:""}" placeholder="${ph!=null&&ph!==""?ph:""}"></td>`;
