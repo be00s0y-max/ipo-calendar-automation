@@ -65,6 +65,16 @@
   .today-badge .label { display: block; font-family: var(--font-kr); font-size: 11px; color: var(--ink-faint); margin-bottom: 2px; }
   .today-badge .date { font-size: 16px; font-weight: 700; color: var(--accent); }
   .today-badge.updated .date { color: var(--ink-dim); }
+  /* 최근 업데이트 배지는 누르면 내역이 뜨는 버튼이라, 눌러도 되는 티를 낸다. */
+  button.today-badge { cursor: pointer; font: inherit; font-family: var(--font-mono); }
+  button.today-badge:hover { border-color: var(--accent); }
+  button.today-badge .label::after { content: " ▾"; font-size: 9px; }
+  .ul-entry { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .ul-entry:last-child { border-bottom: none; }
+  .ul-when { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .ul-items { margin: 0; padding-left: 17px; }
+  .ul-items li { font-size: 12.5px; color: var(--ink-dim); line-height: 1.65; }
+  .ul-empty { font-size: 12.5px; color: var(--ink-faint); line-height: 1.7; padding: 8px 0; }
 
   /* ---- today digest ---- */
   .digest {
@@ -509,10 +519,10 @@
       <h1>공모주 캘린더</h1>
     </div>
     <div class="badges">
-      <div class="today-badge updated">
+      <button class="today-badge updated" id="updatedBadge" title="무엇이 바뀌었는지 보기">
         <span class="label">최근 업데이트</span>
         <span class="date" id="lastUpdatedDate">—</span>
-      </div>
+      </button>
       <div class="today-badge">
         <span class="label">오늘</span>
         <span class="date" id="todayDate">—</span>
@@ -576,7 +586,7 @@
     <div class="cal-grid month" id="calGrid"></div>
     <div class="legend">
       <span><i style="background:var(--ev-demand)"></i>수요예측</span>
-      <span><i style="background:var(--ev-allot)"></i>배정공고 (미입력 시 수요예측 마감 다음 영업일로 표시)</span>
+      <span><i style="background:var(--ev-allot)"></i>배정 예정 (수요예측 마감 다음 영업일)</span>
       <span><i style="background:var(--ev-sub)"></i>청약</span>
       <span><i style="background:var(--ev-pay)"></i>납입</span>
       <span><i style="background:var(--ev-list)"></i>상장</span>
@@ -740,6 +750,18 @@
   </div>
 </div>
 
+<div class="backdrop" id="ulBackdrop"></div>
+<div class="panel" id="ulPanel">
+  <div class="panel-head">
+    <button class="panel-close" id="ulPanelClose">✕</button>
+    <div class="pname">업데이트 내역</div>
+    <div class="puw">매일 아침 8시·오후 3시에 DART와 거래소를 훑어서 바뀐 것만 적어둡니다.</div>
+  </div>
+  <div class="panel-body">
+    <div id="ulList"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -750,6 +772,13 @@
 // AUTO-GENERATED:LAST_UPDATED:START
 const LAST_UPDATED_KST = "8.25(화) 09:14";
 // AUTO-GENERATED:LAST_UPDATED:END
+
+// 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
+// (최신이 맨 위, 최근 20회분만 보관). 바뀐 게 없던 날은 아예 안 남긴다 —
+// "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
+// AUTO-GENERATED:UPDATE_LOG:START
+const UPDATE_LOG = [];
+// AUTO-GENERATED:UPDATE_LOG:END
 
 // dealSizeM = 38커뮤니케이션 수요예측일정 기준 공모금액(백만원)
 // update_calendar_data.py가 이 마커 사이를 통째로 교체한다 — 수동으로 고쳐도
@@ -1723,7 +1752,7 @@ const TYPE_META = {
   "demand-start": { label: "수요예측 시작", color: "var(--ev-demand)" },
   "demand-day3":  { label: "수요예측 3일차", color: "var(--ev-demand)" },
   "demand-end":   { label: "수요예측 마감", color: "var(--ev-demand)" },
-  "allot":        { label: "배정공고",      color: "var(--ev-allot)" },
+  "allot":        { label: "배정 예정",     color: "var(--ev-allot)" },
   "sub-start":    { label: "청약 시작",     color: "var(--ev-sub)" },
   "sub-end":      { label: "청약 마감",     color: "var(--ev-sub)" },
   "pay":          { label: "납입일",        color: "var(--ev-pay)" },
@@ -1802,6 +1831,33 @@ function kstDateString(){
 const today = d(kstDateString());
 document.getElementById("todayDate").textContent = fmt(today) + " " + today.getFullYear() + "년";
 document.getElementById("lastUpdatedDate").textContent = LAST_UPDATED_KST;
+
+/* ---------- 업데이트 내역 팝업 ---------- */
+function renderUpdateLog(){
+  const box = document.getElementById("ulList");
+  if (!UPDATE_LOG.length) {
+    box.innerHTML = `<div class="ul-empty">아직 쌓인 내역이 없습니다.<br>다음 자동 갱신(평일 오전 8시·오후 3시)부터 여기에 기록됩니다.</div>`;
+    return;
+  }
+  box.innerHTML = UPDATE_LOG.map(e => `
+    <div class="ul-entry">
+      <div class="ul-when">${e.at}</div>
+      <ul class="ul-items">${e.items.map(t => `<li>${t}</li>`).join("")}</ul>
+    </div>`).join("");
+}
+function openUpdateLog(){
+  renderUpdateLog();
+  document.getElementById("ulBackdrop").classList.add("show");
+  document.getElementById("ulPanel").classList.add("show");
+}
+function closeUpdateLog(){
+  document.getElementById("ulBackdrop").classList.remove("show");
+  document.getElementById("ulPanel").classList.remove("show");
+}
+document.getElementById("updatedBadge").addEventListener("click", openUpdateLog);
+document.getElementById("ulBackdrop").addEventListener("click", closeUpdateLog);
+document.getElementById("ulPanelClose").addEventListener("click", closeUpdateLog);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeUpdateLog(); });
 
 /* ---------- 저장 토스트 ---------- 어디서 뭘 입력하든(단계별 표 셀, 배정 NAV,
    캘린더 패널) 저장되면 같은 방식으로 짧게 알려준다. */
@@ -2321,7 +2377,7 @@ function openPanel(idx){
   if (demandDay3 <= d(dl.demand[1])) rows.push(["demand-day3", "수요예측 3일차", isoKey(demandDay3)]);
   rows.push(["demand-end", "수요예측 마감", dl.demand[1]]);
   const allotD = allotDateFor(dl);
-  if (allotD) rows.push(["allot", "배정공고" + (isAllotEstimated(dl) ? " (예정)" : ""), isoKey(allotD)]);
+  if (allotD) rows.push(["allot", isAllotEstimated(dl) ? "배정 예정" : "배정공고", isoKey(allotD)]);
   rows.push(
     ["sub-start",    "청약 시작",     dl.sub[0]],
     ["sub-end",      "청약 마감",     dl.sub[1]],
@@ -2598,10 +2654,17 @@ const STAGE_TABS = {
    나머지는 로그인 뒤에야 주소가 확정되는 곳이라 비워뒀고, 표에서 "＋주소 넣기"를
    눌러 직접 넣으면 저장되고 다른 기기에도 같이 넘어간다. */
 const UW_IPO_URL_SEED = {
+  // 수요예측 참여신청 + 결과조회가 한 화면에 있는 곳
   "한국투자증권": "https://securities.koreainvestment.com/main/research/corporate/ipo/PartList.jsp",
   "대신증권":     "https://www.daishin.com/g.ds?p=1049&v=698&m=1563&next_ftnc_cod=U",
-  "미래에셋증권": "https://securities.miraeasset.com/bbs/board/message/list.do?categoryId=43",
-  "KB증권":       "https://www.kbsec.com/go.able?linkcd=s060901010000",
+  // 유진은 참여/배정결과 메뉴가 나뉘어 있어서 배정결과 쪽으로 건다
+  "유진투자증권": "https://www.eugenefn.com/serv/svsr/svsr500_1.do",
+  // 청약 화면 — 로그인하면 여기서 배정 내역으로 들어간다
+  "미래에셋증권": "https://securities.miraeasset.com/hku/hku4051/c07.do",
+  "DB증권":       "https://www.db-fi.com/custcenter/jobservice/cu_SubscriptionPublic_viw.do",
+  "KB증권":       "https://www.kbsec.com/go.able?linkcd=m02070000",
+  // NH투자증권·삼성증권·IBK투자증권은 메뉴 자체가 로그인 뒤에만 열려서 주소를
+  // 확인하지 못했다. 표에서 "＋주소"로 넣으면 나머지와 똑같이 동작한다.
 };
 const UW_LINKS_KEY = "ipoCalendarUwLinks_v1";
 let uwLinks = (() => {
