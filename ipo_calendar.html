@@ -74,6 +74,12 @@
   .digest-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .digest-row.done-row { padding-top: 10px; border-top: 1px dashed var(--border); }
   .digest .dl { font-size: 12px; font-weight: 700; color: var(--ink-faint); white-space: nowrap; }
+  .digest-nav { display: flex; align-items: center; gap: 5px; }
+  .digest-step {
+    width: 19px; height: 19px; padding: 0; border-radius: 5px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink-dim); cursor: pointer; font-size: 11px; line-height: 1;
+  }
+  .digest-step:hover { color: var(--ink); background: var(--surface-2); }
   .digest .chips { display: flex; gap: 6px; flex-wrap: wrap; }
   .digest .none { font-size: 12.5px; color: var(--ink-faint); }
   .digest .spacer { flex: 1 1 auto; }
@@ -114,8 +120,9 @@
   .tabbar {
     display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border);
   }
+  .tab-search-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
   .tab-search {
-    width: 200px; margin: 0 0 14px; padding: 7px 10px;
+    width: 200px; margin: 0; padding: 7px 10px;
     border-radius: 7px; border: 1px solid var(--border); background: var(--surface);
     color: var(--ink); font-size: 12.5px; font-family: var(--font-kr);
   }
@@ -582,7 +589,13 @@
       <h2>종목정보 <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— DART 증권신고서 기준</span></h2>
       <p>전체 딜의 일정·공모정보를 한 목록으로 보여줍니다(수요예측일 순). 종목 행을 클릭하면 그 종목의 상세 페이지로 이동하고, 상세 페이지 맨 위에 해당 증권신고서 DART 원문 링크가 있습니다.
       확정 수치가 38커뮤니케이션과 다르면 <b>이 문서(DART, 법적 공시)를 우선</b>합니다 — 38은 아직 신고서가 없는 종목의 일정 확인용으로만 씁니다.</p>
-      <input type="text" id="infoSearch" class="tab-search" placeholder="종목명 검색">
+      <div class="tab-search-row">
+        <input type="text" id="infoSearch" class="tab-search" placeholder="종목명 검색">
+        <div class="seg" id="infoSortSeg">
+          <button data-sort="desc" class="active">최신순</button>
+          <button data-sort="asc">과거순</button>
+        </div>
+      </div>
     </div>
     <div class="stage-table-wrap" id="info-table"></div>
   </div>
@@ -591,7 +604,13 @@
     <div class="stage-head">
       <h2>메자닌 <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— DART 발행결정 공시 기준</span></h2>
       <p>전환사채(CB)·신주인수권부사채(BW)·교환사채(EB) 발행결정 공시를 시장 전역에서 찾아 모은 목록입니다. 공모주와 달리 참여 트래킹 대상이 아니라 참고용 정보입니다. 조기상환청구권(풋옵션) 일정은 DART에 없어 예탁결제원(KSD) SEIBRO에서 따로 가져오는데, 발행 직후엔 KSD 등록 전이라 "미확인"으로 보일 수 있고(며칠 뒤 자동으로 채워짐), 애초에 풋옵션이 없는 종목은 "만기까지 없음"으로 표시됩니다.</p>
-      <input type="text" id="mezzSearch" class="tab-search" placeholder="종목명 검색">
+      <div class="tab-search-row">
+        <input type="text" id="mezzSearch" class="tab-search" placeholder="종목명 검색">
+        <div class="seg" id="mezzSortSeg">
+          <button data-sort="desc" class="active">최신순</button>
+          <button data-sort="asc">과거순</button>
+        </div>
+      </div>
     </div>
     <div class="stage-table-wrap" id="mezz-table"></div>
   </div>
@@ -1877,6 +1896,8 @@ let filterMode = "all";   // "all" | "joined"
 let showMezz = true;      // 메자닌(CB/BW/EB) 칩 표시 여부
 let infoSearchQuery = ""; // 종목정보 탭 종목명 검색어
 let mezzSearchQuery = ""; // 메자닌 탭 종목명 검색어 (종목정보와 독립적)
+let infoSortDir = "desc"; // 종목정보 탭 정렬(최신순/과거순), 메자닌과 독립적
+let mezzSortDir = "desc"; // 메자닌 탭 정렬
 let anchor = new Date(today);
 let printMode = false;    // true 동안은 압축 표기(print-line)로 렌더링해 인쇄물에서 글씨가 잘리지 않게 한다
 
@@ -1983,30 +2004,48 @@ function digestDoneChipHtml(ev){
   return `<button class="chip done" style="--chip-color:${meta.color}" data-deal="${ev.dealIdx}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
 }
 
+let digestOffset = 0; // 오늘=0, 어제=-1, 내일=+1, 그 외엔 날짜(M.D(요일))로 표시
+function digestDayLabel(offset){
+  if (offset === 0) return "오늘";
+  if (offset === -1) return "어제";
+  if (offset === 1) return "내일";
+  return fmt(addDays(today, offset));
+}
 function renderDigest(){
+  const targetKey = isoKey(addDays(today, digestOffset));
   const all = buildEvents();
-  const todays = all.filter(ev => isoKey(ev.date) === isoKey(today));
+  const todays = all.filter(ev => isoKey(ev.date) === targetKey);
   const todo = todays.filter(ev => !isEventDone(deals[ev.dealIdx].name, ev.type));
   const done = todays.filter(ev => isEventDone(deals[ev.dealIdx].name, ev.type));
   const el = document.getElementById("digest");
   const joinedCount = deals.filter(dl => records[dl.name].joined).length;
+  const label = digestDayLabel(digestOffset);
 
-  const todoHtml = todo.length ? todo.map(digestChipHtml).join("") : `<span class="none">오늘 일정 없음</span>`;
+  const todoHtml = todo.length ? todo.map(digestChipHtml).join("") : `<span class="none">${label} 일정 없음</span>`;
   const doneRow = done.length ? `
     <div class="digest-row done-row">
-      <span class="dl">오늘 완료</span>
+      <span class="dl">${label} 완료</span>
       <div class="chips">${done.map(digestDoneChipHtml).join("")}</div>
     </div>` : "";
 
   el.innerHTML = `
     <div class="digest-row">
-      <span class="dl">오늘 할 일</span>
+      <div class="digest-nav">
+        <button class="digest-step" id="digestPrev" aria-label="전날">‹</button>
+        <span class="dl">${label} 할 일</span>
+        <button class="digest-step" id="digestNext" aria-label="다음날">›</button>
+      </div>
       <div class="chips">${todoHtml}</div>
       <div class="spacer"></div>
+      ${digestOffset !== 0 ? `<button class="today-jump" id="digestToday">오늘로</button>` : ""}
       <span class="count">전체 <b>${deals.length}</b>건 · 참여 확정 <b>${joinedCount}</b>건</span>
     </div>
     ${doneRow}
   `;
+  document.getElementById("digestPrev").addEventListener("click", () => { digestOffset--; renderDigest(); });
+  document.getElementById("digestNext").addEventListener("click", () => { digestOffset++; renderDigest(); });
+  const todayBtn = document.getElementById("digestToday");
+  if (todayBtn) todayBtn.addEventListener("click", () => { digestOffset = 0; renderDigest(); });
 }
 
 /* ---------- calendar render ---------- */
@@ -2754,7 +2793,7 @@ function renderInfoList(){
   const rows = deals
     .slice()
     .filter(dl => matchesQuery(dl.name, infoSearchQuery))
-    .sort((a, b) => d(a.demand[0]) - d(b.demand[0]))
+    .sort((a, b) => (d(a.demand[0]) - d(b.demand[0])) * (infoSortDir === "asc" ? 1 : -1))
     .map(dl => {
       const idx = deals.indexOf(dl);
       const rec = records[dl.name];
@@ -2794,7 +2833,10 @@ function renderMezzTab(){
   const rows = mezzDeals
     .slice()
     .filter(dl => matchesQuery(dl.name, mezzSearchQuery))
-    .sort((a, b) => (b.pay_date || b.board_date || "").localeCompare(a.pay_date || a.board_date || ""))
+    .sort((a, b) => {
+      const cmp = (a.pay_date || a.board_date || "").localeCompare(b.pay_date || b.board_date || "");
+      return mezzSortDir === "asc" ? cmp : -cmp;
+    })
     .map(dl => {
       const convStr = dl.conv_price
         ? `${fmtNum(dl.conv_price)}원${dl.conv_period_start ? ` (${fmtMaybeYear(dl.conv_period_start)}~${fmtMaybeYear(dl.conv_period_end)})` : ""}`
@@ -3020,6 +3062,20 @@ document.getElementById("infoSearch").addEventListener("input", e => {
 });
 document.getElementById("mezzSearch").addEventListener("input", e => {
   mezzSearchQuery = e.target.value.trim();
+  renderMezzTab();
+});
+document.getElementById("infoSortSeg").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-sort]");
+  if (!btn) return;
+  infoSortDir = btn.dataset.sort;
+  document.querySelectorAll("#infoSortSeg button").forEach(b => b.classList.toggle("active", b === btn));
+  renderInfoTab();
+});
+document.getElementById("mezzSortSeg").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-sort]");
+  if (!btn) return;
+  mezzSortDir = btn.dataset.sort;
+  document.querySelectorAll("#mezzSortSeg button").forEach(b => b.classList.toggle("active", b === btn));
   renderMezzTab();
 });
 
