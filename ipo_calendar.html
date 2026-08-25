@@ -1887,6 +1887,14 @@ function persistRecords(){
 }
 
 /* ---- 공유 저장(아티팩트 파일) ---- */
+// 이 기능(공유 파일 저장)은 "artifact" 기능으로 쓰는데, 예전 런타임에서는
+// 같은 기능 이름이 "self"였다. 아티팩트가 옛 런타임에 묶여 있으면
+// use("artifact")가 null을 돌려주므로 두 이름을 다 시도한다.
+async function getArtifactNs(){
+  if (!(window.claude && window.claude.use)) return null;
+  return (await window.claude.use("artifact")) || (await window.claude.use("self")) || null;
+}
+
 let recordsCanWrite = true;   // 읽기 전용 보기에서 false로 내려간다
 let recordsSyncTimer = null;
 let recordsSyncWarned = false;
@@ -1901,24 +1909,29 @@ function scheduleRecordsSync(){
 async function syncRecordsNow(){
   if (!recordsCanWrite) return;
   try {
-    const artifact = (window.claude && window.claude.use) ? await window.claude.use("artifact") : null;
-    if (!artifact) { recordsCanWrite = false; return; }
+    const artifact = await getArtifactNs();
+    if (!artifact) { failRecordsSync("no-namespace"); return; }
     const payload = JSON.stringify({ updatedAt: recordsUpdatedAt, nav: navValue, records });
     await artifact.publish({ [SHARED_RECORDS_FILE]: payload });
+    // 성공 — 다음에 실패하면 다시 알려줄 수 있게 경고 플래그를 푼다.
+    recordsSyncWarned = false;
   } catch (err) {
-    const code = err && err.code;
+    const code = (err && err.code) || "unknown";
     if (code === "conflict") return;   // 다른 기기가 먼저 저장 — 그쪽이 이김, 곧 새로고침됨
-    if (code === "not_writer" || code === "not_granted" || code === "capability_disabled") {
-      recordsCanWrite = false;
-      if (!recordsSyncWarned) {
-        recordsSyncWarned = true;
-        showToast("이 화면에서는 이 기기에만 저장됩니다");
-      }
-      return;
-    }
     if (code === "rate_limited") { scheduleRecordsSync(); return; }  // 잠시 뒤 재시도
-    console.error("records sync failed:", err);
+    if (code === "upstream_error") { scheduleRecordsSync(); return; } // 일시적 — 한 번 더
+    failRecordsSync(code, err);
   }
+}
+
+// 왜 공유 저장이 안 되는지 코드까지 같이 보여준다 — 원인 없이 "안 됩니다"만
+// 뜨면 고칠 수가 없어서다.
+function failRecordsSync(code, err){
+  recordsCanWrite = false;
+  if (err) console.error("records sync failed:", code, err);
+  if (recordsSyncWarned) return;
+  recordsSyncWarned = true;
+  showToast(`공유 저장 불가(${code}) — 이 기기에만 저장됩니다`);
 }
 
 // 시작할 때 공유 저장본을 읽어와서, 이 기기 값보다 최신이면 덮어쓴다.
@@ -2383,19 +2396,21 @@ async function saveCustomEvents(){
   const status = document.getElementById("ceStatus");
   if (!ceCanWrite) { status.textContent = "이 화면에서는 저장할 수 없어요 (읽기 전용 보기)."; return false; }
   try {
-    const artifact = (window.claude && window.claude.use) ? await window.claude.use("artifact") : null;
+    const artifact = await getArtifactNs();
     if (!artifact) { status.textContent = "이 화면에서는 공유 저장 기능을 쓸 수 없어요."; ceCanWrite = false; return false; }
     await artifact.publish({ "custom-events.json": JSON.stringify(customEvents) });
     status.textContent = "";
     return true;
   } catch (err) {
-    if (err && (err.code === "not_writer" || err.code === "not_granted" || err.code === "capability_disabled")) {
-      ceCanWrite = false;
-      status.textContent = "이 화면에서는 저장할 수 없어요 (읽기 전용 보기).";
-    } else if (err && err.code === "rate_limited") {
+    const code = (err && err.code) || "unknown";
+    console.error("custom events save failed:", code, err);
+    if (code === "rate_limited") {
       status.textContent = "저장이 너무 잦아요 — 잠시 후 다시 시도해주세요.";
+    } else if (code === "conflict" || code === "upstream_error") {
+      status.textContent = "저장이 밀렸어요 — 다시 한 번 눌러주세요.";
     } else {
-      status.textContent = "저장에 실패했어요. 잠시 후 다시 시도해주세요.";
+      ceCanWrite = false;
+      status.textContent = `공유 저장 불가(${code}) — 이 화면에서는 저장할 수 없어요.`;
     }
     return false;
   }
