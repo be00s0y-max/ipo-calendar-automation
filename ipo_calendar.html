@@ -551,6 +551,7 @@
       </div>
       <button class="today-jump" id="addEventBtn">+ 내 일정</button>
       <button class="today-jump" id="printBtn">인쇄</button>
+      <button class="today-jump" id="xlsxBtn">엑셀 다운로드</button>
       <button class="today-jump" id="pptBtn">PPT 다운로드</button>
       <button class="today-jump" id="pngBtn">이미지로 다운로드</button>
     </div>
@@ -3472,6 +3473,284 @@ document.getElementById("pptBtn").addEventListener("click", async () => {
     } else {
       showPptStatus("err", "PPT 생성 중 문제가 발생했습니다: " + (e && e.message ? e.message : String(e)));
     }
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
+});
+
+/* ================= 엑셀(XLSX) 다운로드 =================
+   회사에서 쓰는 "IPO&SPAC_운용현황.xlsx"의 IPO(연도) 시트와 똑같은 열 구성으로
+   내보낸다 — 그 파일에 그대로 복사해 붙여넣을 수 있게 하는 게 목적이라,
+   열 순서·머리글·행 시작위치(3행 머리글, 5행부터 데이터)를 그대로 맞췄다.
+   pptx와 마찬가지로 makeZip()으로 OOXML을 직접 조립한다(외부 라이브러리 없음).
+
+   값 출처: 일정·공모금액은 38.co.kr(deals), 공모가·경쟁률·확약률은 DART
+   (dartData), 참여가격·수량·확약·배정은 내가 입력한 값(records).
+   ------------------------------------------------------------------ */
+
+// 주관사명을 회사 양식 표기(미래/한투/삼성/KB/IBK/DB/NH/대신…)로 줄인다.
+// 공동주관이면 첫 번째 것만 쓴다 — 원본 파일도 한 칸에 하나만 적혀 있다.
+const UW_SHORT = [
+  ["미래에셋", "미래"], ["한국투자", "한투"], ["삼성", "삼성"], ["KB", "KB"],
+  ["IBK", "IBK"], ["DB", "DB"], ["NH", "NH"], ["대신", "대신"], ["신한", "신한"],
+  ["하나", "하나"], ["키움", "키움"], ["유진", "유진"], ["교보", "교보"], ["한화", "한화"],
+];
+function shortUw(uw){
+  const first = String(uw || "").split(",")[0].trim();
+  for (const [needle, short] of UW_SHORT) if (first.includes(needle)) return short;
+  return first.replace(/(증권|투자증권)$/, "");
+}
+
+// price_bands의 밴드 라벨("41,200원", "30,000원 초과 ~ 41,200원 미만" …)에서
+// 정확히 "N원" 한 개짜리 라벨만 골라내면 그게 밴드 상·하단이다.
+function bandRange(bands){
+  if (!bands) return [null, null];
+  const pts = [];
+  for (const b of bands) {
+    const m = /^([\d,]+)원$/.exec(String(b.band).trim());
+    if (m) pts.push(Number(m[1].replace(/,/g, "")));
+  }
+  if (!pts.length) return [null, null];
+  return [Math.min(...pts), Math.max(...pts)];
+}
+
+// 확약 구간별 수량비중 + 전체 확약률(건수/수량). dartData.lockup은
+// {"6개월 확약": {count, qty}, …, "미확약": {…}} 형태다.
+function lockupStats(dd){
+  const lk = dd && dd.lockup;
+  const ds = dd && dd.demand_summary;
+  if (!lk || !ds || !ds.total_count || !ds.total_qty) return null;
+  const pick = (re) => {
+    for (const k of Object.keys(lk)) if (re.test(k)) return lk[k];
+    return null;
+  };
+  const d15 = pick(/15\s*일/), d1m = pick(/1\s*개?월/), d3m = pick(/3\s*개?월/), d6m = pick(/6\s*개?월/);
+  const none = pick(/미확약/);
+  const cmtCount = ds.total_count - (none ? none.count : 0);
+  const cmtQty = ds.total_qty - (none ? none.qty : 0);
+  const share = (o) => o ? o.qty / ds.total_qty : 0;
+  return {
+    rateCount: cmtCount / ds.total_count,
+    rateQty: cmtQty / ds.total_qty,
+    d15: share(d15), d1m: share(d1m), d3m: share(d3m), d6m: share(d6m),
+  };
+}
+
+// 엑셀 날짜 일련번호(1900 체계). 1899-12-30을 0으로 두면 Excel과 맞는다.
+function excelSerial(dt){
+  if (!dt) return null;
+  const d0 = Date.UTC(1899, 11, 30);
+  const d1 = Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  return Math.round((d1 - d0) / 86400000);
+}
+
+const CMT_SHORT = { "미확약": "미", "15일": "15일", "1개월": "1M", "3개월": "3M", "6개월": "6M" };
+
+/* 한 딜 = 한 행. 회사 양식(IPO(26) 시트) 열 순서 그대로 A~AI를 채운다.
+   값이 없는 칸은 비워두고(사람이 나중에 채우는 칸), 계산되는 칸은
+   하드코딩된 결과가 아니라 수식으로 넣어 나중에 입력해도 자동으로 맞게 한다. */
+function xlsxRowFor(dl, rowNum){
+  const rec = records[dl.name] || {};
+  const dd = dartData[dl.name];
+  const [lo, hi] = bandRange(dd && dd.price_bands);
+  const lk = lockupStats(dd);
+  const fixed = dd ? dartPricePerShare(dd.offering) : null;
+  const listD = dl.list ? d(dl.list) : null;
+  const afterMonths = (n) => listD ? excelSerial(addMonths(listD, n)) : null;
+
+  // 참여가격: 신청했지만 참여 안 한 건은 원본 파일 관례대로 "드랍"으로 적는다.
+  let priceCell = null;
+  if (rec.price != null) priceCell = rec.price;
+  else if (rec.applied && !rec.joined) priceCell = "드랍";
+
+  const r = rowNum;
+  return {
+    A: { v: excelSerial(d(dl.demand[0])), t: "date" },
+    B: { v: dl.name, t: "s" },
+    C: { v: "일임", t: "s" },
+    D: { v: shortUw(dl.uw), t: "s" },
+    E: { v: lo, t: "n" },
+    F: { v: hi, t: "n" },
+    G: { v: fixed, t: "n" },
+    H: { v: dl.dealSizeM != null ? dl.dealSizeM / 100 : null, t: "n" },   // 백만원 → 억
+    I: { v: dd ? dd.demand_summary.total_count : null, t: "n" },
+    J: { v: dd ? dd.demand_summary.competition_rate : null, t: "n2" },
+    K: { v: lk ? lk.rateCount : null, t: "pct" },
+    L: { v: lk ? lk.rateQty : null, t: "pct" },
+    M: { v: lk ? lk.d15 : null, t: "pct" },
+    N: { v: lk ? lk.d1m : null, t: "pct" },
+    O: { v: lk ? lk.d3m : null, t: "pct" },
+    P: { v: lk ? lk.d6m : null, t: "pct" },
+    Q: { v: null, t: "n" },                                              // 매매단가(수기)
+    R: { v: rec.openPrice != null ? rec.openPrice : null, t: "n" },
+    S: { f: `IF(OR(G${r}="",R${r}=""),"",(R${r}-G${r})/G${r})`, t: "pct" },
+    T: { v: excelSerial(listD), t: "date" },
+    U: { v: afterMonths(1), t: "date" },
+    V: { v: afterMonths(3), t: "date" },
+    W: { v: afterMonths(6), t: "date" },
+    X: { v: priceCell, t: typeof priceCell === "number" ? "n" : "s" },
+    Y: { v: rec.commit ? (CMT_SHORT[rec.commit] || rec.commit) : null, t: "s" },
+    Z: { v: rec.qty != null ? rec.qty : null, t: "n" },
+    AA: { v: rec.allotShares != null ? rec.allotShares : null, t: "n" },
+    AB: { v: rec.allotAmount != null ? rec.allotAmount : null, t: "n" },
+    AC: { f: `IF(OR(AB${r}="",H${r}=""),"",AB${r}/(H${r}*100000000))`, t: "pct" },
+    AD: { v: navValue != null ? navValue : null, t: "n" },
+    AE: { f: `IF(OR(AB${r}="",AD${r}=""),"",AB${r}/AD${r})`, t: "pct" },
+    AF: { v: null, t: "n" },                                             // 매매금액(수기)
+    AG: { f: `IF(OR(AF${r}="",AB${r}=""),"",(AF${r}-AB${r})/AB${r})`, t: "pct" },
+    AH: { v: null, t: "n" },                                             // 기여수익률(수기)
+    AI: { v: null, t: "s" },                                             // 비고
+  };
+}
+
+const XLSX_COLS = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T",
+                   "U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI"];
+const XLSX_HEADERS = {
+  A: "수요예측일\n(초일)", B: "종목명", C: "보유형태", D: "주관", E: "공모가\n(하단)", F: "공모가\n(상단)",
+  G: "공모가\n(확정)", H: "공모금액\n(억)", I: "경쟁률\n(기관)", J: "경쟁률 \n(수량)", K: "확약률\n(건수)",
+  L: "확약률\n(수량)", M: "15일", N: "1M", O: "3M", P: "6M", Q: "매매단가", R: "상장일\n시초가",
+  S: "시초가\n(%)", T: "상장일", U: "1M", V: "3M", W: "6M", X: "참여내역(가격/확약/수량)",
+  AA: "배정주수", AB: "배정금액", AC: "배정비중\n(공모액)", AD: "NAV", AE: "배정비중\n(NAV)",
+  AF: "매매금액", AG: "매매수익률", AH: "기여수익률", AI: "비고",
+};
+// 스타일 인덱스: 0=기본 1=머리글 2=날짜 3=백분율 4=천단위 5=소수2자리
+const STYLE = { s: 0, n: 4, n2: 5, pct: 3, date: 2 };
+
+function xlsxCell(ref, cell){
+  if (cell.f) {
+    return `<c r="${ref}" s="${STYLE[cell.t] || 0}"><f>${xmlEsc(cell.f)}</f></c>`;
+  }
+  const v = cell.v;
+  if (v === null || v === undefined || v === "") return "";
+  const st = STYLE[cell.t] != null ? STYLE[cell.t] : 0;
+  if (typeof v === "number") return `<c r="${ref}" s="${st}"><v>${v}</v></c>`;
+  return `<c r="${ref}" s="${st}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+}
+
+function buildXlsxBytes(){
+  const enc = new TextEncoder();
+  const rows = currentFilteredDeals()
+    .slice()
+    .sort((a, b) => d(a.demand[0]) - d(b.demand[0]));
+
+  const sheetRows = [];
+
+  // 3행: 머리글 / 4행: M~P 아래 "(수량)" 부기 — 원본 파일과 동일한 배치
+  sheetRows.push(`<row r="3" ht="34" customHeight="1">` +
+    XLSX_COLS.map(c => XLSX_HEADERS[c] != null
+      ? `<c r="${c}3" s="1" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(XLSX_HEADERS[c])}</t></is></c>` : "").join("") +
+    `</row>`);
+  sheetRows.push(`<row r="4">` +
+    ["M","N","O","P"].map(c => `<c r="${c}4" s="1" t="inlineStr"><is><t>(수량)</t></is></c>`).join("") +
+    `</row>`);
+
+  rows.forEach((dl, i) => {
+    const rn = 5 + i;
+    const cells = xlsxRowFor(dl, rn);
+    sheetRows.push(`<row r="${rn}">` +
+      XLSX_COLS.map(c => xlsxCell(`${c}${rn}`, cells[c] || {})).join("") + `</row>`);
+  });
+
+  const colWidths = [
+    [1,1,13],[2,2,20],[3,3,9],[4,4,7],[5,7,10],[8,8,11],[9,10,10],[11,16,9],
+    [17,18,11],[19,19,9],[20,23,12],[24,24,11],[25,25,7],[26,26,11],
+    [27,28,13],[29,29,12],[30,30,15],[31,31,12],[32,32,13],[33,35,12],
+  ].map(([a,b,w]) => `<col min="${a}" max="${b}" width="${w}" customWidth="1"/>`).join("");
+
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<sheetViews><sheetView workbookViewId="0" tabSelected="1"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
+<sheetFormatPr defaultRowHeight="15"/>
+<cols>${colWidths}</cols>
+<sheetData>${sheetRows.join("")}</sheetData>
+</worksheet>`;
+
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="3">
+<numFmt numFmtId="164" formatCode="yyyy\\-mm\\-dd"/>
+<numFmt numFmtId="165" formatCode="0.00%"/>
+<numFmt numFmtId="166" formatCode="#,##0"/>
+</numFmts>
+<fonts count="2">
+<font><sz val="10"/><name val="Arial"/></font>
+<font><b/><sz val="10"/><name val="Arial"/></font>
+</fonts>
+<fills count="3">
+<fill><patternFill patternType="none"/></fill>
+<fill><patternFill patternType="gray125"/></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFDCE6F1"/><bgColor indexed="64"/></patternFill></fill>
+</fills>
+<borders count="2">
+<border><left/><right/><top/><bottom/><diagonal/></border>
+<border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border>
+</borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="6">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="166" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+
+  const sheetName = `IPO(${String(today.getFullYear()).slice(2)})`;
+  const files = [
+    { name: "[Content_Types].xml", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`) },
+    { name: "_rels/.rels", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`) },
+    { name: "xl/workbook.xml", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets><sheet name="${xmlEsc(sheetName)}" sheetId="1" r:id="rId1"/></sheets>
+</workbook>`) },
+    { name: "xl/_rels/workbook.xml.rels", data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`) },
+    { name: "xl/styles.xml", data: enc.encode(styles) },
+    { name: "xl/worksheets/sheet1.xml", data: enc.encode(sheet) },
+  ];
+  return makeZip(files);
+}
+
+document.getElementById("xlsxBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("xlsxBtn");
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = "생성 중…";
+  try {
+    const bytes = buildXlsxBytes();
+    if (typeof claude === "undefined" || !claude.use) {
+      showPptStatus("err", "이 화면(로컬 미리보기 등)에서는 다운로드 기능을 쓸 수 없습니다. 실제 아티팩트 링크에서 눌러주세요.");
+      return;
+    }
+    const downloads = await withTimeout(claude.use("downloads"), 8000, "다운로드 기능 초기화");
+    if (!downloads) {
+      showPptStatus("err", "이 화면에서는 파일 다운로드가 지원되지 않습니다. (capability not granted)");
+      return;
+    }
+    const filename = `IPO운용현황_${isoKey(today)}.xlsx`;
+    await withTimeout(downloads.save({ filename, data: bytes.buffer }), 20000, "파일 저장");
+    showPptStatus("ok", `엑셀을 저장했습니다 — IPO&SPAC_운용현황의 IPO(${String(today.getFullYear()).slice(2)}) 시트에 그대로 붙여넣으면 됩니다.`);
+  } catch (e) {
+    console.error("XLSX export failed:", e);
+    const code = e && e.code;
+    if (code === "declined") showPptStatus("info", "다운로드를 취소했습니다.");
+    else if (code === "too_large") showPptStatus("err", "파일이 너무 커서(16MB 초과) 저장할 수 없습니다.");
+    else if (code) showPptStatus("err", `엑셀 저장에 실패했습니다 (${code}): ${e.message || ""}`);
+    else showPptStatus("err", "엑셀 생성 중 문제가 발생했습니다: " + (e && e.message ? e.message : String(e)));
   } finally {
     btn.disabled = false; btn.textContent = original;
   }
