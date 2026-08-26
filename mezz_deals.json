@@ -354,6 +354,27 @@
     "conv_period_start": "2027-09-01",
     "conv_period_end": "2029-08-01",
     "refixing": "아니오",
-    "rcept_no": "20260824000272"
+    "rcept_no": "20260826000355"
+  },
+  "01601222_CB_2": {
+    "name": "씨피시스템",
+    "kind": "CB",
+    "round": "2",
+    "bondName": "무기명식 무이권부 무보증 사모 전환사채",
+    "amount": 10000000000,
+    "board_date": "2026-08-26",
+    "sub_date": null,
+    "pay_date": "2026-09-03",
+    "maturity_date": "2031-09-03",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 5106,
+    "conv_period_start": "2027-09-03",
+    "conv_period_end": "2031-08-03",
+    "refixing": "아니오",
+    "rcept_no": "20260826000286"
   }
 }
