@@ -81,7 +81,10 @@
     "conv_period_start": "2027-08-28",
     "conv_period_end": "2029-07-28",
     "refixing": "아니오",
-    "rcept_no": "20260820000407"
+    "rcept_no": "20260820000407",
+    "put_start": "2027-06-29",
+    "put_end": "2027-07-29",
+    "put_redemption": "2027-08-28"
   },
   "00416414_CB_10": {
     "name": "넥스턴앤롤코리아",
@@ -102,7 +105,10 @@
     "conv_period_start": "2027-08-28",
     "conv_period_end": "2029-07-28",
     "refixing": "아니오",
-    "rcept_no": "20260820000411"
+    "rcept_no": "20260820000411",
+    "put_start": "2027-08-06",
+    "put_end": "2027-08-23",
+    "put_redemption": "2027-08-28"
   },
   "00115287_CB_118": {
     "name": "동방",
@@ -123,7 +129,10 @@
     "conv_period_start": "2027-08-28",
     "conv_period_end": "2031-07-28",
     "refixing": "아니오",
-    "rcept_no": "20260820000396"
+    "rcept_no": "20260820000396",
+    "put_start": "2029-06-29",
+    "put_end": "2029-07-30",
+    "put_redemption": "2029-08-28"
   },
   "01546101_CB_6": {
     "name": "아이엠티",
@@ -144,7 +153,10 @@
     "conv_period_start": "2027-08-28",
     "conv_period_end": "2031-07-28",
     "refixing": "아니오",
-    "rcept_no": "20260820000313"
+    "rcept_no": "20260820000313",
+    "put_start": "2029-02-10",
+    "put_end": "2029-02-20",
+    "put_redemption": "2029-02-28"
   },
   "00276834_CB_14": {
     "name": "KX하이텍",

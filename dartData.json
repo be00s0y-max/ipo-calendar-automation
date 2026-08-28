@@ -988,5 +988,45 @@
         "qty": 94948000
       }
     }
+  },
+  "NH스팩34호": {
+    "offering": {
+      "offer_shares": 8500000,
+      "offer_amount_final": 17000000000,
+      "offer_amount_expected": 17000000000,
+      "subscription": {
+        "inst_start": "2026.09.01",
+        "inst_end": "2026.09.02"
+      },
+      "payment_date": "2026.09.04"
+    },
+    "demand_summary": {
+      "total_count": 2050,
+      "total_qty": 7399483000,
+      "competition_rate": 1160.7
+    },
+    "price_bands": null,
+    "lockup": {
+      "미확약": {
+        "count": 66,
+        "qty": 382297000
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      }
+    }
   }
 }

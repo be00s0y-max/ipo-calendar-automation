@@ -825,7 +825,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "8.28(금) 09:21";
+const LAST_UPDATED_KST = "8.28(금) 15:10";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -833,6 +833,15 @@ const LAST_UPDATED_KST = "8.28(금) 09:21";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "8.28(금) 15:10",
+    "items": [
+      "신규 공모주 1건 — 진코스텍",
+      "수요예측 결과 반영 1건 — NH스팩34호",
+      "확정 증권신고서 공시 1건 — NH스팩34호",
+      "조기상환(풋옵션) 일정 4건 추가 확인"
+    ]
+  },
   {
     "at": "8.28(금) 09:18",
     "items": [
@@ -890,6 +899,7 @@ const deals = [
   { name: "브릴스", uw: "IBK투자증권", demand: ["2026-09-09","2026-09-15"], sub: ["2026-09-17", "2026-09-18"], pay: "2026-09-22", list: null, dealSizeM: 19800 },
   { name: "엘리스그룹", uw: "미래에셋증권,삼성증권", demand: ["2026-09-09","2026-09-15"], sub: ["2026-09-18", "2026-09-21"], pay: "2026-09-23", list: null, dealSizeM: 156428 },
   { name: "멜콘(구.에스앤에프솔루션)", uw: "대신증권", demand: ["2026-09-16","2026-09-22"], sub: ["2026-10-01", "2026-10-02"], pay: "2026-10-07", list: null, dealSizeM: 26750 },
+  { name: "진코스텍", uw: "하나증권", demand: ["2026-09-16","2026-09-22"], sub: ["2026-10-02", "2026-10-06"], pay: "2026-10-08", list: null, dealSizeM: 16614 },
   { name: "래블업", uw: "NH투자증권", demand: ["2026-09-28","2026-10-02"], sub: ["2026-10-12", "2026-10-13"], pay: "2026-10-15", list: null, dealSizeM: 43600 },
   { name: "SK증권스팩14호", uw: "SK증권", demand: ["2026-10-12","2026-10-13"], sub: ["2026-10-15", "2026-10-16"], pay: "2026-10-20", list: null, dealSizeM: 13000 },
 ];
@@ -902,8 +912,8 @@ const deals = [
 // AUTO-GENERATED:MEZZ_DEALS:START
 const mezzDeals = [
   {"name": "엔투텍", "kind": "CB", "round": "18", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 12000000000, "board_date": "2026-08-20", "sub_date": "2026-08-20", "pay_date": "2026-09-10", "maturity_date": "2029-09-10", "coupon_rate": "4", "ytm_rate": "4", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1519, "conv_period_start": "2027-09-10", "conv_period_end": "2029-08-10", "refixing": "아니오", "rcept_no": "20260825000349"},
-  {"name": "넥스턴앤롤코리아", "kind": "CB", "round": "9", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 11000000000, "board_date": "2026-08-20", "sub_date": "2026-08-20", "pay_date": "2026-08-28", "maturity_date": "2029-08-28", "coupon_rate": "1.00", "ytm_rate": "4.00", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 2500, "conv_period_start": "2027-08-28", "conv_period_end": "2029-07-28", "refixing": "아니오", "rcept_no": "20260820000407"},
-  {"name": "넥스턴앤롤코리아", "kind": "CB", "round": "10", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 9000000000, "board_date": "2026-08-20", "sub_date": "2026-08-20", "pay_date": "2026-08-28", "maturity_date": "2029-08-28", "coupon_rate": "2.00", "ytm_rate": "6.00", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 2500, "conv_period_start": "2027-08-28", "conv_period_end": "2029-07-28", "refixing": "아니오", "rcept_no": "20260820000411"},
+  {"name": "넥스턴앤롤코리아", "kind": "CB", "round": "9", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 11000000000, "board_date": "2026-08-20", "sub_date": "2026-08-20", "pay_date": "2026-08-28", "maturity_date": "2029-08-28", "coupon_rate": "1.00", "ytm_rate": "4.00", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 2500, "conv_period_start": "2027-08-28", "conv_period_end": "2029-07-28", "refixing": "아니오", "rcept_no": "20260820000407", "put_start": "2027-06-29", "put_end": "2027-07-29", "put_redemption": "2027-08-28"},
+  {"name": "넥스턴앤롤코리아", "kind": "CB", "round": "10", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 9000000000, "board_date": "2026-08-20", "sub_date": "2026-08-20", "pay_date": "2026-08-28", "maturity_date": "2029-08-28", "coupon_rate": "2.00", "ytm_rate": "6.00", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 2500, "conv_period_start": "2027-08-28", "conv_period_end": "2029-07-28", "refixing": "아니오", "rcept_no": "20260820000411", "put_start": "2027-08-06", "put_end": "2027-08-23", "put_redemption": "2027-08-28"},
   {"name": "핑거", "kind": "CB", "round": "8", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 30000000000, "board_date": "2026-08-21", "sub_date": "2026-08-21", "pay_date": "2026-08-31", "maturity_date": "2029-08-31", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 10860, "conv_period_start": "2027-08-31", "conv_period_end": "2029-07-31", "refixing": "아니오", "rcept_no": "20260821000597"},
   {"name": "넥사다이내믹스", "kind": "CB", "round": "8", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 8000000000, "board_date": "2026-08-24", "sub_date": "2026-08-24", "pay_date": "2026-09-22", "maturity_date": "2029-09-22", "coupon_rate": "3.0", "ytm_rate": "5.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1238, "conv_period_start": "2027-09-22", "conv_period_end": "2029-08-22", "refixing": "아니오", "rcept_no": "20260824000329"},
   {"name": "씨피시스템", "kind": "CB", "round": "2", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-08-26", "sub_date": null, "pay_date": "2026-09-03", "maturity_date": "2031-09-03", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 5106, "conv_period_start": "2027-09-03", "conv_period_end": "2031-08-03", "refixing": "아니오", "rcept_no": "20260826000286"},
@@ -912,8 +922,8 @@ const mezzDeals = [
   {"name": "서진시스템", "kind": "CB", "round": "42", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 32500000000, "board_date": "2026-08-24", "sub_date": "2026-08-27", "pay_date": "2026-09-04", "maturity_date": "2030-09-04", "coupon_rate": "0.0", "ytm_rate": "2.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 36950, "conv_period_start": "2027-09-04", "conv_period_end": "2030-08-04", "refixing": "아니오", "rcept_no": "20260824000337"},
   {"name": "서진시스템", "kind": "CB", "round": "40", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 67500000000, "board_date": "2026-08-24", "sub_date": "2026-08-27", "pay_date": "2026-09-01", "maturity_date": "2030-09-01", "coupon_rate": "0.0", "ytm_rate": "2.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 36950, "conv_period_start": "2027-09-01", "conv_period_end": "2030-08-01", "refixing": "아니오", "rcept_no": "20260824000325"},
   {"name": "서진시스템", "kind": "CB", "round": "39", "bondName": "무기명식 이권부 무보증 사모 영구 전환사채", "amount": 37500000000, "board_date": "2026-08-24", "sub_date": "2026-08-27", "pay_date": "2026-09-01", "maturity_date": "2056-09-01", "coupon_rate": "2.0", "ytm_rate": "5.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 33255, "conv_period_start": "2027-09-01", "conv_period_end": "2056-08-01", "refixing": "아니오", "rcept_no": "20260824000269"},
-  {"name": "동방", "kind": "CB", "round": "118", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 12000000000, "board_date": "2026-08-20", "sub_date": "2026-08-28", "pay_date": "2026-08-28", "maturity_date": "2031-08-28", "coupon_rate": "0.0", "ytm_rate": "1.5", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 2213, "conv_period_start": "2027-08-28", "conv_period_end": "2031-07-28", "refixing": "아니오", "rcept_no": "20260820000396"},
-  {"name": "아이엠티", "kind": "CB", "round": "6", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-08-20", "sub_date": "2026-08-28", "pay_date": "2026-08-28", "maturity_date": "2031-08-28", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 12661, "conv_period_start": "2027-08-28", "conv_period_end": "2031-07-28", "refixing": "아니오", "rcept_no": "20260820000313"},
+  {"name": "동방", "kind": "CB", "round": "118", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 12000000000, "board_date": "2026-08-20", "sub_date": "2026-08-28", "pay_date": "2026-08-28", "maturity_date": "2031-08-28", "coupon_rate": "0.0", "ytm_rate": "1.5", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 2213, "conv_period_start": "2027-08-28", "conv_period_end": "2031-07-28", "refixing": "아니오", "rcept_no": "20260820000396", "put_start": "2029-06-29", "put_end": "2029-07-30", "put_redemption": "2029-08-28"},
+  {"name": "아이엠티", "kind": "CB", "round": "6", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-08-20", "sub_date": "2026-08-28", "pay_date": "2026-08-28", "maturity_date": "2031-08-28", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 12661, "conv_period_start": "2027-08-28", "conv_period_end": "2031-07-28", "refixing": "아니오", "rcept_no": "20260820000313", "put_start": "2029-02-10", "put_end": "2029-02-20", "put_redemption": "2029-02-28"},
   {"name": "오르비텍", "kind": "CB", "round": "13", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 5000000000, "board_date": "2026-08-24", "sub_date": "2026-08-28", "pay_date": "2026-09-01", "maturity_date": "2029-09-01", "coupon_rate": "2.0", "ytm_rate": "5.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 4514, "conv_period_start": "2027-09-01", "conv_period_end": "2029-08-01", "refixing": "아니오", "rcept_no": "20260827000953"},
   {"name": "그리드위즈", "kind": "CB", "round": "2", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-08-24", "sub_date": "2026-09-01", "pay_date": "2026-09-01", "maturity_date": "2031-09-01", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 14116, "conv_period_start": "2027-09-01", "conv_period_end": "2031-08-01", "refixing": "아니오", "rcept_no": "20260824000168"},
   {"name": "그리드위즈", "kind": "CB", "round": "1", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 15000000000, "board_date": "2026-08-24", "sub_date": "2026-09-01", "pay_date": "2026-09-01", "maturity_date": "2031-09-01", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 14116, "conv_period_start": "2027-09-01", "conv_period_end": "2031-08-01", "refixing": "아니오", "rcept_no": "20260824000164"},
@@ -1918,6 +1928,46 @@ const dartData = {
       "미확약": {
         "count": 241,
         "qty": 94948000
+      }
+    }
+  },
+  "NH스팩34호": {
+    "offering": {
+      "offer_shares": 8500000,
+      "offer_amount_final": 17000000000,
+      "offer_amount_expected": 17000000000,
+      "subscription": {
+        "inst_start": "2026.09.01",
+        "inst_end": "2026.09.02"
+      },
+      "payment_date": "2026.09.04"
+    },
+    "demand_summary": {
+      "total_count": 2050,
+      "total_qty": 7399483000,
+      "competition_rate": 1160.7
+    },
+    "price_bands": null,
+    "lockup": {
+      "미확약": {
+        "count": 66,
+        "qty": 382297000
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
       }
     }
   }
@@ -3073,7 +3123,8 @@ const DART_FILING_URL = {
   "레메디": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260626000241",
   "레몬헬스케어": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260623000235",
   "매드업": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260622000382",
-  "스카이랩스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260825000417"
+  "스카이랩스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260825000417",
+  "NH스팩34호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260828000881"
 };
 // AUTO-GENERATED:FILING_URL:END
 
@@ -3265,6 +3316,15 @@ const COMPANY_PROFILE = {
     "hm_url": "",
     "phn_no": "031-8092-3290",
     "est_dt": "20150908"
+  },
+  "NH스팩34호": {
+    "stock_code": "",
+    "ceo_nm": "유준수",
+    "corp_cls": "E",
+    "adres": "서울특별시 영등포구 여의대로 108 (여의도동, 파크원)",
+    "hm_url": "",
+    "phn_no": "02-768-7530",
+    "est_dt": "20260506"
   }
 };
 // AUTO-GENERATED:COMPANY_PROFILE:END
