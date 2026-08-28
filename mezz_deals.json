@@ -342,7 +342,7 @@
     "bondName": "무기명식 이권부 무보증 사모 전환사채",
     "amount": 5000000000,
     "board_date": "2026-08-24",
-    "sub_date": "2026-08-24",
+    "sub_date": "2026-08-28",
     "pay_date": "2026-09-01",
     "maturity_date": "2029-09-01",
     "coupon_rate": "2.0",
@@ -354,7 +354,7 @@
     "conv_period_start": "2027-09-01",
     "conv_period_end": "2029-08-01",
     "refixing": "아니오",
-    "rcept_no": "20260826000355"
+    "rcept_no": "20260827000953"
   },
   "01601222_CB_2": {
     "name": "씨피시스템",
@@ -376,5 +376,26 @@
     "conv_period_end": "2031-08-03",
     "refixing": "아니오",
     "rcept_no": "20260826000286"
+  },
+  "00138242_CB_125": {
+    "name": "KG모빌리티",
+    "kind": "CB",
+    "round": "125",
+    "bondName": "무기명식 무이권부 무보증 사모 전환사채",
+    "amount": 154500000000,
+    "board_date": "2026-08-27",
+    "sub_date": "2026-09-11",
+    "pay_date": "2026-09-11",
+    "maturity_date": "2031-09-11",
+    "coupon_rate": "0.0",
+    "ytm_rate": "3.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 2713,
+    "conv_period_start": "2027-09-11",
+    "conv_period_end": "2031-08-11",
+    "refixing": "아니오",
+    "rcept_no": "20260827000861"
   }
 }
