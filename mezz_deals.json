@@ -18,7 +18,10 @@
     "conv_period_start": "2027-08-31",
     "conv_period_end": "2029-07-31",
     "refixing": "아니오",
-    "rcept_no": "20260821000597"
+    "rcept_no": "20260821000597",
+    "put_start": null,
+    "put_end": null,
+    "put_redemption": null
   },
   "01105621_CB_18": {
     "name": "엔투텍",
