@@ -222,7 +222,10 @@
     "conv_period_start": "2027-09-01",
     "conv_period_end": "2031-08-01",
     "refixing": "아니오",
-    "rcept_no": "20260824000168"
+    "rcept_no": "20260824000168",
+    "put_start": "2029-12-31",
+    "put_end": "2030-01-30",
+    "put_redemption": "2030-03-01"
   },
   "01299203_CB_1": {
     "name": "그리드위즈",
@@ -243,7 +246,10 @@
     "conv_period_start": "2027-09-01",
     "conv_period_end": "2031-08-01",
     "refixing": "아니오",
-    "rcept_no": "20260824000164"
+    "rcept_no": "20260824000164",
+    "put_start": "2028-12-31",
+    "put_end": "2029-01-30",
+    "put_redemption": "2029-03-01"
   },
   "01440153_CB_8": {
     "name": "넥사다이내믹스",
@@ -327,7 +333,10 @@
     "conv_period_start": "2027-09-01",
     "conv_period_end": "2030-08-01",
     "refixing": "아니오",
-    "rcept_no": "20260824000325"
+    "rcept_no": "20260824000325",
+    "put_start": "2028-07-03",
+    "put_end": "2028-08-02",
+    "put_redemption": "2028-09-01"
   },
   "00838005_CB_39": {
     "name": "서진시스템",
@@ -348,7 +357,10 @@
     "conv_period_start": "2027-09-01",
     "conv_period_end": "2056-08-01",
     "refixing": "아니오",
-    "rcept_no": "20260824000269"
+    "rcept_no": "20260824000269",
+    "put_start": null,
+    "put_end": null,
+    "put_redemption": null
   },
   "00297989_CB_13": {
     "name": "오르비텍",
@@ -369,7 +381,10 @@
     "conv_period_start": "2027-09-01",
     "conv_period_end": "2029-08-01",
     "refixing": "아니오",
-    "rcept_no": "20260827000953"
+    "rcept_no": "20260827000953",
+    "put_start": "2027-07-20",
+    "put_end": "2027-08-10",
+    "put_redemption": "2027-09-01"
   },
   "01601222_CB_2": {
     "name": "씨피시스템",
@@ -433,5 +448,26 @@
     "conv_period_end": "2028-08-16",
     "refixing": "아니오",
     "rcept_no": "20260831001414"
+  },
+  "00317210_CB_21": {
+    "name": "성호전자",
+    "kind": "CB",
+    "round": "21",
+    "bondName": "무기명식 무보증 사모 전환사채",
+    "amount": 13000000000,
+    "board_date": "2026-08-31",
+    "sub_date": "2026-09-08",
+    "pay_date": "2026-09-08",
+    "maturity_date": "2029-09-08",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 17192,
+    "conv_period_start": "2027-09-08",
+    "conv_period_end": "2029-08-08",
+    "refixing": "아니오",
+    "rcept_no": "20260831001545"
   }
 }
