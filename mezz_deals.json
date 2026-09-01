@@ -469,5 +469,26 @@
     "conv_period_end": "2029-08-08",
     "refixing": "아니오",
     "rcept_no": "20260831001545"
+  },
+  "00526951_CB_6": {
+    "name": "신화프리텍",
+    "kind": "CB",
+    "round": "6",
+    "bondName": "무기명식 무이권부 무보증 사모 전환사채",
+    "amount": 21000000000,
+    "board_date": "2026-09-01",
+    "sub_date": "2026-09-09",
+    "pay_date": "2026-09-09",
+    "maturity_date": "2031-09-09",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 1869,
+    "conv_period_start": "2027-09-09",
+    "conv_period_end": "2031-08-09",
+    "refixing": "아니오",
+    "rcept_no": "20260901000319"
   }
 }
