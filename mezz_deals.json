@@ -405,7 +405,10 @@
     "conv_period_start": "2027-09-03",
     "conv_period_end": "2031-08-03",
     "refixing": "아니오",
-    "rcept_no": "20260826000286"
+    "rcept_no": "20260826000286",
+    "put_start": "2029-01-02",
+    "put_end": "2029-02-01",
+    "put_redemption": "2029-03-03"
   },
   "00138242_CB_125": {
     "name": "KG모빌리티",
