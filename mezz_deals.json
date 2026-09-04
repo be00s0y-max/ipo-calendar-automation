@@ -291,7 +291,10 @@
     "conv_period_start": "2027-09-04",
     "conv_period_end": "2056-08-04",
     "refixing": "아니오",
-    "rcept_no": "20260824000304"
+    "rcept_no": "20260824000304",
+    "put_start": null,
+    "put_end": null,
+    "put_redemption": null
   },
   "00838005_CB_42": {
     "name": "서진시스템",
@@ -312,7 +315,10 @@
     "conv_period_start": "2027-09-04",
     "conv_period_end": "2030-08-04",
     "refixing": "아니오",
-    "rcept_no": "20260824000337"
+    "rcept_no": "20260824000337",
+    "put_start": "2028-07-03",
+    "put_end": "2028-08-02",
+    "put_redemption": "2028-09-01"
   },
   "00838005_CB_40": {
     "name": "서진시스템",
