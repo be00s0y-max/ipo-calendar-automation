@@ -1028,5 +1028,45 @@
         "qty": 0
       }
     }
+  },
+  "KB스팩34호": {
+    "offering": {
+      "offer_shares": 7000000,
+      "offer_amount_final": 14000000000,
+      "offer_amount_expected": 14000000000,
+      "subscription": {
+        "inst_start": "2026.09.10",
+        "inst_end": "2026.09.11"
+      },
+      "payment_date": "2026.09.15"
+    },
+    "demand_summary": {
+      "total_count": 2001,
+      "total_qty": 6470702000,
+      "competition_rate": 1232.51
+    },
+    "price_bands": null,
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 2,
+        "qty": 505000
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "미확약": {
+        "count": 1999,
+        "qty": 6470197000
+      }
+    }
   }
 }

@@ -477,7 +477,10 @@
     "conv_period_start": "2027-09-08",
     "conv_period_end": "2029-08-08",
     "refixing": "아니오",
-    "rcept_no": "20260831001545"
+    "rcept_no": "20260831001545",
+    "put_start": "2028-01-08",
+    "put_end": "2028-02-07",
+    "put_redemption": "2028-03-08"
   },
   "00526951_CB_6": {
     "name": "신화프리텍",
@@ -646,5 +649,26 @@
     "conv_period_end": "2031-08-14",
     "refixing": "아니오",
     "rcept_no": "20260904000205"
+  },
+  "00530413_CB_11": {
+    "name": "더코디",
+    "kind": "CB",
+    "round": "11",
+    "bondName": "무기명식 이권부 무보증 사모 전환사채",
+    "amount": 30000000000,
+    "board_date": "2026-09-07",
+    "sub_date": "2026-09-07",
+    "pay_date": "2026-10-06",
+    "maturity_date": "2029-10-06",
+    "coupon_rate": "3",
+    "ytm_rate": "4",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 3550,
+    "conv_period_start": "2027-10-06",
+    "conv_period_end": "2029-09-06",
+    "refixing": "아니오",
+    "rcept_no": "20260908000001"
   }
 }
