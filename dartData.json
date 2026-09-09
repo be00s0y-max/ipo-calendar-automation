@@ -1068,5 +1068,95 @@
         "qty": 6470197000
       }
     }
+  },
+  "네오사피엔스": {
+    "offering": {
+      "offer_shares": 2000000,
+      "offer_amount_expected": 27600000000,
+      "offer_amount_final": 20000000000,
+      "subscription": {
+        "inst_start": "2026년 09월 10일(목)",
+        "inst_end": "2026년 09월 11일(금)"
+      },
+      "payment_date": "2026년 09월 15일"
+    },
+    "demand_summary": {
+      "total_count": 1045,
+      "total_qty": 329341000,
+      "competition_rate": 219.56
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "15,800원(상단) 초과",
+        "count": 3,
+        "count_pct": "0.29%",
+        "qty": 466000,
+        "qty_pct": "0.14%"
+      },
+      {
+        "band": "15.800원(상단)",
+        "count": 65,
+        "count_pct": "6.22%",
+        "qty": 19492000,
+        "qty_pct": "5.92%"
+      },
+      {
+        "band": "13,800원(하단) 초과 ~ 15,800원(상단) 미만",
+        "count": 5,
+        "count_pct": "0.48%",
+        "qty": 68000,
+        "qty_pct": "0.02%"
+      },
+      {
+        "band": "13,800원",
+        "count": 426,
+        "count_pct": "40.77%",
+        "qty": 167194000,
+        "qty_pct": "50.77%"
+      },
+      {
+        "band": "13,800원(하단) 미만",
+        "count": 546,
+        "count_pct": "52.25%",
+        "qty": 142121000,
+        "qty_pct": "43.15%"
+      },
+      {
+        "band": "합계",
+        "count": 1045,
+        "count_pct": "100.00%",
+        "qty": 329341000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 46,
+        "qty": 29569000
+      },
+      "미확약": {
+        "count": 999,
+        "qty": 299772000
+      }
+    }
   }
 }
