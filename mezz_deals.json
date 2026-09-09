@@ -501,7 +501,10 @@
     "conv_period_start": "2027-09-09",
     "conv_period_end": "2031-08-09",
     "refixing": "아니오",
-    "rcept_no": "20260901000319"
+    "rcept_no": "20260901000319",
+    "put_start": "2028-07-11",
+    "put_end": "2028-08-10",
+    "put_redemption": "2028-09-09"
   },
   "00403766_CB_5": {
     "name": "한국첨단소재",
