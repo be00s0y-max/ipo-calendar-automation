@@ -576,7 +576,10 @@
     "conv_period_start": "2027-09-11",
     "conv_period_end": "2029-08-11",
     "refixing": "아니오",
-    "rcept_no": "20260902000227"
+    "rcept_no": "20260902000227",
+    "put_start": "2027-07-13",
+    "put_end": "2027-08-12",
+    "put_redemption": "2027-09-11"
   },
   "01051472_CB_8": {
     "name": "젠큐릭스",
@@ -618,7 +621,10 @@
     "conv_period_start": "2027-09-12",
     "conv_period_end": "2031-08-11",
     "refixing": "아니오",
-    "rcept_no": "20260903000285"
+    "rcept_no": "20260903000285",
+    "put_start": "2028-07-13",
+    "put_end": "2028-08-14",
+    "put_redemption": "2028-09-11"
   },
   "01399992_CB_5": {
     "name": "뉴라텍",
