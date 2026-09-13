@@ -600,7 +600,10 @@
     "conv_period_start": "2027-09-11",
     "conv_period_end": "2029-08-10",
     "refixing": "아니오",
-    "rcept_no": "20260903000307"
+    "rcept_no": "20260903000307",
+    "put_start": "2027-07-11",
+    "put_end": "2027-08-11",
+    "put_redemption": "2027-09-11"
   },
   "00152385_CB_35": {
     "name": "에이프로젠",
@@ -772,5 +775,26 @@
     "conv_period_end": "2031-08-18",
     "refixing": "아니오",
     "rcept_no": "20260910000248"
+  },
+  "00683283_EB_34": {
+    "name": "LS전선",
+    "kind": "EB",
+    "round": "34",
+    "bondName": "무기명식 무이권부 무보증 사모 교환사채",
+    "amount": 500000000000,
+    "board_date": "2026-09-10",
+    "sub_date": "2026-11-09",
+    "pay_date": "2026-11-09",
+    "maturity_date": "2031-11-09",
+    "coupon_rate": "0.00",
+    "ytm_rate": "0.00",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100.00",
+    "conv_price": 270000,
+    "conv_period_start": "2026-11-10",
+    "conv_period_end": "2031-10-09",
+    "refixing": "아니오",
+    "rcept_no": "20260911000411"
   }
 }
