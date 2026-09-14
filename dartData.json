@@ -1245,5 +1245,45 @@
         "qty": 1443451000
       }
     }
+  },
+  "빅웨이브로보틱스": {
+    "offering": {
+      "offer_shares": 1600000,
+      "offer_amount_expected": 24000000000,
+      "offer_amount_final": 28800000000,
+      "subscription": {
+        "inst_start": "2026년 09월 15일(화)",
+        "inst_end": "2026년 09월 16일(수)"
+      },
+      "payment_date": "2026년 09월 18일"
+    },
+    "demand_summary": {
+      "total_count": 2255,
+      "total_qty": 1156724000,
+      "competition_rate": 1109.37
+    },
+    "price_bands": null,
+    "lockup": {
+      "미확약": {
+        "count": 1873,
+        "qty": 946952000
+      },
+      "15일 확약": {
+        "count": 244,
+        "qty": 134410000
+      },
+      "1개월 확약": {
+        "count": 59,
+        "qty": 30686000
+      },
+      "3개월 확약": {
+        "count": 57,
+        "qty": 29859000
+      },
+      "6개월 확약": {
+        "count": 22,
+        "qty": 14817000
+      }
+    }
   }
 }
