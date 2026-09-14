@@ -669,7 +669,10 @@
     "conv_period_start": "2027-09-14",
     "conv_period_end": "2031-08-14",
     "refixing": "아니오",
-    "rcept_no": "20260904000205"
+    "rcept_no": "20260904000205",
+    "put_start": "2029-01-13",
+    "put_end": "2029-02-15",
+    "put_redemption": "2029-03-14"
   },
   "00530413_CB_11": {
     "name": "더코디",
@@ -796,5 +799,47 @@
     "conv_period_end": "2031-10-09",
     "refixing": "아니오",
     "rcept_no": "20260911000411"
+  },
+  "01407158_CB_2": {
+    "name": "이노테나",
+    "kind": "CB",
+    "round": "2",
+    "bondName": "무기명식 무이권부 무보증 사모 전환사채",
+    "amount": 5000000000,
+    "board_date": "2026-09-14",
+    "sub_date": "2026-09-22",
+    "pay_date": "2026-09-22",
+    "maturity_date": "2031-09-22",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100.00",
+    "conv_price": 7725,
+    "conv_period_start": "2027-09-22",
+    "conv_period_end": "2031-08-22",
+    "refixing": "아니오",
+    "rcept_no": "20260914000062"
+  },
+  "00618410_CB_19": {
+    "name": "KS인더스트리",
+    "kind": "CB",
+    "round": "19",
+    "bondName": "무기명식 이권부 무보증 사모 전환사채",
+    "amount": 7000000000,
+    "board_date": "2026-09-11",
+    "sub_date": "2026-09-16",
+    "pay_date": "2026-10-01",
+    "maturity_date": "2029-09-11",
+    "coupon_rate": "0",
+    "ytm_rate": "3",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 1440,
+    "conv_period_start": "2028-03-11",
+    "conv_period_end": "2029-08-10",
+    "refixing": "아니오",
+    "rcept_no": "20260911000607"
   }
 }
