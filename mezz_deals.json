@@ -925,5 +925,26 @@
     "conv_period_end": "2031-08-22",
     "refixing": "아니오",
     "rcept_no": "20260914000252"
+  },
+  "00188973_CB_2": {
+    "name": "화일약품",
+    "kind": "CB",
+    "round": "2",
+    "bondName": "무기명식 이권부 무보증 사모 전환사채",
+    "amount": 10000000000,
+    "board_date": "2026-09-15",
+    "sub_date": "2026-10-06",
+    "pay_date": "2026-10-08",
+    "maturity_date": "2029-10-08",
+    "coupon_rate": "2",
+    "ytm_rate": "4",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 8294,
+    "conv_period_start": "2027-10-08",
+    "conv_period_end": "2029-09-08",
+    "refixing": "아니오",
+    "rcept_no": "20260915000382"
   }
 }
