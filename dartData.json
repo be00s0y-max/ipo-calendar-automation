@@ -1285,5 +1285,135 @@
         "qty": 14817000
       }
     }
+  },
+  "덕산넵코어스(구.넵코어스)": {
+    "offering": {
+      "offer_shares": 3000000,
+      "offer_amount_expected": 37200000000,
+      "offer_amount_final": 43800000000,
+      "subscription": {
+        "inst_start": "2026년 09월 16일(수)",
+        "inst_end": "2026년 09월 17일(목)"
+      },
+      "payment_date": "2026년 09월 21일"
+    },
+    "demand_summary": {
+      "total_count": 2269,
+      "total_qty": 1954434000,
+      "competition_rate": 868.64
+    },
+    "price_bands": null,
+    "lockup": {
+      "6개월 확약": {
+        "count": 21,
+        "qty": 25481000
+      },
+      "3개월 확약": {
+        "count": 18,
+        "qty": 12226000
+      },
+      "1개월 확약": {
+        "count": 17,
+        "qty": 10945000
+      },
+      "15일 확약": {
+        "count": 63,
+        "qty": 30504000
+      },
+      "미확약": {
+        "count": 2150,
+        "qty": 1875278000
+      }
+    }
+  },
+  "글로벌테크놀로지": {
+    "offering": {
+      "offer_shares": 4000000,
+      "offer_amount_expected": 52000000000,
+      "offer_amount_final": 40000000000,
+      "subscription": {
+        "inst_start": "2026년 09월 16일(수)",
+        "inst_end": "2026년 09월 17일(목)"
+      },
+      "payment_date": "2026년 09월 21일"
+    },
+    "demand_summary": {
+      "total_count": 961,
+      "total_qty": 369558000,
+      "competition_rate": 123.19
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 5,
+        "count_pct": "0.52%",
+        "qty": 431000,
+        "qty_pct": "0.12%"
+      },
+      {
+        "band": "15,000원(상단) 초과",
+        "count": 3,
+        "count_pct": "0.31%",
+        "qty": 14000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "15,000원(상단)",
+        "count": 65,
+        "count_pct": "6.76%",
+        "qty": 59159000,
+        "qty_pct": "16.01%"
+      },
+      {
+        "band": "13,000원(하단) 초과 ~ 15,000원(상단) 미만",
+        "count": 4,
+        "count_pct": "0.42%",
+        "qty": 67000,
+        "qty_pct": "0.02%"
+      },
+      {
+        "band": "13,000원(하단)",
+        "count": 55,
+        "count_pct": "5.72%",
+        "qty": 12585000,
+        "qty_pct": "3.41%"
+      },
+      {
+        "band": "13,000원(하단) 미만",
+        "count": 829,
+        "count_pct": "86.26%",
+        "qty": 297302000,
+        "qty_pct": "80.45%"
+      },
+      {
+        "band": "합계",
+        "count": 961,
+        "count_pct": "100.00%",
+        "qty": 369558000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 40,
+        "qty": 990000
+      },
+      "미확약": {
+        "count": 921,
+        "qty": 368568000
+      }
+    }
   }
 }

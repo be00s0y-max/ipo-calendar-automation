@@ -920,7 +920,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "9.15(화) 08:09";
+const LAST_UPDATED_KST = "9.15(화) 15:19";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -928,6 +928,13 @@ const LAST_UPDATED_KST = "9.15(화) 08:09";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "9.15(화) 15:19",
+    "items": [
+      "수요예측 결과 반영 2건 — 글로벌테크놀로지, 덕산넵코어스(구.넵코어스)",
+      "확정 증권신고서 공시 2건 — 글로벌테크놀로지, 덕산넵코어스(구.넵코어스)"
+    ]
+  },
   {
     "at": "9.15(화) 08:09",
     "items": [
@@ -1063,12 +1070,6 @@ const UPDATE_LOG = [
       "확정 증권신고서 공시 1건 — NH스팩34호",
       "조기상환(풋옵션) 일정 4건 추가 확인"
     ]
-  },
-  {
-    "at": "8.28(금) 09:18",
-    "items": [
-      "신규 메자닌 1건 (CB 1건) — KG모빌리티"
-    ]
   }
 ];
 // AUTO-GENERATED:UPDATE_LOG:END
@@ -1094,10 +1095,10 @@ const deals = [
   { name: "네오사피엔스", uw: "대신증권", demand: ["2026-09-02","2026-09-08"], sub: ["2026-09-10", "2026-09-11"], pay: "2026-09-15", list: "2026-09-21", dealSizeM: 20000 },
   { name: "와이즈플래닛컴퍼니", uw: "대신증권", demand: ["2026-09-04","2026-09-10"], sub: ["2026-09-14", "2026-09-15"], pay: "2026-09-17", list: "2026-09-23", dealSizeM: 19200 },
   { name: "KB스팩34호", uw: "KB증권", demand: ["2026-09-04","2026-09-07"], sub: ["2026-09-10", "2026-09-11"], pay: "2026-09-15", list: "2026-09-22", dealSizeM: 14000 },
-  { name: "빅웨이브로보틱스", uw: "유진투자증권,미래에셋증권", demand: ["2026-09-07","2026-09-11"], sub: ["2026-09-15", "2026-09-16"], pay: "2026-09-18", list: "2026-09-29", dealSizeM: 24000 },
+  { name: "빅웨이브로보틱스", uw: "유진투자증권,미래에셋증권", demand: ["2026-09-07","2026-09-11"], sub: ["2026-09-15", "2026-09-16"], pay: "2026-09-18", list: "2026-09-29", dealSizeM: 28800 },
   { name: "글로벌테크놀로지", uw: "한국투자증권", demand: ["2026-09-07","2026-09-11"], sub: ["2026-09-16", "2026-09-17"], pay: "2026-09-21", list: "2026-09-29", dealSizeM: 52000 },
   { name: "한국스팩17호", uw: "한국투자증권", demand: ["2026-09-07","2026-09-08"], sub: ["2026-09-10", "2026-09-11"], pay: "2026-09-15", list: "2026-09-22", dealSizeM: 14000 },
-  { name: "덕산넵코어스(구.넵코어스)", uw: "대신증권", demand: ["2026-09-08","2026-09-14"], sub: ["2026-09-16", "2026-09-17"], pay: "2026-09-21", list: null, dealSizeM: 37200 },
+  { name: "덕산넵코어스(구.넵코어스)", uw: "대신증권", demand: ["2026-09-08","2026-09-14"], sub: ["2026-09-16", "2026-09-17"], pay: "2026-09-21", list: "2026-09-30", dealSizeM: 43800 },
   { name: "브릴스", uw: "IBK투자증권", demand: ["2026-09-09","2026-09-15"], sub: ["2026-09-17", "2026-09-18"], pay: "2026-09-22", list: null, dealSizeM: 19800 },
   { name: "멜콘(구.에스앤에프솔루션)", uw: "대신증권", demand: ["2026-09-16","2026-09-22"], sub: ["2026-10-01", "2026-10-02"], pay: "2026-10-07", list: null, dealSizeM: 26750 },
   { name: "진코스텍", uw: "하나증권", demand: ["2026-09-16","2026-09-22"], sub: ["2026-10-02", "2026-10-06"], pay: "2026-10-08", list: null, dealSizeM: 16614 },
@@ -2457,6 +2458,136 @@ const dartData = {
         "qty": 14817000
       }
     }
+  },
+  "덕산넵코어스(구.넵코어스)": {
+    "offering": {
+      "offer_shares": 3000000,
+      "offer_amount_expected": 37200000000,
+      "offer_amount_final": 43800000000,
+      "subscription": {
+        "inst_start": "2026년 09월 16일(수)",
+        "inst_end": "2026년 09월 17일(목)"
+      },
+      "payment_date": "2026년 09월 21일"
+    },
+    "demand_summary": {
+      "total_count": 2269,
+      "total_qty": 1954434000,
+      "competition_rate": 868.64
+    },
+    "price_bands": null,
+    "lockup": {
+      "6개월 확약": {
+        "count": 21,
+        "qty": 25481000
+      },
+      "3개월 확약": {
+        "count": 18,
+        "qty": 12226000
+      },
+      "1개월 확약": {
+        "count": 17,
+        "qty": 10945000
+      },
+      "15일 확약": {
+        "count": 63,
+        "qty": 30504000
+      },
+      "미확약": {
+        "count": 2150,
+        "qty": 1875278000
+      }
+    }
+  },
+  "글로벌테크놀로지": {
+    "offering": {
+      "offer_shares": 4000000,
+      "offer_amount_expected": 52000000000,
+      "offer_amount_final": 40000000000,
+      "subscription": {
+        "inst_start": "2026년 09월 16일(수)",
+        "inst_end": "2026년 09월 17일(목)"
+      },
+      "payment_date": "2026년 09월 21일"
+    },
+    "demand_summary": {
+      "total_count": 961,
+      "total_qty": 369558000,
+      "competition_rate": 123.19
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 5,
+        "count_pct": "0.52%",
+        "qty": 431000,
+        "qty_pct": "0.12%"
+      },
+      {
+        "band": "15,000원(상단) 초과",
+        "count": 3,
+        "count_pct": "0.31%",
+        "qty": 14000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "15,000원(상단)",
+        "count": 65,
+        "count_pct": "6.76%",
+        "qty": 59159000,
+        "qty_pct": "16.01%"
+      },
+      {
+        "band": "13,000원(하단) 초과 ~ 15,000원(상단) 미만",
+        "count": 4,
+        "count_pct": "0.42%",
+        "qty": 67000,
+        "qty_pct": "0.02%"
+      },
+      {
+        "band": "13,000원(하단)",
+        "count": 55,
+        "count_pct": "5.72%",
+        "qty": 12585000,
+        "qty_pct": "3.41%"
+      },
+      {
+        "band": "13,000원(하단) 미만",
+        "count": 829,
+        "count_pct": "86.26%",
+        "qty": 297302000,
+        "qty_pct": "80.45%"
+      },
+      {
+        "band": "합계",
+        "count": 961,
+        "count_pct": "100.00%",
+        "qty": 369558000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 40,
+        "qty": 990000
+      },
+      "미확약": {
+        "count": 921,
+        "qty": 368568000
+      }
+    }
   }
 };
 // AUTO-GENERATED:DART_DATA:END
@@ -3722,7 +3853,9 @@ const DART_FILING_URL = {
   "KB스팩34호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260908000181",
   "네오사피엔스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260909000307",
   "와이즈플래닛컴퍼니": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260911000209",
-  "빅웨이브로보틱스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260914000379"
+  "빅웨이브로보틱스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260914000379",
+  "덕산넵코어스(구.넵코어스)": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260915000085",
+  "글로벌테크놀로지": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260915000237"
 };
 // AUTO-GENERATED:FILING_URL:END
 
@@ -3959,6 +4092,24 @@ const COMPANY_PROFILE = {
     "hm_url": "myrobotsolution.com/",
     "phn_no": "01068631866",
     "est_dt": "20200929"
+  },
+  "덕산넵코어스(구.넵코어스)": {
+    "stock_code": "",
+    "ceo_nm": "황태호",
+    "corp_cls": "E",
+    "adres": "대전광역시 유성구 테크노2로 66-6 (관평동)",
+    "hm_url": "",
+    "phn_no": "042-363-9000",
+    "est_dt": "20121228"
+  },
+  "글로벌테크놀로지": {
+    "stock_code": "",
+    "ceo_nm": "김민선",
+    "corp_cls": "E",
+    "adres": "경기도 화성시 동탄대로21길 10 303-1호(영천동 더퍼스트타워)",
+    "hm_url": "www.glbltech.com",
+    "phn_no": "031-8015-3477",
+    "est_dt": "20130509"
   }
 };
 // AUTO-GENERATED:COMPANY_PROFILE:END
