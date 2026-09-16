@@ -970,5 +970,26 @@
     "conv_period_end": "2031-08-22",
     "refixing": "아니오",
     "rcept_no": "20260916000208"
+  },
+  "01370322_BW_2": {
+    "name": "삼진식품",
+    "kind": "BW",
+    "round": "2",
+    "bondName": "무기명식 무보증 비분리형 사모 신주인수권부사채",
+    "amount": 10000000000,
+    "board_date": "2026-09-16",
+    "sub_date": "2026-09-28",
+    "pay_date": "2026-09-28",
+    "maturity_date": "2029-09-28",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 7427,
+    "conv_period_start": "2027-09-28",
+    "conv_period_end": "2029-08-28",
+    "refixing": "아니오",
+    "rcept_no": "20260916000348"
   }
 }
