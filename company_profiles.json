@@ -244,5 +244,14 @@
     "hm_url": "www.glbltech.com",
     "phn_no": "031-8015-3477",
     "est_dt": "20130509"
+  },
+  "브릴스": {
+    "stock_code": "",
+    "ceo_nm": "전진",
+    "corp_cls": "E",
+    "adres": "인천광역시 연수구 갯벌로 94 (송도동, (주)브릴스)",
+    "hm_url": "https://www.brils.co.kr",
+    "phn_no": "032-721-4760",
+    "est_dt": "20150206"
   }
 }
