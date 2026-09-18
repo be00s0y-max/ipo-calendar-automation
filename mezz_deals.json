@@ -759,7 +759,10 @@
     "conv_period_start": "2027-09-18",
     "conv_period_end": "2031-08-18",
     "refixing": "아니오",
-    "rcept_no": "20260910000280"
+    "rcept_no": "20260910000280",
+    "put_start": "2029-01-17",
+    "put_end": "2029-02-16",
+    "put_redemption": "2029-03-18"
   },
   "01326279_CB_9": {
     "name": "아이엘",
@@ -864,7 +867,10 @@
     "conv_period_start": "2026-10-18",
     "conv_period_end": "2029-03-17",
     "refixing": "아니오",
-    "rcept_no": "20260914000428"
+    "rcept_no": "20260914000428",
+    "put_start": null,
+    "put_end": null,
+    "put_redemption": null
   },
   "00169048_CB_38": {
     "name": "HLB글로벌",
