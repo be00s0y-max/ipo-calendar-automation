@@ -273,7 +273,10 @@
     "conv_period_start": "2027-09-22",
     "conv_period_end": "2029-08-22",
     "refixing": "아니오",
-    "rcept_no": "20260824000329"
+    "rcept_no": "20260824000329",
+    "put_start": "2027-07-24",
+    "put_end": "2027-08-23",
+    "put_redemption": "2027-09-22"
   },
   "00838005_CB_41": {
     "name": "서진시스템",
@@ -825,7 +828,10 @@
     "conv_period_start": "2027-09-22",
     "conv_period_end": "2031-08-22",
     "refixing": "아니오",
-    "rcept_no": "20260914000062"
+    "rcept_no": "20260914000062",
+    "put_start": "2028-07-24",
+    "put_end": "2028-08-23",
+    "put_redemption": "2028-09-22"
   },
   "00618410_CB_19": {
     "name": "KS인더스트리",
@@ -975,7 +981,10 @@
     "conv_period_start": "2027-09-22",
     "conv_period_end": "2031-08-22",
     "refixing": "아니오",
-    "rcept_no": "20260917000205"
+    "rcept_no": "20260917000205",
+    "put_start": "2029-01-21",
+    "put_end": "2029-02-20",
+    "put_redemption": "2029-03-22"
   },
   "01370322_BW_2": {
     "name": "삼진식품",
