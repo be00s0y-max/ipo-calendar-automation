@@ -1174,5 +1174,26 @@
     "conv_period_end": "2029-08-30",
     "refixing": "아니오",
     "rcept_no": "20260922000356"
+  },
+  "01689266_CB_1": {
+    "name": "케이쓰리아이",
+    "kind": "CB",
+    "round": "1",
+    "bondName": "무기명식 이권부 무보증 사모 전환사채",
+    "amount": 15000000000,
+    "board_date": "2026-09-23",
+    "sub_date": "2026-10-20",
+    "pay_date": "2026-10-20",
+    "maturity_date": "2031-10-20",
+    "coupon_rate": "2.0",
+    "ytm_rate": "6.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100.00",
+    "conv_price": 3873,
+    "conv_period_start": "2027-10-20",
+    "conv_period_end": "2031-09-20",
+    "refixing": "아니오",
+    "rcept_no": "20260923000637"
   }
 }
