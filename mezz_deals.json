@@ -1005,7 +1005,10 @@
     "conv_period_start": "2027-09-28",
     "conv_period_end": "2029-08-28",
     "refixing": "아니오",
-    "rcept_no": "20260916000348"
+    "rcept_no": "20260916000348",
+    "put_start": "2029-01-27",
+    "put_end": "2029-02-26",
+    "put_redemption": "2029-03-28"
   },
   "01315042_CB_8": {
     "name": "시선AI",
