@@ -1195,5 +1195,26 @@
     "conv_period_end": "2031-09-20",
     "refixing": "아니오",
     "rcept_no": "20260923000637"
+  },
+  "01142075_CB_9": {
+    "name": "핑거",
+    "kind": "CB",
+    "round": "9",
+    "bondName": "무기명식 무이권부 무보증 사모 전환사채",
+    "amount": 15000000000,
+    "board_date": "2026-09-23",
+    "sub_date": "2026-10-01",
+    "pay_date": "2026-10-01",
+    "maturity_date": "2029-10-01",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 11904,
+    "conv_period_start": "2027-10-01",
+    "conv_period_end": "2029-09-01",
+    "refixing": "아니오",
+    "rcept_no": "20260923000640"
   }
 }
