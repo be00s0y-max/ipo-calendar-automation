@@ -1050,7 +1050,10 @@
     "conv_period_start": "2027-09-29",
     "conv_period_end": "2031-08-29",
     "refixing": "아니오",
-    "rcept_no": "20260923000131"
+    "rcept_no": "20260923000131",
+    "put_start": "2028-07-31",
+    "put_end": "2028-08-30",
+    "put_redemption": "2028-09-29"
   },
   "01309795_CB_4": {
     "name": "아틀라스링크",
@@ -1071,7 +1074,10 @@
     "conv_period_start": "2027-09-29",
     "conv_period_end": "2029-08-29",
     "refixing": "아니오",
-    "rcept_no": "20260921000354"
+    "rcept_no": "20260921000354",
+    "put_start": "2027-09-09",
+    "put_end": "2027-09-19",
+    "put_redemption": "2027-09-29"
   },
   "00350020_CB_13": {
     "name": "파인디앤씨",
