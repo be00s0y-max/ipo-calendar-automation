@@ -1297,5 +1297,26 @@
     "conv_period_end": "2031-09-12",
     "refixing": "아니오",
     "rcept_no": "20261001000515"
+  },
+  "00367871_CB_5": {
+    "name": "인바이오",
+    "kind": "CB",
+    "round": "5",
+    "bondName": "무기명식 무이권부 무보증 사모 전환사채",
+    "amount": 1500000000,
+    "board_date": "2026-10-02",
+    "sub_date": "2026-10-12",
+    "pay_date": "2026-10-12",
+    "maturity_date": "2029-10-12",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 2082,
+    "conv_period_start": "2027-10-12",
+    "conv_period_end": "2029-09-12",
+    "refixing": "아니오",
+    "rcept_no": "20261002000375"
   }
 }
