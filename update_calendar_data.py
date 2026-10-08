@@ -11,6 +11,7 @@ DART 스크립트(update_dart_data.py)와 역할이 다르다: 그건 이미 아
      종목명·수요예측일·공모금액·주간사·상세페이지 링크(no=)를 얻는다.
   2. 종목별 상세페이지(?o=v&no=N)에서 공모청약일·납입일·상장일을 보충한다.
   3. deals.json(소스 오브 트루스)과 비교해서 새 종목/일정 변경을 찾아낸다.
+     1페이지 기간 안에 있어야 할 딜이 사라졌으면(연기·철회) 목록에서 뺀다.
   4. 바뀐 게 있으면 deals.json을 갱신하고 ipo_calendar.html의
      AUTO-GENERATED:DEALS 블록을 재생성한다.
 
@@ -238,7 +239,22 @@ def main():
             changed.append(d["name"])
         merged[d["name"]] = d
 
-    if not new_names and not changed:
+    # 일정이 연기·철회된 딜은 38이 목록에서 아예 지워버린다(다음 페이지로
+    # 밀리는 게 아니라 사라짐). 위 병합만으로는 그런 딜이 옛 일정 그대로
+    # 캘린더에 계속 남으므로, 1페이지가 덮는 기간(가장 이른 수요예측
+    # 시작일 이후) 안에 있어야 할 딜이 1페이지에 없으면 빠진 것으로 보고
+    # 지운다. 경계일과 같은 날 딜은 2페이지로 넘어갔을 수도 있어서 남겨둔다.
+    # 같은 이름으로 새 일정이 다시 올라오면 위에서 신규 종목으로 다시 들어온다.
+    removed = []
+    if len(scraped) >= 10:  # 목록을 제대로 못 읽은 날 엉뚱하게 지우지 않도록
+        window_start = min(d["demand"][0] for d in scraped)
+        scraped_names = {d["name"] for d in scraped}
+        for name, d in list(merged.items()):
+            if name not in scraped_names and d["demand"][0] > window_start:
+                removed.append(name)
+                del merged[name]
+
+    if not new_names and not changed and not removed:
         print(f"확인 대상: {len(scraped)}개 종목 (전체 보유 {len(merged)}개)")
         print("변경 없음 (신규 종목 없고 일정 변경도 없음).")
         sys.exit(3)
@@ -256,6 +272,8 @@ def main():
         print("신규 종목:", ", ".join(new_names))
     if changed:
         print("일정 변경:", ", ".join(changed))
+    if removed:
+        print("연기·철회로 제외:", ", ".join(removed))
     sys.exit(0)
 
 
