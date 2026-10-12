@@ -1302,7 +1302,10 @@
     "conv_period_start": "2027-10-12",
     "conv_period_end": "2031-09-12",
     "refixing": "아니오",
-    "rcept_no": "20261001000515"
+    "rcept_no": "20261001000515",
+    "put_start": "2028-08-13",
+    "put_end": "2028-09-12",
+    "put_redemption": "2028-10-12"
   },
   "00367871_CB_5": {
     "name": "인바이오",
