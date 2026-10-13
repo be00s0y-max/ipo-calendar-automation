@@ -1350,7 +1350,10 @@
     "conv_period_start": "2027-10-13",
     "conv_period_end": "2028-09-13",
     "refixing": "아니오",
-    "rcept_no": "20261002000538"
+    "rcept_no": "20261002000538",
+    "put_start": "2027-10-14",
+    "put_end": "2027-11-15",
+    "put_redemption": "2027-12-13"
   },
   "00963976_CB_22": {
     "name": "SG",
@@ -1518,7 +1521,7 @@
     "conv_period_start": "2027-10-16",
     "conv_period_end": "2031-09-16",
     "refixing": "아니오",
-    "rcept_no": "20261008000687"
+    "rcept_no": "20261013000057"
   },
   "01298806_CB_1-2": {
     "name": "다원메닥스",
