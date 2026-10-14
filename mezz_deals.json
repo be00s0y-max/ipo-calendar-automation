@@ -1395,7 +1395,10 @@
     "conv_period_start": "2027-10-14",
     "conv_period_end": "2031-09-14",
     "refixing": "아니오",
-    "rcept_no": "20261006000446"
+    "rcept_no": "20261006000446",
+    "put_start": "2028-08-15",
+    "put_end": "2028-09-14",
+    "put_redemption": "2028-10-14"
   },
   "00366137_EB_4": {
     "name": "KG에코솔루션",
@@ -1711,5 +1714,26 @@
     "conv_period_end": "2056-10-12",
     "refixing": "아니오",
     "rcept_no": "20261013000355"
+  },
+  "00177816_CB_9": {
+    "name": "대주전자재료",
+    "kind": "CB",
+    "round": "9",
+    "bondName": "무기명식 무보증 사모 전환사채",
+    "amount": 70000000000,
+    "board_date": "2026-10-14",
+    "sub_date": "2026-10-22",
+    "pay_date": "2026-10-22",
+    "maturity_date": "2031-10-22",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 120000,
+    "conv_period_start": "2027-10-22",
+    "conv_period_end": "2031-09-22",
+    "refixing": "아니오",
+    "rcept_no": "20261014000146"
   }
 }
