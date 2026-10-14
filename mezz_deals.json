@@ -1735,5 +1735,26 @@
     "conv_period_end": "2031-09-22",
     "refixing": "아니오",
     "rcept_no": "20261014000146"
+  },
+  "01275665_CB_4": {
+    "name": "리메드",
+    "kind": "CB",
+    "round": "4",
+    "bondName": "무기명식 무보증 이권부 사모 전환사채",
+    "amount": 10000000000,
+    "board_date": "2026-10-14",
+    "sub_date": "2026-10-26",
+    "pay_date": "2026-10-26",
+    "maturity_date": "2031-10-26",
+    "coupon_rate": "1.0",
+    "ytm_rate": "5.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 2954,
+    "conv_period_start": "2027-10-27",
+    "conv_period_end": "2031-09-26",
+    "refixing": "아니오",
+    "rcept_no": "20261014000424"
   }
 }
