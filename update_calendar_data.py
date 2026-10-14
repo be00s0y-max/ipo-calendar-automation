@@ -12,6 +12,8 @@ DART 스크립트(update_dart_data.py)와 역할이 다르다: 그건 이미 아
   2. 종목별 상세페이지(?o=v&no=N)에서 공모청약일·납입일·상장일을 보충한다.
   3. deals.json(소스 오브 트루스)과 비교해서 새 종목/일정 변경을 찾아낸다.
      1페이지 기간 안에 있어야 할 딜이 사라졌으면(연기·철회) 목록에서 뺀다.
+     1페이지 밖으로 밀려난 딜도 일정(특히 상장일)이 비어 있으면, 저장해둔
+     no로 상세페이지를 다시 봐서 빈 필드만 채운다.
   4. 바뀐 게 있으면 deals.json을 갱신하고 ipo_calendar.html의
      AUTO-GENERATED:DEALS 블록을 재생성한다.
 
@@ -206,6 +208,34 @@ def replace_block(html, marker, new_body):
     return html[:sm.end()] + new_body + html[em.start():]
 
 
+def backfill_off_page(merged, scraped_names):
+    """1페이지에서 밀려난 딜 중 일정이 비어 있는 것을 상세페이지로 다시 채운다.
+
+    상장일은 거래소 승인 뒤에야 확정돼서, 납입까지 끝나 1페이지에서 밀려난
+    다음에 채워지는 경우가 많다(예: 진코스텍). 병합은 1페이지 딜만 갱신하므로
+    그대로 두면 null이 영원히 고정된다 — 저장해둔 no로 상세페이지를 다시 보고
+    빈 필드만 채운다(이미 있는 값은 덮어쓰지 않음). 채운 딜 이름 목록을 돌려준다.
+    """
+    filled = []
+    for name, d in merged.items():
+        if name in scraped_names or not d.get("no"):
+            continue
+        empty = [k for k in ("sub", "pay", "list") if not d.get(k)]
+        if not empty:
+            continue
+        try:
+            sched = parse_detail_schedule(d["no"])
+        except Exception as e:  # noqa: BLE001 — 한 종목 실패로 전체 갱신을 멈추지 않는다
+            print(f"상세페이지 재조회 실패: {name} (no={d['no']}): {e}")
+            continue
+        got = [k for k in empty if sched.get(k)]
+        for k in got:
+            d[k] = sched[k]
+        if got:
+            filled.append(f"{name}({','.join(got)})")
+    return filled
+
+
 def main():
     listed = parse_list_page()
     scraped = []
@@ -213,6 +243,7 @@ def main():
         sched = parse_detail_schedule(item["no"])
         scraped.append({
             "name": item["name"],
+            "no": item["no"],
             "uw": item["uw"],
             "demand": item["demand"],
             "sub": sched["sub"],
@@ -230,6 +261,7 @@ def main():
 
     new_names = []
     changed = []
+    id_added = []
     for d in scraped:
         prev = merged.get(d["name"])
         if prev is None:
@@ -237,6 +269,10 @@ def main():
         elif (prev.get("demand") != d["demand"] or prev.get("sub") != d["sub"]
               or prev.get("pay") != d["pay"] or prev.get("list") != d["list"]):
             changed.append(d["name"])
+        elif prev.get("no") != d["no"]:
+            # 일정은 그대로지만 상세페이지 ID를 처음 알게 된 경우 — 저장해둬야
+            # 나중에 1페이지에서 밀려나도 아래 재조회로 일정을 채울 수 있다
+            id_added.append(d["name"])
         merged[d["name"]] = d
 
     # 일정이 연기·철회된 딜은 38이 목록에서 아예 지워버린다(다음 페이지로
@@ -254,7 +290,9 @@ def main():
                 removed.append(name)
                 del merged[name]
 
-    if not new_names and not changed and not removed:
+    filled = backfill_off_page(merged, {d["name"] for d in scraped})
+
+    if not new_names and not changed and not removed and not id_added and not filled:
         print(f"확인 대상: {len(scraped)}개 종목 (전체 보유 {len(merged)}개)")
         print("변경 없음 (신규 종목 없고 일정 변경도 없음).")
         sys.exit(3)
@@ -274,6 +312,10 @@ def main():
         print("일정 변경:", ", ".join(changed))
     if removed:
         print("연기·철회로 제외:", ", ".join(removed))
+    if filled:
+        print("1페이지 밖 딜 일정 보충:", ", ".join(filled))
+    if id_added:
+        print("상세페이지 ID 저장:", ", ".join(id_added))
     sys.exit(0)
 
 
