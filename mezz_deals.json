@@ -1756,5 +1756,26 @@
     "conv_period_end": "2031-09-26",
     "refixing": "아니오",
     "rcept_no": "20261014000424"
+  },
+  "01274310_CB_7": {
+    "name": "이오플로우",
+    "kind": "CB",
+    "round": "7",
+    "bondName": "무기명식 무보증 사모 전환사채\n(채권형 신종자본증권)",
+    "amount": 10000000000,
+    "board_date": "2026-10-15",
+    "sub_date": "2026-11-20",
+    "pay_date": "2026-11-20",
+    "maturity_date": "2056-11-19",
+    "coupon_rate": "0.00",
+    "ytm_rate": "5.00",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 3000,
+    "conv_period_start": "2027-11-20",
+    "conv_period_end": "2056-08-19",
+    "refixing": "아니오",
+    "rcept_no": "20261015000232"
   }
 }
