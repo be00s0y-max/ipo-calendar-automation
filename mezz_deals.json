@@ -1524,7 +1524,10 @@
     "conv_period_start": "2027-10-16",
     "conv_period_end": "2031-09-16",
     "refixing": "아니오",
-    "rcept_no": "20261013000057"
+    "rcept_no": "20261013000057",
+    "put_start": "2028-08-17",
+    "put_end": "2028-09-18",
+    "put_redemption": "2028-10-16"
   },
   "01298806_CB_1-2": {
     "name": "다원메닥스",
@@ -1777,5 +1780,26 @@
     "conv_period_end": "2056-08-19",
     "refixing": "아니오",
     "rcept_no": "20261015000232"
+  },
+  "00226352_CB_11": {
+    "name": "케이엠더블유",
+    "kind": "CB",
+    "round": "11",
+    "bondName": "무기명식 무이권부 무보증 사모 전환사채",
+    "amount": 35000000000,
+    "board_date": "2026-10-16",
+    "sub_date": "2026-10-26",
+    "pay_date": "2026-10-26",
+    "maturity_date": "2031-10-26",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 18140,
+    "conv_period_start": "2027-10-26",
+    "conv_period_end": "2031-09-26",
+    "refixing": "아니오",
+    "rcept_no": "20261016000208"
   }
 }
