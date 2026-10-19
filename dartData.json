@@ -1505,5 +1505,384 @@
         "qty": 19901000
       }
     }
+  },
+  "멜콘(구.에스앤에프솔루션)": {
+    "offering": {
+      "offer_shares": 2500000,
+      "offer_amount_expected": 26750000000,
+      "offer_amount_final": 30750000000,
+      "subscription": {
+        "inst_start": "2026년 10월 01일(목)",
+        "inst_end": "2026년 10월 02일(금)"
+      },
+      "payment_date": "2026년 10월 07일"
+    },
+    "demand_summary": {
+      "total_count": 2405,
+      "total_qty": 2074742000,
+      "competition_rate": 1136.84
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 7,
+        "count_pct": "0.29%",
+        "qty": 9388000,
+        "qty_pct": "0.45%"
+      },
+      {
+        "band": "12,300원(상단) 초과",
+        "count": 36,
+        "count_pct": "1.50%",
+        "qty": 36252000,
+        "qty_pct": "1.75%"
+      },
+      {
+        "band": "12,300원(상단)",
+        "count": 2359,
+        "count_pct": "98.09%",
+        "qty": 2026760000,
+        "qty_pct": "97.69%"
+      },
+      {
+        "band": "10,700원(하단) 초과 ~ 12,300원(상단) 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "10,700원(하단)",
+        "count": 3,
+        "count_pct": "0.12%",
+        "qty": 2342000,
+        "qty_pct": "0.11%"
+      },
+      {
+        "band": "10,700원(하단) 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "합계",
+        "count": 2405,
+        "count_pct": "100.00%",
+        "qty": 2074742000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 51,
+        "qty": 44996000
+      },
+      "3개월 확약": {
+        "count": 92,
+        "qty": 89848000
+      },
+      "1개월 확약": {
+        "count": 143,
+        "qty": 138080000
+      },
+      "15일 확약": {
+        "count": 511,
+        "qty": 475465000
+      },
+      "미확약": {
+        "count": 1608,
+        "qty": 1326353000
+      }
+    }
+  },
+  "진코스텍": {
+    "offering": {},
+    "demand_summary": null,
+    "price_bands": null,
+    "lockup": null
+  },
+  "엘리스그룹": {
+    "offering": {
+      "offer_shares": 2222000,
+      "offer_amount_expected": 156428800000,
+      "offer_amount_final": 201091000000,
+      "subscription": {
+        "inst_start": "2026년 10월 7일(수)",
+        "inst_end": "2026년 10월 8일(목)"
+      },
+      "payment_date": "2026년 10월 13일"
+    },
+    "demand_summary": {
+      "total_count": 2367,
+      "total_qty": 647998700,
+      "competition_rate": 388.84
+    },
+    "price_bands": [
+      {
+        "band": "가격미제시",
+        "count": 33,
+        "count_pct": "1.4%",
+        "qty": 12440900,
+        "qty_pct": "1.9%"
+      },
+      {
+        "band": "90,500원 초과",
+        "count": 32,
+        "count_pct": "1.4%",
+        "qty": 8668200,
+        "qty_pct": "1.3%"
+      },
+      {
+        "band": "90,500원(상단)",
+        "count": 2287,
+        "count_pct": "96.6%",
+        "qty": 625201100,
+        "qty_pct": "96.5%"
+      },
+      {
+        "band": "70,400원 초과 ~ 90,500원 미만",
+        "count": 2,
+        "count_pct": "0.1%",
+        "qty": 1675000,
+        "qty_pct": "0.3%"
+      },
+      {
+        "band": "70,400원(하단)",
+        "count": 13,
+        "count_pct": "0.5%",
+        "qty": 13500,
+        "qty_pct": "0.0%"
+      },
+      {
+        "band": "70,400원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "합계",
+        "count": 2367,
+        "count_pct": "100.0%",
+        "qty": 647998700,
+        "qty_pct": "100.0%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 47,
+        "qty": 8698200
+      },
+      "3개월 확약": {
+        "count": 35,
+        "qty": 5487400
+      },
+      "1개월 확약": {
+        "count": 35,
+        "qty": 8179800
+      },
+      "15일 확약": {
+        "count": 238,
+        "qty": 66391400
+      },
+      "미확약": {
+        "count": 2012,
+        "qty": 559241900
+      }
+    }
+  },
+  "엠에스바이오": {
+    "offering": {
+      "offer_shares": 4000000,
+      "offer_amount_expected": 27200000000,
+      "offer_amount_final": 31200000000,
+      "subscription": {
+        "inst_start": "2026년 10월 12일(월)",
+        "inst_end": "2026년 10월 13일(화)"
+      },
+      "payment_date": "2026년 10월 15일"
+    },
+    "demand_summary": {
+      "total_count": 2269,
+      "total_qty": 3114241000,
+      "competition_rate": 1096.56
+    },
+    "price_bands": [
+      {
+        "band": "7,800원 초과",
+        "count": 53,
+        "count_pct": "2.3%",
+        "qty": 57220000,
+        "qty_pct": "1.8%"
+      },
+      {
+        "band": "7,800원 (상단)",
+        "count": 2191,
+        "count_pct": "96.6%",
+        "qty": 3017630000,
+        "qty_pct": "96.9%"
+      },
+      {
+        "band": "6,800원 초과 ~ 7,800원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "6,800원 (하단)",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "6,800원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "가격미제시",
+        "count": 25,
+        "count_pct": "1.1%",
+        "qty": 39391000,
+        "qty_pct": "1.3%"
+      },
+      {
+        "band": "합계",
+        "count": 2269,
+        "count_pct": "100.0%",
+        "qty": 3114241000,
+        "qty_pct": "100.0%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 50,
+        "qty": 81080000
+      },
+      "3개월 확약": {
+        "count": 41,
+        "qty": 47924000
+      },
+      "1개월 확약": {
+        "count": 171,
+        "qty": 283795000
+      },
+      "15일 확약": {
+        "count": 374,
+        "qty": 540631000
+      },
+      "미확약": {
+        "count": 1633,
+        "qty": 2160811000
+      }
+    }
+  },
+  "디티에스(구.동양티에스)": {
+    "offering": {
+      "subscription": {
+        "inst_start": "2026년 10월 13일",
+        "inst_end": "2026년 10월 14일"
+      },
+      "payment_date": "2026년 10월 16일"
+    },
+    "demand_summary": {
+      "total_count": 2381,
+      "total_qty": 1644913000,
+      "competition_rate": 983.98
+    },
+    "price_bands": null,
+    "lockup": {
+      "6개월 확약": {
+        "count": 16,
+        "qty": 16471000
+      },
+      "3개월 확약": {
+        "count": 38,
+        "qty": 26663000
+      },
+      "1개월 확약": {
+        "count": 52,
+        "qty": 37526000
+      },
+      "15일 확약": {
+        "count": 186,
+        "qty": 138211000
+      },
+      "미확약": {
+        "count": 2089,
+        "qty": 1426042000
+      }
+    }
+  },
+  "티앤이코리아": {
+    "offering": {
+      "subscription": {
+        "inst_start": "2026년 10월 20일",
+        "inst_end": "2026년 10월 21일"
+      },
+      "payment_date": "2026년 10월 23일"
+    },
+    "demand_summary": {
+      "total_count": 2274,
+      "total_qty": 1873827000,
+      "competition_rate": 1041.02
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 11,
+        "count_pct": "0.48%",
+        "qty": 15712000,
+        "qty_pct": "0.84%"
+      },
+      {
+        "band": "15,300원 초과",
+        "count": 27,
+        "count_pct": "1.19%",
+        "qty": 25643000,
+        "qty_pct": "1.37%"
+      },
+      {
+        "band": "15,300원",
+        "count": 2233,
+        "count_pct": "98.20%",
+        "qty": 1832469000,
+        "qty_pct": "97.79%"
+      },
+      {
+        "band": "12,600원 초과 15,300원 미만",
+        "count": 3,
+        "count_pct": "0.13%",
+        "qty": 3000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "12,600원",
+        "count": 0,
+        "count_pct": "0.00%",
+        "qty": 0,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "12,600원 미만",
+        "count": 0,
+        "count_pct": "0.00%",
+        "qty": 0,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "합계",
+        "count": 2274,
+        "count_pct": "100.00%",
+        "qty": 1873827000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": null
   }
 }

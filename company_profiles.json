@@ -253,5 +253,59 @@
     "hm_url": "https://www.brils.co.kr",
     "phn_no": "032-721-4760",
     "est_dt": "20150206"
+  },
+  "멜콘(구.에스앤에프솔루션)": {
+    "stock_code": "179880",
+    "ceo_nm": "김성일",
+    "corp_cls": "K",
+    "adres": "경기도 화성시 동탄산단9길 23-22 &nbsp",
+    "hm_url": "www.melcon.co.kr",
+    "phn_no": "031-737-9811",
+    "est_dt": "20031216"
+  },
+  "진코스텍": {
+    "stock_code": "250030",
+    "ceo_nm": "김임준",
+    "corp_cls": "K",
+    "adres": "경기도 시흥시 군자천로237번길 31 2나 604호(정왕동)",
+    "hm_url": "www.jincostech.com",
+    "phn_no": "031-433-5575",
+    "est_dt": "20100615"
+  },
+  "엘리스그룹": {
+    "stock_code": "",
+    "ceo_nm": "KIM JAE WON",
+    "corp_cls": "E",
+    "adres": "서울특별시 강남구 테헤란로 445 5-9층 (삼성동, 본솔빌딩)",
+    "hm_url": "",
+    "phn_no": "07046332015",
+    "est_dt": "20151104"
+  },
+  "엠에스바이오": {
+    "stock_code": "",
+    "ceo_nm": "김성포",
+    "corp_cls": "E",
+    "adres": "경기도 성남시 중원구 사기막골로 124 (상대원동, SKn테크노파크) 테크동1413",
+    "hm_url": "msbio.co.kr/",
+    "phn_no": "070-4943-8340",
+    "est_dt": "20151027"
+  },
+  "디티에스(구.동양티에스)": {
+    "stock_code": "",
+    "ceo_nm": "김중일",
+    "corp_cls": "E",
+    "adres": "전라북도 군산시 자유무역2길 45 (오식도동)",
+    "hm_url": "www.dasants.com",
+    "phn_no": "070-4943-8501",
+    "est_dt": "20000731"
+  },
+  "티앤이코리아": {
+    "stock_code": "",
+    "ceo_nm": "박기철",
+    "corp_cls": "E",
+    "adres": "충청북도 청주시 흥덕구 오송읍 오송생명9로 192",
+    "hm_url": "www.tnekorea.com",
+    "phn_no": "042-900-9982",
+    "est_dt": "20140226"
   }
 }
