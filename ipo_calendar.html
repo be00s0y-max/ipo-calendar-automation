@@ -256,6 +256,22 @@
      성격이 다르다는 걸 얇은 구분선으로 표시한다. */
   .tab-divider { width: 1px; background: var(--border); margin: 8px 6px; }
 
+  /* ---- TO DO 탭 — 오늘부터 7일치 할 일 ---- */
+  .todo-day {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 10px;
+  }
+  .todo-day.is-today { border-color: var(--accent); }
+  .todo-day-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .todo-day-head .tdate { font-size: 14px; font-weight: 800; }
+  .todo-day-head .trel { font-size: 11.5px; font-weight: 700; color: var(--ink-faint); }
+  .todo-day-head .tcount { margin-left: auto; font-size: 11.5px; color: var(--ink-dim); font-family: var(--font-mono); }
+  .todo-item { display: flex; align-items: center; gap: 10px; padding: 3px 0; }
+  .todo-item input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex: 0 0 auto; }
+  .todo-item .chip { width: auto; max-width: 100%; margin-bottom: 0; font-size: 12.5px; padding: 5px 9px; }
+  .todo-item .tdone { font-size: 11px; font-weight: 700; color: var(--ink-faint); white-space: nowrap; }
+  .todo-none { font-size: 12.5px; color: var(--ink-faint); }
+
   /* ---- 종목정보(DART 증권신고서) 탭 — 목록 ---- */
   .info-list-row { cursor: pointer; }
   .info-list-row:hover { background: var(--row-hover, var(--surface-2)); }
@@ -584,6 +600,7 @@
   <div class="digest" id="digest"></div>
 
   <div class="tabbar" id="tabbar">
+    <button class="tabbtn" data-tab="todo">TO DO</button>
     <button class="tabbtn active" data-tab="calendar">캘린더</button>
     <button class="tabbtn" data-tab="info">종목정보</button>
     <button class="tabbtn" data-tab="mezz">메자닌</button>
@@ -594,6 +611,21 @@
     <button class="tabbtn" data-tab="sub">청약</button>
     <button class="tabbtn" data-tab="pay">납입</button>
     <button class="tabbtn" data-tab="list">상장</button>
+  </div>
+
+  <div class="tab-panel" id="tab-todo">
+    <div class="stage-head">
+      <h2>TO DO <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— 오늘부터 7일</span></h2>
+      <p>캘린더 위 "오늘 할 일"에 뜨는 일정을 오늘부터 7일치 미리 보여줍니다. "전체 일정" 보기에서 챙길 항목에 체크하면 "체크한 항목" 보기에 그것만 모여 보입니다.
+      체크는 참여 정보와 같이 저장되어 다른 기기에도 공유됩니다. (일정 날짜가 바뀌면 그 항목 체크는 풀립니다)</p>
+      <div class="tab-search-row">
+        <div class="seg" id="todoSeg">
+          <button data-todo="checked" class="active">체크한 항목</button>
+          <button data-todo="all">전체 일정</button>
+        </div>
+      </div>
+    </div>
+    <div id="todo-list"></div>
   </div>
 
   <div class="tab-panel active" id="tab-calendar">
@@ -3217,6 +3249,66 @@ function renderDigest(){
   if (todayBtn) todayBtn.addEventListener("click", () => { digestOffset = 0; renderDigest(); });
 }
 
+/* ---------- TO DO 탭 ----------
+   "오늘 할 일" 디제스트와 같은 이벤트(buildEvents)를 오늘~6일 뒤까지 날짜별로
+   펼친다. 체크 여부는 records[종목].todoChecks["유형|YYYY-MM-DD"]에 둬서
+   참여 정보와 같은 경로(localStorage + records.json)로 저장·공유된다. */
+const TODO_DAYS = 7;
+let todoMode = "checked"; // "checked" | "all"
+function todoKey(ev){ return ev.type + "|" + isoKey(ev.date); }
+function isTodoChecked(ev){
+  const checks = records[deals[ev.dealIdx].name].todoChecks;
+  return !!(checks && checks[todoKey(ev)]);
+}
+function renderTodoTab(){
+  const el = document.getElementById("todo-list");
+  if (!el) return;
+  const byDay = eventsByDay(buildEvents());
+  let html = "";
+  for (let i = 0; i < TODO_DAYS; i++) {
+    const dt = addDays(today, i);
+    const all = byDay.get(isoKey(dt)) || [];
+    const evs = todoMode === "checked" ? all.filter(isTodoChecked) : all;
+    const items = evs.map(ev => {
+      const dl = deals[ev.dealIdx];
+      const done = isEventDone(dl.name, ev.type);
+      const chip = done ? digestDoneChipHtml(ev) : digestChipHtml(ev);
+      return `<div class="todo-item">
+        <input type="checkbox" data-todo-deal="${ev.dealIdx}" data-todo-key="${todoKey(ev)}" ${isTodoChecked(ev) ? "checked" : ""}>
+        ${chip}${done ? `<span class="tdone">완료</span>` : ""}
+      </div>`;
+    }).join("");
+    const emptyMsg = todoMode === "checked" ? (all.length ? "체크한 일정 없음" : "일정 없음") : "일정 없음";
+    const countText = todoMode === "checked" ? `${evs.length} / ${all.length}` : `${all.length}`;
+    html += `<div class="todo-day ${i === 0 ? "is-today" : ""}">
+      <div class="todo-day-head">
+        <span class="tdate">${fmt(dt)}</span>
+        <span class="trel">${i <= 1 ? digestDayLabel(i) : i + "일 뒤"}</span>
+        <span class="tcount">${countText}</span>
+      </div>
+      ${items || `<div class="todo-none">${emptyMsg}</div>`}
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+document.getElementById("todoSeg").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-todo]");
+  if (!btn) return;
+  todoMode = btn.dataset.todo;
+  document.querySelectorAll("#todoSeg button").forEach(b => b.classList.toggle("active", b === btn));
+  renderTodoTab();
+});
+document.getElementById("todo-list").addEventListener("change", e => {
+  const cb = e.target.closest("input[data-todo-key]");
+  if (!cb) return;
+  const rec = records[deals[Number(cb.dataset.todoDeal)].name];
+  rec.todoChecks = rec.todoChecks || {};
+  if (cb.checked) rec.todoChecks[cb.dataset.todoKey] = true;
+  else delete rec.todoChecks[cb.dataset.todoKey];
+  persistRecords();
+  renderTodoTab();
+});
+
 /* ---------- calendar render ---------- */
 function renderDow(){
   document.getElementById("calDow").innerHTML = WD.map(w => `<div>${w}</div>`).join("");
@@ -3331,6 +3423,7 @@ function equalizeMonthRowHeights(){
 function rerender(){
   renderDigest();
   renderCalendar();
+  renderTodoTab();
 }
 
 /* ---------- side panel ---------- */
@@ -4515,6 +4608,7 @@ function applyAppState(state){
   if (key === "allot") renderAllotRegistry();
   if (key === "info") renderInfoTab();
   if (key === "mezz") renderMezzTab();
+  if (key === "todo") renderTodoTab();
 }
 function navigateTo(state){
   applyAppState(state);
