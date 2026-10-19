@@ -137,10 +137,7 @@ def discover_corp_codes(key, corp_codes):
     반환: (새로 찾은 {종목명: corp_code}, 못 찾은 종목명 목록)"""
     import datetime
     deals = load_json(DEALS_PATH, [])
-    # 청약이 한 달보다 더 지난 딜은 확정 신고서를 찾을 일이 없으니 빼서 출력 잡음을 줄인다.
-    cutoff = (datetime.date.today() - datetime.timedelta(days=30)).isoformat()
-    missing = [dl["name"] for dl in deals
-               if dl["name"] not in corp_codes and (dl.get("sub") or [""])[-1] >= cutoff]
+    missing = [dl["name"] for dl in deals if dl["name"] not in corp_codes]
     if not missing:
         return {}, []
     end = datetime.date.today()
@@ -220,20 +217,27 @@ def update_demand_info(key, corp_codes, demand_info, changed, errors):
         if complete and prev.get("rcept_no") == filings[0]["rcept_no"]:
             continue
         terms = {f: None for f in TERM_FIELDS}
-        try:
-            for it in filings[:MAX_TERM_DOCS]:
+        failed = []
+        for it in filings[:MAX_TERM_DOCS]:
+            # 한 문서가 안 받아져도(DART가 ZIP 대신 오류 응답을 주는 경우) 다음 신고서로 넘어간다
+            try:
                 tmp_path = os.path.join(SCRATCH, f"_tmp_terms_{cc}.xml")
                 fetch_filing_xml(key, it["rcept_no"], tmp_path)
                 got = parse_demand_terms(tmp_path)
                 os.remove(tmp_path)
-                for f in TERM_FIELDS:
-                    if terms[f] is None and got.get(f) is not None:
-                        terms[f] = got[f]
-                if all(terms[f] is not None for f in TERM_FIELDS):
-                    break
-        except Exception as e:  # noqa: BLE001
-            errors.append(f"{name}: 참여조건 파싱 실패 ({e})")
-            continue
+            except Exception as e:  # noqa: BLE001
+                failed.append(f"{it['rcept_no']}({e})")
+                continue
+            for f in TERM_FIELDS:
+                if terms[f] is None and got.get(f) is not None:
+                    terms[f] = got[f]
+            if all(terms[f] is not None for f in TERM_FIELDS):
+                break
+        if failed:
+            errors.append(f"{name}: 참여조건 신고서 일부 못 받음 — " + ", ".join(failed))
+        for f in TERM_FIELDS:  # 이번에 못 받은 항목은 지난번 값을 지킨다
+            if terms[f] is None and prev.get(f) is not None:
+                terms[f] = prev[f]
         if terms["band"] is None and spac_key(name):
             terms["band"] = [2000, 2000]
         terms.update({"rcept_no": filings[0]["rcept_no"], "report_nm": filings[0]["report_nm"]})
