@@ -2004,5 +2004,88 @@
         "qty": 0
       }
     }
+  },
+  "한국스팩17호": {
+    "offering": {
+      "offer_shares": 7000000,
+      "offer_amount_final": 14000000000,
+      "offer_amount_expected": 14000000000,
+      "subscription": {
+        "inst_start": "2026.09.10",
+        "inst_end": "2026.09.11"
+      },
+      "payment_date": "2026.09.15"
+    },
+    "demand_summary": {
+      "total_count": 2040,
+      "total_qty": 6670172000,
+      "competition_rate": 1270.51
+    },
+    "price_bands": [
+      {
+        "band": "2,000원 초과",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "2,000원",
+        "count": 2025,
+        "count_pct": "99.26%",
+        "qty": 6607035000,
+        "qty_pct": "99.05%"
+      },
+      {
+        "band": "2,000원 초과 ~ 2,000원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "0원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "가격미제시",
+        "count": 15,
+        "count_pct": "0.74%",
+        "qty": 63137000,
+        "qty_pct": "0.95%"
+      },
+      {
+        "band": "합 계",
+        "count": 2040,
+        "count_pct": "100.0%",
+        "qty": 6670172000,
+        "qty_pct": "100.0%"
+      }
+    ],
+    "lockup": {
+      "미확약": {
+        "count": 94,
+        "qty": 477657000
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      }
+    }
   }
 }

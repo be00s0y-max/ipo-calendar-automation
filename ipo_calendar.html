@@ -1077,7 +1077,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "10.19(월) 15:20";
+const LAST_UPDATED_KST = "10.19(월) 15:37";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -1085,6 +1085,13 @@ const LAST_UPDATED_KST = "10.19(월) 15:20";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "10.19(월) 15:37",
+    "items": [
+      "수요예측 결과 반영 1건 — 한국스팩17호",
+      "확정 증권신고서 공시 1건 — 한국스팩17호"
+    ]
+  },
   {
     "at": "10.19(월) 15:20",
     "items": [
@@ -1205,12 +1212,6 @@ const UPDATE_LOG = [
     "at": "10.7(수) 15:36",
     "items": [
       "신규 메자닌 1건 (EB 1건) — KG에코솔루션"
-    ]
-  },
-  {
-    "at": "10.7(수) 08:35",
-    "items": [
-      "신규 메자닌 1건 (CB 1건) — 에코앤드림"
     ]
   }
 ];
@@ -3376,6 +3377,89 @@ const dartData = {
         "qty": 0
       }
     }
+  },
+  "한국스팩17호": {
+    "offering": {
+      "offer_shares": 7000000,
+      "offer_amount_final": 14000000000,
+      "offer_amount_expected": 14000000000,
+      "subscription": {
+        "inst_start": "2026.09.10",
+        "inst_end": "2026.09.11"
+      },
+      "payment_date": "2026.09.15"
+    },
+    "demand_summary": {
+      "total_count": 2040,
+      "total_qty": 6670172000,
+      "competition_rate": 1270.51
+    },
+    "price_bands": [
+      {
+        "band": "2,000원 초과",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "2,000원",
+        "count": 2025,
+        "count_pct": "99.26%",
+        "qty": 6607035000,
+        "qty_pct": "99.05%"
+      },
+      {
+        "band": "2,000원 초과 ~ 2,000원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "0원 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "가격미제시",
+        "count": 15,
+        "count_pct": "0.74%",
+        "qty": 63137000,
+        "qty_pct": "0.95%"
+      },
+      {
+        "band": "합 계",
+        "count": 2040,
+        "count_pct": "100.0%",
+        "qty": 6670172000,
+        "qty_pct": "100.0%"
+      }
+    ],
+    "lockup": {
+      "미확약": {
+        "count": 94,
+        "qty": 477657000
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      }
+    }
   }
 };
 // AUTO-GENERATED:DART_DATA:END
@@ -3876,6 +3960,50 @@ const DEMAND_INFO = {
     "price_unit": 100,
     "inst_max": 4500000,
     "rcept_no": "20261019000182",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "딜리셔스": {
+    "band": [
+      5000,
+      7000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1650000,
+    "rcept_no": "20260731000443",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "한국스팩17호": {
+    "band": [
+      2000,
+      2000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 5250000,
+    "rcept_no": "20260909000276",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "브릴스": {
+    "band": [
+      16500,
+      19500
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 720000,
+    "rcept_no": "20260916000234",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "진코스텍": {
+    "band": [
+      19500,
+      23500
+    ],
+    "qty_unit": null,
+    "price_unit": null,
+    "inst_max": null,
+    "rcept_no": "20261001000586",
     "report_nm": "[발행조건확정]증권신고서(지분증권)"
   }
 };
@@ -5662,7 +5790,8 @@ const DART_FILING_URL = {
   "티앤이코리아": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261016000158",
   "크리에이츠": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261019000150",
   "SK증권스팩14호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261014000196",
-  "한화플러스스팩6호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261019000182"
+  "한화플러스스팩6호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261019000182",
+  "한국스팩17호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260909000276"
 };
 // AUTO-GENERATED:FILING_URL:END
 
@@ -6007,6 +6136,15 @@ const COMPANY_PROFILE = {
     "hm_url": "",
     "phn_no": "02-3772-7393",
     "est_dt": "20251017"
+  },
+  "한국스팩17호": {
+    "stock_code": "0200G0",
+    "ceo_nm": "이호연",
+    "corp_cls": "K",
+    "adres": "서울특별시 영등포구 의사당대로 88 &nbsp",
+    "hm_url": "",
+    "phn_no": "02-3276-5958",
+    "est_dt": "20260508"
   }
 };
 // AUTO-GENERATED:COMPANY_PROFILE:END
