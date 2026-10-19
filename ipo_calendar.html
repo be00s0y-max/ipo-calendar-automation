@@ -4974,18 +4974,22 @@ function applyAllotSheet(p){
       note = ` ⚠ 최종배분 합 ${fmtNum(sum)}이 배정주수와 ${fmtNum(Math.abs(diff))}주 차이 — 고치지 않았습니다`;
     }
   }
-  // 신청수량 = 집계표. 합이 기관 총 주식수보다 모자라면 모자란 만큼 코스닥벤처-6에 더한다.
+  // 신청수량 = 집계표. 합이 기관 총 주식수와 다르면 그 차이만큼 코스닥벤처-6에서 더하거나 뺀다.
+  // 코스닥벤처-6이 없으면 5→4→…→1 순서, 코벤이 하나도 없으면(집합투자 엑셀) 시트 맨 아래 펀드.
   let qtyNote = "";
   const hasQty = rows.some(x => x.qty != null);
   if (hasQty && p.instTotal) {
     const qsum = rows.reduce((a, x) => a + (x.qty || 0), 0);
-    const short = p.instTotal - qsum;
-    const kb6 = rows.find(x => x.fund === "코스닥벤처-6");
-    if (short > 0 && kb6) {
-      kb6.qty += short;
-      qtyNote = ` · 신청수량 합 ${fmtNum(qsum)} → 코스닥벤처-6에 ${fmtNum(short)}주 더해 ${fmtNum(p.instTotal)}주`;
-    } else if (short !== 0) {
-      qtyNote = ` ⚠ 신청수량 합 ${fmtNum(qsum)}이 기관 총 주식수 ${fmtNum(p.instTotal)}와 다름 — 고치지 않았습니다`;
+    const diff = p.instTotal - qsum;
+    if (diff !== 0) {
+      const order = ["코스닥벤처-6", "코스닥벤처-5", "코스닥벤처-4", "코스닥벤처-3", "코스닥벤처-2", "코스닥벤처-1"];
+      const target = order.map(n => rows.find(x => x.fund === n)).find(Boolean) || rows[rows.length - 1];
+      if (target && (target.qty || 0) + diff >= 0) {
+        target.qty = (target.qty || 0) + diff;
+        qtyNote = ` · 신청수량 합 ${fmtNum(qsum)} → ${target.fund}에 ${diff > 0 ? "+" : ""}${fmtNum(diff)}주 해서 ${fmtNum(p.instTotal)}주`;
+      } else {
+        qtyNote = ` ⚠ 신청수량 합 ${fmtNum(qsum)}이 기관 총 주식수 ${fmtNum(p.instTotal)}와 다른데 맞출 펀드가 없어 고치지 않았습니다`;
+      }
     }
   }
   rec.funds = rec.funds || {};
