@@ -108,6 +108,28 @@ def normalize_corp_name(name):
     return re.sub(r"\s+", "", name).lower()
 
 
+# 스팩은 38과 DART 이름이 다르다(2026-10 DART 실측):
+#   "SK증권스팩14호" ↔ "에스케이증권제14호기업인수목적", "KB스팩34호" ↔ "KB제34호스팩",
+#   "아이엠스팩1호" ↔ "아이엠기업인수목적1호", "한화플러스스팩6호" ↔ "한화플러스제6호기업인수목적"
+# 그래서 (증권사, 회차)로 맞춘다. 증권사는 한글 표기를 영문 약칭으로 모은다.
+SPAC_RE = re.compile(r"스팩|기업인수목적")
+SPAC_BRAND_ALIAS = {"에스케이": "sk", "엔에이치": "nh", "케이비": "kb", "아이엠": "im", "디비": "db", "아이비케이": "ibk"}
+
+
+def spac_key(name):
+    """스팩이면 (증권사, 회차), 아니면 None."""
+    name = name or ""
+    if not SPAC_RE.search(name):
+        return None
+    m = re.search(r"(\d+)\s*호", name)
+    if not m:
+        return None
+    brand = re.sub(r"\(\s*구\s*[.)]?[^)]*\)", "", name)
+    brand = re.sub(r"제?\s*\d+\s*호|스팩|기업인수목적|주식회사|\(주\)|㈜|\s", "", brand)
+    brand = re.sub(r"(금융투자|투자증권|증권)$", "", brand).lower()
+    return (SPAC_BRAND_ALIAS.get(brand, brand), int(m.group(1)))
+
+
 def discover_corp_codes(key, corp_codes):
     """deals.json에 있지만 corp_codes.json에 없는 종목의 corp_code를, 최근
     DISCOVER_DAYS일 발행공시(pblntf_ty=C) 중 지분증권 증권신고서를 낸 회사명과
@@ -124,6 +146,7 @@ def discover_corp_codes(key, corp_codes):
     end = datetime.date.today()
     begin = end - datetime.timedelta(days=DISCOVER_DAYS)
     by_name = {}
+    by_spac = {}
     page = 1
     while True:
         url = (
@@ -139,12 +162,16 @@ def discover_corp_codes(key, corp_codes):
         for item in data.get("list", []):
             if EQUITY_FILING_RE.search(item.get("report_nm", "")):
                 by_name.setdefault(normalize_corp_name(item.get("corp_name")), set()).add(item["corp_code"])
+                sk = spac_key(item.get("corp_name"))
+                if sk:
+                    by_spac.setdefault(sk, set()).add(item["corp_code"])
         if page >= data.get("total_page", 1):
             break
         page += 1
     found, unmatched = {}, []
     for name in missing:
-        codes = by_name.get(normalize_corp_name(name), set())
+        sk = spac_key(name)
+        codes = by_spac.get(sk, set()) if sk else by_name.get(normalize_corp_name(name), set())
         if len(codes) == 1:
             found[name] = next(iter(codes))
         else:
