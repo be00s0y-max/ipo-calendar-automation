@@ -3850,7 +3850,8 @@ function openNoticePanel(idx){
   const dartPay = dartPayM ? `${dartPayM[1]}-${dartPayM[2].padStart(2, "0")}-${dartPayM[3].padStart(2, "0")}` : null;
   document.getElementById("ntDealName").textContent = `${dl.name} · 청약 ${fmtRange(dl.sub[0], dl.sub[1])} · 납입 ${fmt(dl.pay)}`;
   document.getElementById("ntName").value = dl.name;
-  document.getElementById("ntPrice").value = rec.noticePrice != null ? rec.noticePrice : (dartPrice || "");
+  // 확정공모가: 직접 고친 값 > DART [발행조건확정] 신고서 > 38커뮤니케이션 상세페이지
+  document.getElementById("ntPrice").value = rec.noticePrice != null ? rec.noticePrice : (dartPrice || dl.finalPrice || "");
   document.getElementById("ntPayDate").value = dartPay || dl.pay || "";
   document.getElementById("ntPayTime").value = noticeSettings.payTime || "";
   document.getElementById("ntShares1").value = rec.noticeShares1 != null ? rec.noticeShares1 : "";

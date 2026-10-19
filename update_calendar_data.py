@@ -167,7 +167,23 @@ def parse_detail_schedule(no):
     if sched.get("상장일"):
         list_date = dot_to_dash(sched["상장일"])
 
-    return {"sub": sub, "pay": pay, "list": list_date}
+    # 상세페이지 상단 정보표: "시장구분 | 코스닥 | 종목코드 | 0206M0",
+    # "확정공모가 | 90,500 원 | 공모금액 | ..." (확정 전엔 "- 원"). 2026-10 실측.
+    stock_code = final_price = None
+    for t in soup.find_all("table"):
+        for row in table_rows(t):
+            for i, cell in enumerate(row[:-1]):
+                label = cell.strip()
+                if stock_code is None and label == "종목코드":
+                    m = re.fullmatch(r"\s*([0-9A-Z]{6})\s*", row[i + 1])
+                    if m:
+                        stock_code = m.group(1)
+                if final_price is None and label == "확정공모가":
+                    m = re.match(r"\s*([\d,]+)\s*원", row[i + 1])
+                    if m:
+                        final_price = int(m.group(1).replace(",", ""))
+
+    return {"sub": sub, "pay": pay, "list": list_date, "stockCode": stock_code, "finalPrice": final_price}
 
 
 def load_json(path, default):
@@ -187,12 +203,15 @@ def deals_to_js(deals):
         pay_val = f'"{d["pay"]}"' if d.get("pay") else "null"
         sub_val = json.dumps(d["sub"]) if d.get("sub") else "null"
         size_val = d["dealSizeM"] if d.get("dealSizeM") is not None else "null"
+        code_val = f'"{d["stockCode"]}"' if d.get("stockCode") else "null"
+        price_val = d["finalPrice"] if d.get("finalPrice") is not None else "null"
         lines.append(
             f'  {{ name: "{d["name"]}", uw: "{d["uw"]}", '
             f'demand: ["{d["demand"][0]}","{d["demand"][1]}"], '
             f'sub: {sub_val}, '
             f'pay: {pay_val}, '
-            f'list: {list_val}, dealSizeM: {size_val} }},'
+            f'list: {list_val}, dealSizeM: {size_val}, '
+            f'stockCode: {code_val}, finalPrice: {price_val} }},'
         )
     lines.append("];")
     return "\n".join(lines)
@@ -220,7 +239,7 @@ def backfill_off_page(merged, scraped_names):
     for name, d in merged.items():
         if name in scraped_names or not d.get("no"):
             continue
-        empty = [k for k in ("sub", "pay", "list") if not d.get(k)]
+        empty = [k for k in ("sub", "pay", "list", "stockCode", "finalPrice") if not d.get(k)]
         if not empty:
             continue
         try:
@@ -250,6 +269,8 @@ def main():
             "pay": sched["pay"],
             "list": sched["list"],
             "dealSizeM": item["dealSizeM"],
+            "stockCode": sched["stockCode"],
+            "finalPrice": sched["finalPrice"],
         })
 
     old_deals = load_json(DEALS_PATH, [])
@@ -267,7 +288,8 @@ def main():
         if prev is None:
             new_names.append(d["name"])
         elif (prev.get("demand") != d["demand"] or prev.get("sub") != d["sub"]
-              or prev.get("pay") != d["pay"] or prev.get("list") != d["list"]):
+              or prev.get("pay") != d["pay"] or prev.get("list") != d["list"]
+              or prev.get("stockCode") != d["stockCode"] or prev.get("finalPrice") != d["finalPrice"]):
             changed.append(d["name"])
         elif prev.get("no") != d["no"]:
             # 일정은 그대로지만 상세페이지 ID를 처음 알게 된 경우 — 저장해둬야
