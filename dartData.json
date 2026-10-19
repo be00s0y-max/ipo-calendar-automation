@@ -1964,5 +1964,45 @@
         "qty": 5973705000
       }
     }
+  },
+  "한화플러스스팩6호": {
+    "offering": {
+      "offer_shares": 6000000,
+      "offer_amount_expected": 12000000000,
+      "offer_amount_final": 12000000000,
+      "subscription": {
+        "inst_start": "2026년 10월 20일",
+        "inst_end": "2026년 10월 21일"
+      },
+      "payment_date": "2026년 10월 23일"
+    },
+    "demand_summary": {
+      "total_count": 1927,
+      "total_qty": 5654158000,
+      "competition_rate": 1256.48
+    },
+    "price_bands": null,
+    "lockup": {
+      "미확약": {
+        "count": 1927,
+        "qty": 5654158000
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      }
+    }
   }
 }

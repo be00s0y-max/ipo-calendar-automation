@@ -1077,7 +1077,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "10.19(월) 15:02";
+const LAST_UPDATED_KST = "10.19(월) 15:20";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -1085,6 +1085,13 @@ const LAST_UPDATED_KST = "10.19(월) 15:02";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "10.19(월) 15:20",
+    "items": [
+      "수요예측 결과 반영 1건 — 한화플러스스팩6호",
+      "확정 증권신고서 공시 1건 — 한화플러스스팩6호"
+    ]
+  },
   {
     "at": "10.19(월) 15:02",
     "items": [
@@ -1204,13 +1211,6 @@ const UPDATE_LOG = [
     "at": "10.7(수) 08:35",
     "items": [
       "신규 메자닌 1건 (CB 1건) — 에코앤드림"
-    ]
-  },
-  {
-    "at": "10.2(금) 21:05",
-    "items": [
-      "신규 공모주 1건 — 케이엠에프",
-      "신규 메자닌 2건 (CB 2건) — SG, 와이씨켐"
     ]
   }
 ];
@@ -3336,6 +3336,46 @@ const dartData = {
         "qty": 5973705000
       }
     }
+  },
+  "한화플러스스팩6호": {
+    "offering": {
+      "offer_shares": 6000000,
+      "offer_amount_expected": 12000000000,
+      "offer_amount_final": 12000000000,
+      "subscription": {
+        "inst_start": "2026년 10월 20일",
+        "inst_end": "2026년 10월 21일"
+      },
+      "payment_date": "2026년 10월 23일"
+    },
+    "demand_summary": {
+      "total_count": 1927,
+      "total_qty": 5654158000,
+      "competition_rate": 1256.48
+    },
+    "price_bands": null,
+    "lockup": {
+      "미확약": {
+        "count": 1927,
+        "qty": 5654158000
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      }
+    }
   }
 };
 // AUTO-GENERATED:DART_DATA:END
@@ -3348,9 +3388,9 @@ const DEMAND_INFO = {
       15000,
       18000
     ],
-    "qty_unit": null,
-    "price_unit": null,
-    "inst_max": null,
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1050000,
     "rcept_no": "20261019000150",
     "report_nm": "[발행조건확정]증권신고서(지분증권)"
   },
@@ -3482,7 +3522,7 @@ const DEMAND_INFO = {
     ],
     "qty_unit": 1000,
     "price_unit": 100,
-    "inst_max": null,
+    "inst_max": 1500000,
     "rcept_no": "20261015000329",
     "report_nm": "[기재정정]증권신고서(지분증권)"
   },
@@ -3564,12 +3604,279 @@ const DEMAND_INFO = {
     "report_nm": "증권신고서(지분증권)"
   },
   "아이엠스팩1호": {
-    "band": null,
+    "band": [
+      2000,
+      2000
+    ],
     "qty_unit": 1000,
     "price_unit": 100,
-    "inst_max": null,
+    "inst_max": 3750000,
     "rcept_no": "20261008000225",
     "report_nm": "[기재정정]증권신고서(지분증권)"
+  },
+  "매드업": {
+    "band": [
+      7000,
+      8000
+    ],
+    "qty_unit": 100,
+    "price_unit": 100,
+    "inst_max": 1500000,
+    "rcept_no": "20260622000382",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "레몬헬스케어": {
+    "band": [
+      7500,
+      10000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1500000,
+    "rcept_no": "20260623000235",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "레메디": {
+    "band": [
+      17800,
+      20700
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 900000,
+    "rcept_no": "20260626000241",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "에이치엘지노믹스": {
+    "band": [
+      18500,
+      21500
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1923750,
+    "rcept_no": "20260710000294",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "인제니아테라퓨틱스": {
+    "band": [
+      12000,
+      14500
+    ],
+    "qty_unit": null,
+    "price_unit": 100,
+    "inst_max": null,
+    "rcept_no": "20260728000400",
+    "report_nm": "[발행조건확정]증권신고서(증권예탁증권)"
+  },
+  "케이앤에스아이앤씨": {
+    "band": [
+      9000,
+      11000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1800000,
+    "rcept_no": "20260803000165",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "기도산업": {
+    "band": [
+      24800,
+      28400
+    ],
+    "qty_unit": 100,
+    "price_unit": 100,
+    "inst_max": 1275000,
+    "rcept_no": "20260810000682",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "니어스랩": {
+    "band": [
+      30000,
+      41200
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 682500,
+    "rcept_no": "20260811000060",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "해치텍": {
+    "band": [
+      23000,
+      28000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 750000,
+    "rcept_no": "20260810000663",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "스카이랩스": {
+    "band": [
+      13000,
+      16000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1500000,
+    "rcept_no": "20260825000417",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "NH스팩34호": {
+    "band": [
+      2000,
+      2000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 6375000,
+    "rcept_no": "20260828000881",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "네오사피엔스": {
+    "band": [
+      13800,
+      15800
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1500000,
+    "rcept_no": "20260909000307",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "와이즈플래닛컴퍼니": {
+    "band": [
+      10000,
+      12000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1200000,
+    "rcept_no": "20260911000209",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "KB스팩34호": {
+    "band": [
+      2000,
+      2000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 5250000,
+    "rcept_no": "20260908000181",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "빅웨이브로보틱스": {
+    "band": [
+      15000,
+      18000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1042684,
+    "rcept_no": "20260914000379",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "글로벌테크놀로지": {
+    "band": [
+      13000,
+      15000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 3000000,
+    "rcept_no": "20260915000237",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "덕산넵코어스(구.넵코어스)": {
+    "band": [
+      12400,
+      14600
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 2250000,
+    "rcept_no": "20260915000085",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "멜콘(구.에스앤에프솔루션)": {
+    "band": [
+      10700,
+      12300
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1825000,
+    "rcept_no": "20260929000191",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "엘리스그룹": {
+    "band": [
+      70400,
+      90500
+    ],
+    "qty_unit": 100,
+    "price_unit": 100,
+    "inst_max": 1666500,
+    "rcept_no": "20261006000447",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "엠에스바이오": {
+    "band": [
+      6800,
+      7800
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 2840000,
+    "rcept_no": "20261007000327",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "디티에스(구.동양티에스)": {
+    "band": [
+      17000,
+      18500
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1671687,
+    "rcept_no": "20261012000308",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "티앤이코리아": {
+    "band": [
+      12600,
+      15300
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 1800000,
+    "rcept_no": "20261016000158",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "SK증권스팩14호": {
+    "band": [
+      2000,
+      2000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 4875000,
+    "rcept_no": "20261014000196",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+  },
+  "한화플러스스팩6호": {
+    "band": [
+      2000,
+      2000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 4500000,
+    "rcept_no": "20261019000182",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
   }
 };
 // AUTO-GENERATED:DEMAND_INFO:END
@@ -5354,7 +5661,8 @@ const DART_FILING_URL = {
   "디티에스(구.동양티에스)": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261012000308",
   "티앤이코리아": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261016000158",
   "크리에이츠": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261019000150",
-  "SK증권스팩14호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261014000196"
+  "SK증권스팩14호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261014000196",
+  "한화플러스스팩6호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261019000182"
 };
 // AUTO-GENERATED:FILING_URL:END
 
@@ -5690,6 +5998,15 @@ const COMPANY_PROFILE = {
     "hm_url": "",
     "phn_no": "02-3773-9975",
     "est_dt": "20260513"
+  },
+  "한화플러스스팩6호": {
+    "stock_code": "",
+    "ceo_nm": "김동완",
+    "corp_cls": "E",
+    "adres": "서울특별시 영등포구 여의대로 56 (여의도동)",
+    "hm_url": "",
+    "phn_no": "02-3772-7393",
+    "est_dt": "20251017"
   }
 };
 // AUTO-GENERATED:COMPANY_PROFILE:END
