@@ -976,12 +976,10 @@
       <h3>공문 내용</h3>
       <label class="field"><span class="flabel">종목명</span><input type="text" id="ntName"></label>
       <label class="field"><span class="flabel">확정 공모가액 (원)</span><input type="number" id="ntPrice" min="0" step="1"></label>
-      <div class="nt-hint" id="ntPriceHint"></div>
       <div class="nt-two">
         <label class="field"><span class="flabel">납입일</span><input type="date" id="ntPayDate"></label>
         <label class="field"><span class="flabel">납입 시각</span><input type="text" id="ntPayTime"></label>
       </div>
-      <div class="nt-hint" id="ntPayHint"></div>
     </div>
     <div class="panel-section">
       <h3>배정주식 수 (입력하면 이 종목에 저장됩니다)</h3>
@@ -3853,13 +3851,7 @@ function openNoticePanel(idx){
   document.getElementById("ntDealName").textContent = `${dl.name} · 청약 ${fmtRange(dl.sub[0], dl.sub[1])} · 납입 ${fmt(dl.pay)}`;
   document.getElementById("ntName").value = dl.name;
   document.getElementById("ntPrice").value = rec.noticePrice != null ? rec.noticePrice : (dartPrice || "");
-  document.getElementById("ntPriceHint").textContent = dartPrice
-    ? `DART 증권신고서 기준 확정공모가 ${wonFmt(dartPrice)}원${rec.noticePrice != null && rec.noticePrice !== dartPrice ? " (직접 고친 값 사용 중)" : ""}`
-    : "DART 확정공모가가 아직 없습니다 — 직접 입력하세요.";
   document.getElementById("ntPayDate").value = dartPay || dl.pay || "";
-  document.getElementById("ntPayHint").textContent = dartPay
-    ? `DART 증권신고서 기준 납입일${dl.pay && dl.pay !== dartPay ? ` (38커뮤니케이션 일정 ${fmt(dl.pay)}과 다름 — 확인 필요)` : ""}`
-    : "DART 확정 신고서가 아직 없어 38커뮤니케이션 일정 기준입니다.";
   document.getElementById("ntPayTime").value = noticeSettings.payTime || "";
   document.getElementById("ntShares1").value = rec.noticeShares1 != null ? rec.noticeShares1 : "";
   document.getElementById("ntShares2").value = rec.noticeShares2 != null ? rec.noticeShares2 : "";
