@@ -277,8 +277,8 @@
   .btn-primary:disabled, .btn-ghost:disabled { opacity: .45; cursor: default; filter: none; }
   /* 나의 일정(TO DO에서 저장한 항목) --- 나머지 일정 --- 메자닌 순으로 칸을 나누는 점선.
      메자닌 구획(.mezz-group)과 같은 모양으로 맞춘다. */
-  .cell .cell-sep { margin: 4px 0; border-top: 1px dashed var(--border); }
-  .digest .chips .digest-sep { flex: 0 0 100%; height: 0; border-top: 1px dashed var(--border); margin: 1px 0; }
+  .cell .cell-sep { margin: 6px 0; border-top: 2px dashed var(--ink-faint); }
+  .digest .chips .digest-sep { flex: 0 0 100%; height: 0; border-top: 2px dashed var(--ink-faint); margin: 3px 0; }
 
   /* ---- 종목정보(DART 증권신고서) 탭 — 목록 ---- */
   .info-list-row { cursor: pointer; }
@@ -420,7 +420,7 @@
   .chip.custom:hover { background: color-mix(in srgb, var(--chip-color) 12%, var(--surface)); }
   .chip.custom::before { border-radius: 2px; }
   /* 메자닌 칩은 공모주 칩 아래, 얇은 구분선을 두고 별도 구획에 쌓는다. */
-  .cell .mezz-group { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--border); }
+  .cell .mezz-group { margin-top: 6px; padding-top: 6px; border-top: 2px dashed var(--ink-faint); }
   .cell .mezz-group:empty { display: none; }
   .chip.mezz { background: color-mix(in srgb, var(--chip-color) 10%, var(--surface)); }
   .chip.mezz.put { border: 1px dashed var(--chip-color); }
