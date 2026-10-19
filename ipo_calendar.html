@@ -271,6 +271,14 @@
   .todo-item .chip { width: auto; max-width: 100%; margin-bottom: 0; font-size: 12.5px; padding: 5px 9px; }
   .todo-item .tdone { font-size: 11px; font-weight: 700; color: var(--ink-faint); white-space: nowrap; }
   .todo-none { font-size: 12.5px; color: var(--ink-faint); }
+  .todo-savebar { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .todo-savebar[hidden] { display: none; }
+  .todo-savebar .tpending { font-size: 12px; color: var(--ink-dim); }
+  .btn-primary:disabled, .btn-ghost:disabled { opacity: .45; cursor: default; filter: none; }
+  /* 나의 일정(TO DO에서 저장한 항목) --- 나머지 일정 --- 메자닌 순으로 칸을 나누는 점선.
+     메자닌 구획(.mezz-group)과 같은 모양으로 맞춘다. */
+  .cell .cell-sep { margin: 4px 0; border-top: 1px dashed var(--border); }
+  .digest .chips .digest-sep { flex: 0 0 100%; height: 0; border-top: 1px dashed var(--border); margin: 1px 0; }
 
   /* ---- 종목정보(DART 증권신고서) 탭 — 목록 ---- */
   .info-list-row { cursor: pointer; }
@@ -616,12 +624,17 @@
   <div class="tab-panel" id="tab-todo">
     <div class="stage-head">
       <h2>TO DO <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— 오늘부터 7일</span></h2>
-      <p>캘린더 위 "오늘 할 일"에 뜨는 일정을 오늘부터 7일치 미리 보여줍니다. "전체 일정" 보기에서 챙길 항목에 체크하면 "체크한 항목" 보기에 그것만 모여 보입니다.
-      체크는 참여 정보와 같이 저장되어 다른 기기에도 공유됩니다. (일정 날짜가 바뀌면 그 항목 체크는 풀립니다)</p>
+      <p>캘린더 위 "오늘 할 일"에 뜨는 일정을 오늘부터 7일치 미리 보여줍니다. "전체 일정"에서 챙길 항목에 체크하고 <b>저장</b>을 누르면 "나의 일정"에 그것만 모여 보이고,
+      "오늘 할 일"과 캘린더에서도 맨 위(점선 위쪽)에 따로 표시됩니다. 저장한 항목은 참여 정보와 같이 다른 기기에도 공유됩니다. (일정 날짜가 바뀌면 그 항목은 나의 일정에서 빠집니다)</p>
       <div class="tab-search-row">
         <div class="seg" id="todoSeg">
-          <button data-todo="checked" class="active">체크한 항목</button>
+          <button data-todo="checked" class="active">나의 일정</button>
           <button data-todo="all">전체 일정</button>
+        </div>
+        <div class="todo-savebar" id="todoSaveBar" hidden>
+          <span class="tpending" id="todoPendingText"></span>
+          <button class="btn-ghost" id="todoCancel">취소</button>
+          <button class="btn-primary" id="todoSave">저장</button>
         </div>
       </div>
     </div>
@@ -3126,7 +3139,13 @@ function buildEvents(){
       push(nextBizDay(addMonths(listD, 6)), "lockup6m");
     }
   });
-  return events;
+  return sortEvents(events);
+}
+// 같은 날 일정의 표시 순서: 상장 > 청약 > 납입 > 수요예측 3일차 > 수요예측 시작/마감,
+// 그 뒤로 배정 예정 > 락업해제. (정렬은 안정 정렬이라 같은 유형끼리는 딜 순서 유지)
+const EVENT_ORDER = ["list","sub-start","sub-end","pay","demand-day3","demand-start","demand-end","allot","lockup15","lockup1m","lockup3m","lockup6m"];
+function sortEvents(events){
+  return events.sort((a, b) => EVENT_ORDER.indexOf(a.type) - EVENT_ORDER.indexOf(b.type));
 }
 function eventsByDay(events){
   const map = new Map();
@@ -3222,7 +3241,10 @@ function renderDigest(){
   const joinedCount = deals.filter(dl => records[dl.name].joined).length;
   const label = digestDayLabel(digestOffset);
 
-  const todoHtml = todo.length ? todo.map(digestChipHtml).join("") : `<span class="none">${label} 일정 없음</span>`;
+  // 나의 일정(TO DO에서 저장한 항목)을 위에, 나머지를 점선 아래에 — 캘린더 칸과 같은 구분.
+  const mine = todo.filter(isTodoChecked), rest = todo.filter(ev => !isTodoChecked(ev));
+  const sep = mine.length && rest.length ? `<div class="digest-sep"></div>` : "";
+  const todoHtml = todo.length ? mine.map(digestChipHtml).join("") + sep + rest.map(digestChipHtml).join("") : `<span class="none">${label} 일정 없음</span>`;
   const doneRow = done.length ? `
     <div class="digest-row done-row">
       <span class="dl">${label} 완료</span>
@@ -3251,10 +3273,13 @@ function renderDigest(){
 
 /* ---------- TO DO 탭 ----------
    "오늘 할 일" 디제스트와 같은 이벤트(buildEvents)를 오늘~6일 뒤까지 날짜별로
-   펼친다. 체크 여부는 records[종목].todoChecks["유형|YYYY-MM-DD"]에 둬서
-   참여 정보와 같은 경로(localStorage + records.json)로 저장·공유된다. */
+   펼친다. "전체 일정"에서 체크한 건 todoPending에만 쌓이고, 저장을 눌러야
+   records[종목].todoChecks["유형|YYYY-MM-DD"]에 들어가 참여 정보와 같은 경로
+   (localStorage + records.json)로 저장·공유된다. 저장된 항목이 "나의 일정". */
 const TODO_DAYS = 7;
-let todoMode = "checked"; // "checked" | "all"
+let todoMode = "checked"; // "checked"(나의 일정) | "all"(전체 일정)
+let todoPending = {};     // "dealIdx|유형|날짜" → true/false (저장 전 변경분)
+function pendingKey(ev){ return ev.dealIdx + "|" + todoKey(ev); }
 function todoKey(ev){ return ev.type + "|" + isoKey(ev.date); }
 function isTodoChecked(ev){
   const checks = records[deals[ev.dealIdx].name].todoChecks;
@@ -3273,12 +3298,16 @@ function renderTodoTab(){
       const dl = deals[ev.dealIdx];
       const done = isEventDone(dl.name, ev.type);
       const chip = done ? digestDoneChipHtml(ev) : digestChipHtml(ev);
+      const pk = pendingKey(ev);
+      const checked = pk in todoPending ? todoPending[pk] : isTodoChecked(ev);
+      // 나의 일정 보기는 이미 저장된 항목만 모은 거라 체크박스 없이 칩만 보여준다.
+      const box = todoMode === "all"
+        ? `<input type="checkbox" data-todo-deal="${ev.dealIdx}" data-todo-key="${todoKey(ev)}" ${checked ? "checked" : ""}>` : "";
       return `<div class="todo-item">
-        <input type="checkbox" data-todo-deal="${ev.dealIdx}" data-todo-key="${todoKey(ev)}" ${isTodoChecked(ev) ? "checked" : ""}>
-        ${chip}${done ? `<span class="tdone">완료</span>` : ""}
+        ${box}${chip}${done ? `<span class="tdone">완료</span>` : ""}
       </div>`;
     }).join("");
-    const emptyMsg = todoMode === "checked" ? (all.length ? "체크한 일정 없음" : "일정 없음") : "일정 없음";
+    const emptyMsg = todoMode === "checked" ? (all.length ? "나의 일정 없음" : "일정 없음") : "일정 없음";
     const countText = todoMode === "checked" ? `${evs.length} / ${all.length}` : `${all.length}`;
     html += `<div class="todo-day ${i === 0 ? "is-today" : ""}">
       <div class="todo-day-head">
@@ -3290,6 +3319,14 @@ function renderTodoTab(){
     </div>`;
   }
   el.innerHTML = html;
+  renderTodoSaveBar();
+}
+function renderTodoSaveBar(){
+  const n = Object.keys(todoPending).length;
+  document.getElementById("todoSaveBar").hidden = todoMode !== "all";
+  document.getElementById("todoPendingText").textContent = n ? `저장 안 된 변경 ${n}건` : "";
+  document.getElementById("todoSave").disabled = !n;
+  document.getElementById("todoCancel").disabled = !n;
 }
 document.getElementById("todoSeg").addEventListener("click", e => {
   const btn = e.target.closest("button[data-todo]");
@@ -3302,10 +3339,28 @@ document.getElementById("todo-list").addEventListener("change", e => {
   const cb = e.target.closest("input[data-todo-key]");
   if (!cb) return;
   const rec = records[deals[Number(cb.dataset.todoDeal)].name];
-  rec.todoChecks = rec.todoChecks || {};
-  if (cb.checked) rec.todoChecks[cb.dataset.todoKey] = true;
-  else delete rec.todoChecks[cb.dataset.todoKey];
+  const saved = !!(rec.todoChecks && rec.todoChecks[cb.dataset.todoKey]);
+  const pk = cb.dataset.todoDeal + "|" + cb.dataset.todoKey;
+  // 저장된 상태로 되돌린 체크는 변경분에서 뺀다.
+  if (cb.checked === saved) delete todoPending[pk];
+  else todoPending[pk] = cb.checked;
+  renderTodoSaveBar();
+});
+document.getElementById("todoSave").addEventListener("click", () => {
+  Object.entries(todoPending).forEach(([pk, on]) => {
+    const [dealIdx, type, iso] = pk.split("|");
+    const rec = records[deals[Number(dealIdx)].name];
+    rec.todoChecks = rec.todoChecks || {};
+    if (on) rec.todoChecks[type + "|" + iso] = true;
+    else delete rec.todoChecks[type + "|" + iso];
+  });
+  todoPending = {};
   persistRecords();
+  showToast("나의 일정이 저장되었습니다");
+  rerender();
+});
+document.getElementById("todoCancel").addEventListener("click", () => {
+  todoPending = {};
   renderTodoTab();
 });
 
@@ -3339,11 +3394,15 @@ function renderCell(dt, inCurrentPeriod, dayMap, compactMap, mezzDayMap){
 
   // 전체 조회일 때 미참여 종목을 흐리게 구분하던 것 제거 — 참여/미참여
   // 상관없이 동일하게 표시(참여만 보고 싶으면 "참여" 필터를 쓰면 됨).
-  const chips = evs.map(ev => {
+  const chipHtml = ev => {
     const meta = TYPE_META[ev.type];
     const dl = deals[ev.dealIdx];
     return `<button class="chip" style="--chip-color:${meta.color}" data-deal="${ev.dealIdx}" title="${dl.name} · ${meta.label}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
-  }).join("") + customChipsHtml(key);
+  };
+  // 나의 일정(TO DO에서 저장한 항목) --- 나머지 일정(+내 일정) --- 메자닌 순.
+  const mine = evs.filter(isTodoChecked).map(chipHtml).join("");
+  const rest = evs.filter(ev => !isTodoChecked(ev)).map(chipHtml).join("") + customChipsHtml(key);
+  const chips = mine + (mine && rest ? `<div class="cell-sep"></div>` : "") + rest;
 
   return `
     <div class="cell ${inCurrentPeriod ? "" : "out"} ${isToday ? "is-today" : ""} ${holidayName ? "holiday" : ""} ${dt.getDay() === 0 ? "sunday" : ""}">
