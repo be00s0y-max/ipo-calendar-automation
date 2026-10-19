@@ -494,7 +494,8 @@
     "pay": "2026-10-23",
     "list": null,
     "dealSizeM": 21000,
-    "stockCode": "439270"
+    "stockCode": "439270",
+    "finalPrice": 15000
   },
   {
     "name": "인텔리빅스",
@@ -565,7 +566,7 @@
     "list": null,
     "dealSizeM": 12000,
     "stockCode": "0127E0",
-    "finalPrice": null
+    "finalPrice": 2000
   },
   {
     "name": "이에스티",
