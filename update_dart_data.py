@@ -179,8 +179,8 @@ def discover_corp_codes(key, corp_codes):
     return found, unmatched
 
 
-def find_latest_equity_filing(key, corp_code):
-    """corp_code의 가장 최근 지분증권 증권신고서(최초·정정·발행조건확정 중 최신)."""
+def list_equity_filings(key, corp_code):
+    """corp_code의 지분증권 증권신고서(최초·정정·발행조건확정) 목록, 최신순."""
     url = (
         "https://opendart.fss.or.kr/api/list.json"
         f"?crtfc_key={key}&corp_code={corp_code}&bgn_de=20260101&end_de=20261231"
@@ -188,42 +188,59 @@ def find_latest_equity_filing(key, corp_code):
     )
     data = json.loads(api_get(url).decode("utf-8"))
     if data.get("status") != "000":
-        return None
+        return []
     items = [it for it in data.get("list", []) if EQUITY_FILING_RE.search(it.get("report_nm", ""))]
-    if not items:
-        return None
-    latest = max(items, key=lambda it: it["rcept_no"])  # 접수번호는 날짜+일련번호라 클수록 최신
-    return latest["rcept_no"], latest["report_nm"]
+    return sorted(items, key=lambda it: it["rcept_no"], reverse=True)  # 접수번호는 날짜+일련번호라 클수록 최신
+
+
+TERM_FIELDS = ("band", "qty_unit", "price_unit", "inst_max")
+MAX_TERM_DOCS = 4  # 최신 신고서에 없는 항목은 이전 신고서에서 이만큼까지 거슬러 찾는다
 
 
 def update_demand_info(key, corp_codes, demand_info, changed, errors):
-    """수요예측이 끝나지 않은(마감 3일 후까지) 딜의 최신 신고서에서 참여 조건을 갱신."""
-    import datetime
-    cutoff = (datetime.date.today() - datetime.timedelta(days=3)).isoformat()
+    """모든 딜의 수요예측 참여 조건을 최신 지분증권 신고서에서 채운다.
+    - 최신 신고서가 바뀌었거나, 지난번에 못 채운 항목이 있으면 다시 본다.
+    - 최신 신고서에 없는 항목(예: 진코스텍 발행조건확정은 바뀐 부분만 담은 31KB짜리)은
+      이전 신고서들에서 빈 항목만 채운다.
+    - 스팩은 공모가가 2,000원으로 고정이라 밴드를 못 찾으면 2,000원으로 둔다."""
     for dl in load_json(DEALS_PATH, []):
         name = dl["name"]
         cc = corp_codes.get(name)
-        if not cc or (dl.get("demand") or [""])[-1] < cutoff:
+        if not cc:
             continue
+        prev = demand_info.get(name) or {}
         try:
-            found = find_latest_equity_filing(key, cc)
+            filings = list_equity_filings(key, cc)
         except Exception as e:  # noqa: BLE001
             errors.append(f"{name}: 참여조건용 신고서 목록 조회 실패 ({e})")
             continue
-        if not found or (demand_info.get(name) or {}).get("rcept_no") == found[0]:
+        if not filings:
             continue
-        rcept_no, report_nm = found
+        complete = all(prev.get(f) is not None for f in TERM_FIELDS)
+        if complete and prev.get("rcept_no") == filings[0]["rcept_no"]:
+            continue
+        terms = {f: None for f in TERM_FIELDS}
         try:
-            tmp_path = os.path.join(SCRATCH, f"_tmp_terms_{cc}.xml")
-            fetch_filing_xml(key, rcept_no, tmp_path)
-            terms = parse_demand_terms(tmp_path)
-            os.remove(tmp_path)
+            for it in filings[:MAX_TERM_DOCS]:
+                tmp_path = os.path.join(SCRATCH, f"_tmp_terms_{cc}.xml")
+                fetch_filing_xml(key, it["rcept_no"], tmp_path)
+                got = parse_demand_terms(tmp_path)
+                os.remove(tmp_path)
+                for f in TERM_FIELDS:
+                    if terms[f] is None and got.get(f) is not None:
+                        terms[f] = got[f]
+                if all(terms[f] is not None for f in TERM_FIELDS):
+                    break
         except Exception as e:  # noqa: BLE001
             errors.append(f"{name}: 참여조건 파싱 실패 ({e})")
             continue
-        terms.update({"rcept_no": rcept_no, "report_nm": report_nm})
-        demand_info[name] = terms
-        changed.append(f"{name} 수요예측 조건 ({report_nm}, {rcept_no})")
+        if terms["band"] is None and spac_key(name):
+            terms["band"] = [2000, 2000]
+        terms.update({"rcept_no": filings[0]["rcept_no"], "report_nm": filings[0]["report_nm"]})
+        if terms != prev:
+            demand_info[name] = terms
+            missing = [f for f in TERM_FIELDS if terms[f] is None]
+            changed.append(f"{name} 수요예측 조건 ({filings[0]['report_nm']})" + (f" — 못 찾음: {', '.join(missing)}" if missing else ""))
 
 
 def fetch_filing_xml(key, rcept_no, tmp_path):

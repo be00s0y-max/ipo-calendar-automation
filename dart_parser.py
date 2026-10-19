@@ -344,12 +344,17 @@ def parse_demand_terms(path):
       표 "수량단위 | 1,000주" / "가격단위 | 100원"
       표 "구분 | 최고한도 | 최저한도" → "기관투자자 | ...또는 2,059,500주(...) | 1,000주"
       (또는 "수요예측참가신청관련사항 | 1) 최고한도 : ... 또는 3,182,xxx주")
+    표기 변형(2026-10 실측): 엠비디 "...나눈주식수 및 1,500,000주(...) 중 적은 수량"(표가 아닌 문단),
+    아이엠스팩1호 '... 또는 "3,750,000주" 중 적은 수량', 스팩 밴드는 "2,000원" 단일가.
     못 찾은 항목은 None으로 둔다(추정하지 않음)."""
     tables = load_tables(path)
     band = qty_unit = price_unit = inst_max = None
     band_re = re.compile(r"([\d,]+)\s*원\s*~\s*([\d,]+)\s*원")
     unit_re = re.compile(r"([\d,]+)\s*(주|원)")
-    max_re = re.compile(r"최고\s*한도[^\d]{0,200}?또는\s*([\d,]+)\s*주")
+    # "또는"/"및" 다음 숫자, 사이에 따옴표가 낄 수 있다
+    or_num = r"(?:또는|및)\s*[\"“”']?\s*([\d,]+)\s*주"
+    max_re = re.compile(r"최고\s*한도[^\d]{0,200}?" + or_num)
+    single_re = re.compile(r"^\s*([\d,]+)\s*원\s*$")
     for t in tables:
         rows = table_rows(t)
         header = " ".join(rows[0]) if rows else ""
@@ -358,10 +363,14 @@ def parse_demand_terms(path):
                 continue
             label = re.sub(r"\s+", "", r[0])
             val = r[1]
-            if band is None and "희망공모가" in label:
+            if band is None and ("희망공모가" in label or "공모희망가" in label):
                 m = band_re.search(val)
                 if m:
                     band = [_int(m.group(1)), _int(m.group(2))]
+                else:
+                    m = single_re.match(val)  # 스팩 등 단일 희망가
+                    if m:
+                        band = [_int(m.group(1)), _int(m.group(1))]
             if qty_unit is None and label == "수량단위":
                 m = unit_re.search(val)
                 if m:
@@ -371,7 +380,7 @@ def parse_demand_terms(path):
                 if m:
                     price_unit = _int(m.group(1))
             if inst_max is None and "최고한도" in re.sub(r"\s+", "", header) and label == "기관투자자":
-                m = re.search(r"또는\s*([\d,]+)\s*주", r[1])
+                m = re.search(or_num, r[1])
                 if m:
                     inst_max = _int(m.group(1))
         if inst_max is None:
@@ -382,7 +391,7 @@ def parse_demand_terms(path):
     if inst_max is None:
         # 문장형: "최고한도는 수요예측 대상 수량 2,059,500주를 초과할 수 없습니다"
         text = BeautifulSoup(open(path, encoding="utf-8", errors="ignore").read(), "html.parser").get_text(" ")
-        m = re.search(r"최고\s*한도는[^.\d]{0,40}([\d,]+)\s*주", text)
+        m = re.search(r"최고\s*한도는[^.\d]{0,40}([\d,]+)\s*주", text) or max_re.search(text)
         if m:
             inst_max = _int(m.group(1))
     return {"band": band, "qty_unit": qty_unit, "price_unit": price_unit, "inst_max": inst_max}

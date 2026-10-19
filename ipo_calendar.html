@@ -537,6 +537,9 @@
   tr.detail-row > td { background: var(--surface-2); white-space: normal !important; }
   .demand-detail { display: flex; flex-wrap: wrap; gap: 28px; padding: 8px 6px 10px; }
   .demand-detail .dd-col { flex: 1 1 280px; max-width: 420px; }
+  .demand-detail .dd-col.dd-wide { flex: 1 1 100%; max-width: 760px; }
+  table.fund-table { min-width: 0; background: var(--surface); font-size: 12.5px; }
+  table.fund-table td.fund-group { font-weight: 700; color: var(--ink-dim); background: var(--surface-2); }
   .demand-detail .dd-title { font-size: 11.5px; font-weight: 700; color: var(--ink-faint); margin-bottom: 6px; }
 
   /* ================= print =================
@@ -789,7 +792,7 @@
   <div class="tab-panel" id="tab-demand">
     <div class="stage-head">
       <h2>수요예측</h2>
-      <p>수요예측 신청 여부와 실제로 제출한 참여가격·수량·확약여부를 한 표에서 입력합니다. 종목명을 누르면 그 아래에 수요예측 조건(DART 증권신고서)과 주관사 계좌가 펼쳐집니다.</p>
+      <p>수요예측 신청 여부와 참여가격·수량·확약여부를 한 표에서 입력합니다. 종목명을 누르면 그 아래에 수요예측 조건(DART 증권신고서), 주관사 계좌, 펀드별 참여 입력칸이 펼쳐집니다.</p>
       <details id="acctSetup" style="margin-top:10px">
         <summary class="nt-hint" style="cursor:pointer;margin:0">계좌 목록 붙여넣기</summary>
         <div class="nt-hint" style="margin-top:8px">본인용 페이지의 참여 정보와 함께 저장됩니다. GitHub 저장소나 외부 공유 링크에는 들어가지 않습니다.</div>
@@ -797,6 +800,7 @@
         <div><button class="btn-ghost" id="acctApply" style="margin-top:6px">붙여넣은 계좌 적용</button></div>
       </details>
     </div>
+    <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="demand" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-demand"></div>
   </div>
 
@@ -859,6 +863,7 @@
     <div class="stage-head allot-registry-head">
       <h3>등록내역</h3>
     </div>
+    <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="allot" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="allot-registry"></div>
   </div>
 
@@ -867,6 +872,7 @@
       <h2>청약</h2>
       <p>실제 청약 수량과 청약증거금을 기록합니다.</p>
     </div>
+    <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="sub" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-sub"></div>
   </div>
 
@@ -875,6 +881,7 @@
       <h2>납입</h2>
       <p>납입금액과 납입 확인 여부를 기록합니다.</p>
     </div>
+    <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="pay" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-pay"></div>
   </div>
 
@@ -883,6 +890,7 @@
       <h2>상장</h2>
       <p>상장 당일 시초가·종가와 참여가 대비 수익률을 기록합니다.</p>
     </div>
+    <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="list" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-list"></div>
   </div>
 
@@ -4349,6 +4357,70 @@ document.addEventListener("click", e => {
   if (chip) { openPanel(Number(chip.dataset.deal)); return; }
 });
 
+/* ---------- 단계 탭 검색 ---------- */
+const stageSearch = {}; // 탭 키 → 종목명 검색어
+document.addEventListener("input", e => {
+  const el = e.target.closest("input[data-stage-search]");
+  if (!el) return;
+  const key = el.dataset.stageSearch;
+  stageSearch[key] = el.value.trim();
+  if (key === "allot") renderAllotRegistry(); else renderStageTable(key);
+});
+
+/* ---------- 수요예측 펀드별 참여 ----------
+   같은 종목에 코벤·신탁·일임·H일임 여러 펀드로 들어가서, 펀드마다 참여 여부·
+   가격·수량·확약을 records[종목].funds[펀드명]에 따로 둔다. 표의 "참여함"은
+   어느 한 펀드라도 참여로 체크하면 같이 켜진다(캘린더 "참여" 필터와 연동). */
+const FUND_GROUPS = [
+  { group: "코벤", funds: ["코스닥벤처-1", "코스닥벤처-2", "코스닥벤처-3", "코스닥벤처-4", "코스닥벤처-5", "코스닥벤처-6"] },
+  { group: "신탁", funds: ["프라임J-1", "프라임J-2", "프라임J-FA", "프로젝트-1", "J스페셜-1", "프라임J-5"] },
+  { group: "일임", funds: ["일임"] },
+  { group: "H일임", funds: ["H일임"] },
+];
+const COMMIT_OPTIONS = ["", "미확약", "15일", "1개월", "3개월", "6개월"];
+function fundsHtml(dl, idx){
+  const funds = records[dl.name].funds || {};
+  let totalQty = 0;
+  const body = FUND_GROUPS.map(g => g.funds.map((f, i) => {
+    const v = funds[f] || {};
+    if (v.joined && v.qty) totalQty += v.qty;
+    const attrs = `data-fund="${escHtml(f)}" data-fidx="${idx}"`;
+    return `<tr>
+      ${i === 0 ? `<td rowspan="${g.funds.length}" class="fund-group">${g.group}</td>` : ""}
+      <td>${escHtml(f)}</td>
+      <td><input type="checkbox" ${attrs} data-ffield="joined" ${v.joined ? "checked" : ""}></td>
+      <td><input type="number" ${attrs} data-ffield="price" value="${v.price != null ? v.price : ""}"></td>
+      <td><input type="number" ${attrs} data-ffield="qty" value="${v.qty != null ? v.qty : ""}"></td>
+      <td><select ${attrs} data-ffield="commit">${COMMIT_OPTIONS.map(o => `<option value="${o}" ${v.commit === o ? "selected" : ""}>${o || "미지정"}</option>`).join("")}</select></td>
+    </tr>`;
+  }).join("")).join("");
+  return `<table class="stage-table fund-table"><thead><tr><th>구분</th><th>펀드</th><th>참여</th><th>참여가격(원)</th><th>신청수량(주)</th><th>확약여부</th></tr></thead>
+    <tbody>${body}</tbody></table>
+    <div class="nt-hint" style="margin:6px 0 0">참여 체크한 펀드 신청수량 합계: <b class="fund-sum" data-fsum="${idx}">${fmtNum(totalQty)}</b>주</div>`;
+}
+document.addEventListener("change", e => {
+  const el = e.target.closest("[data-fund]");
+  if (!el) return;
+  const dl = deals[Number(el.dataset.fidx)];
+  const rec = records[dl.name];
+  rec.funds = rec.funds || {};
+  const f = rec.funds[el.dataset.fund] = rec.funds[el.dataset.fund] || {};
+  const field = el.dataset.ffield;
+  f[field] = el.type === "checkbox" ? el.checked : el.type === "number" ? (el.value === "" ? null : Number(el.value)) : el.value;
+  persistRecords();
+  showToast("저장되었습니다");
+  // 표 전체를 다시 그리면 입력 중인 칸이 사라져서, 합계와 "참여함"만 고친다.
+  const sum = Object.values(rec.funds).reduce((a, v) => a + (v.joined && v.qty ? v.qty : 0), 0);
+  const sumEl = document.querySelector(`.fund-sum[data-fsum="${el.dataset.fidx}"]`);
+  if (sumEl) sumEl.textContent = fmtNum(sum);
+  if (field === "joined" && el.checked && !rec.joined) {
+    rec.joined = true;
+    const box = document.querySelector(`#stage-demand tr[data-row="${el.dataset.fidx}"] input[data-field="joined"]`);
+    if (box) box.checked = true;
+    rerender();
+  }
+});
+
 /* ---------- 수요예측 탭 종목 펼침 (수요예측 조건 + 주관사 계좌) ---------- */
 const demandOpen = new Set(); // 펼쳐 둔 종목 인덱스
 document.addEventListener("click", e => {
@@ -4362,6 +4434,7 @@ function demandDetailHtml(dl, idx){
   return `<div class="demand-detail">
     <div class="dd-col"><div class="dd-title">수요예측 조건 (DART 증권신고서)</div>${termsHtml(dl)}</div>
     <div class="dd-col"><div class="dd-title">주관사 계좌 (누르면 기호 없이 복사)</div>${accountsHtml(dl)}</div>
+    <div class="dd-col dd-wide"><div class="dd-title">펀드별 참여</div>${fundsHtml(dl, idx)}</div>
   </div>`;
 }
 function termsHtml(dl){
@@ -4839,7 +4912,6 @@ const STAGE_TABS = {
       { field: "_demand", label: "수요예측일", type: "ref", get: dl => fmtRange(dl.demand[0], dl.demand[1]) },
       { field: "applied", label: "신청함", type: "checkbox" },
       { field: "appliedDate", label: "신청일", type: "date" },
-      { field: "appliedNote", label: "담당자/비고", type: "text" },
       { field: "joined", label: "참여함", type: "checkbox" },
       { field: "price", label: "참여가격(원)", type: "number" },
       { field: "qty", label: "신청수량(주)", type: "number" },
@@ -5087,6 +5159,7 @@ function renderAllotRegistry(){
   const container = document.getElementById("allot-registry");
   const rows = deals.map((dl, idx) => ({ dl, idx, rec: records[dl.name] }))
     .filter(({ rec }) => rec.allotShares != null || rec.allotAmount != null || rec.allotDate)
+    .filter(({ dl }) => matchesQuery(dl.name, stageSearch.allot))
     .sort((a, b) => {
       const da = a.rec.allotDate ? d(a.rec.allotDate) : d(a.dl.demand[0]);
       const db = b.rec.allotDate ? d(b.rec.allotDate) : d(b.dl.demand[0]);
@@ -5175,11 +5248,16 @@ function renderStageTable(key){
   const container = document.getElementById("stage-" + key);
   if (!container) return;
   const head = cfg.columns.map(c => `<th>${typeof c.label === "function" ? c.label() : c.label}</th>`).join("");
-  const rows = deals.map((dl, idx) => {
+  // 최신 딜(수요예측 시작일 늦은 순)이 위로, 표 위 검색칸으로 종목명 필터.
+  const order = deals.map((dl, idx) => idx)
+    .filter(idx => matchesQuery(deals[idx].name, stageSearch[key]))
+    .sort((a, b) => deals[b].demand[0].localeCompare(deals[a].demand[0]) || b - a);
+  const rows = order.map(idx => {
+    const dl = deals[idx];
     const rec = records[dl.name];
     const detail = cfg.detail && demandOpen.has(idx)
       ? `<tr class="detail-row"><td colspan="${cfg.columns.length}">${cfg.detail(dl, idx)}</td></tr>` : "";
-    return `<tr>${cfg.columns.map(col => renderStageCell(dl, idx, rec, col)).join("")}</tr>${detail}`;
+    return `<tr data-row="${idx}">${cfg.columns.map(col => renderStageCell(dl, idx, rec, col)).join("")}</tr>${detail}`;
   }).join("");
   container.innerHTML = `<table class="stage-table"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
 }
@@ -5196,7 +5274,7 @@ function refreshComputedCells(key, idx){
   if (!cfg.columns.some(c => c.type === "computed")) return;
   const dl = deals[idx];
   const rec = records[dl.name];
-  const row = document.querySelectorAll("#stage-" + key + " tbody tr:not(.detail-row)")[idx];
+  const row = document.querySelector("#stage-" + key + ` tbody tr[data-row="${idx}"]`);
   if (!row) return;
   cfg.columns.forEach((col, colIdx) => {
     if (col.type === "computed") {
