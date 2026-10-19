@@ -509,11 +509,48 @@
     .chip .clabel { display: none; }
   }
 
+  /* ---- 청약 공문 출력 패널 ---- */
+  #ntPanel { width: 440px; }
+  #ntPanel label.field input[type=text], #ntPanel label.field input[type=date], #ntPanel label.field textarea {
+    width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border); box-sizing: border-box;
+    background: var(--surface); color: var(--ink); font-size: 13px; font-family: var(--font-kr);
+  }
+  #ntPanel label.field textarea { min-height: 54px; resize: vertical; }
+  .nt-two { display: flex; gap: 10px; }
+  .nt-two > label.field { flex: 1 1 0; min-width: 0; }
+  .nt-hint { font-size: 11.5px; color: var(--ink-faint); margin: -4px 0 12px; line-height: 1.5; }
+  .nt-hint.err { color: var(--today-ring); }
+  .nt-sum { font-size: 12px; color: var(--ink-dim); font-family: var(--font-mono); line-height: 1.7; }
+  .nt-sum b { color: var(--ink); }
+  #ntPanel details summary { cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--ink-dim); margin-bottom: 12px; }
+  #noticePrint { display: none; }
+
   /* ================= print =================
      회사에서 실제 쓰던 ★수요예측캘린더 엑셀 양식(노란 월/연도 박스, 굵은
      빨간 일(日) 숫자, 얇은 점선 그리드, 한 줄짜리 일정 텍스트)을 그대로
      재현한다. */
   .print-header { display: none; }
+  @page notice { size: A4 portrait; margin: 16mm 15mm; }
+  .notice-page {
+    page: notice; break-after: page; color: #000; background: #fff;
+    font-family: "Malgun Gothic", "맑은 고딕", var(--font-kr); font-size: 11pt; line-height: 1.45;
+  }
+  .notice-page:last-child { break-after: auto; }
+  .notice-page .n-head { display: flex; align-items: center; justify-content: center; gap: 14px; min-height: 46px; }
+  .notice-page .n-head img { height: 34px; }
+  .notice-page .n-company { font-size: 18pt; font-weight: 700; }
+  .notice-page .n-addr { text-align: center; font-size: 9.5pt; margin-top: 8px; }
+  .notice-page .n-rule { border-top: 2.5px solid #000; margin: 14px 0 18px; }
+  .notice-page .n-meta { display: grid; grid-template-columns: 78px 1fr auto; row-gap: 9px; column-gap: 6px; }
+  .notice-page .n-meta .k { white-space: pre; }
+  .notice-page .n-body p { margin: 0 0 12px; padding-left: 78px; white-space: pre-line; }
+  .notice-page .n-center { text-align: center; margin: 26px 0 20px; }
+  .notice-page table { border-collapse: collapse; width: calc(100% - 78px); margin-left: 78px; font-size: 10pt; }
+  .notice-page th, .notice-page td { border: 1px solid #000; padding: 6px 6px; text-align: center; }
+  .notice-page td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .notice-page td.blank { border: none; }
+  .notice-page .n-pay { margin: 40px 0 0 78px; display: flex; gap: 24px; }
+  .notice-page .n-sign { text-align: center; font-size: 18pt; font-weight: 700; margin-top: 110px; white-space: pre-line; line-height: 1.5; }
   @media print {
     @page { size: landscape; margin: 6mm; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
@@ -554,6 +591,10 @@
     .today-badge, .digest, .controls, footer, .backdrop, .panel, .ppt-status, .legend, .tabbar { display: none !important; }
     .tab-panel { display: none !important; }
     .tab-panel#tab-calendar { display: block !important; }
+
+    /* 청약 공문 출력 중엔 캘린더 대신 공문 2장만 A4 세로로 찍는다. */
+    body.print-notice .wrap, body.print-notice .toast { display: none !important; }
+    body.print-notice #noticePrint { display: block !important; }
 
     .print-header {
       display: flex; align-items: stretch; gap: 10px; margin-bottom: 6px;
@@ -847,6 +888,7 @@
     <div class="panel-section">
       <h3>일정</h3>
       <div id="pSchedule"></div>
+      <button class="today-jump" id="pNoticeBtn" style="margin-top:10px">청약 공문 출력</button>
     </div>
     <div class="panel-section">
       <h3>참여 정보</h3>
@@ -908,6 +950,78 @@
     <div id="ulList"></div>
   </div>
 </div>
+
+<div class="backdrop" id="ntBackdrop"></div>
+<div class="panel" id="ntPanel">
+  <div class="panel-head">
+    <button class="panel-close" id="ntPanelClose">✕</button>
+    <div class="pname">청약 공문 출력</div>
+    <div class="puw" id="ntDealName">—</div>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section">
+      <h3>공문 내용</h3>
+      <label class="field"><span class="flabel">종목명</span><input type="text" id="ntName"></label>
+      <label class="field"><span class="flabel">확정 공모가액 (원)</span><input type="number" id="ntPrice" min="0" step="1"></label>
+      <div class="nt-hint" id="ntPriceHint"></div>
+      <div class="nt-two">
+        <label class="field"><span class="flabel">납입일</span><input type="date" id="ntPayDate"></label>
+        <label class="field"><span class="flabel">납입 시각</span><input type="text" id="ntPayTime"></label>
+      </div>
+    </div>
+    <div class="panel-section">
+      <h3>배정주식 수 (입력하면 이 종목에 저장됩니다)</h3>
+      <div class="nt-two">
+        <label class="field"><span class="flabel" id="ntShares1Label">수신처 ①</span><input type="number" id="ntShares1" min="0" step="1"></label>
+        <label class="field"><span class="flabel" id="ntShares2Label">수신처 ②</span><input type="number" id="ntShares2" min="0" step="1"></label>
+      </div>
+      <div class="nt-sum" id="ntSum"></div>
+    </div>
+    <div class="panel-section">
+      <h3>문서번호</h3>
+      <label class="pdf-fill-btn">대외공문 폴더에서 최신 번호 확인<input type="file" id="ntFolder" webkitdirectory multiple hidden></label>
+      <div class="nt-hint" id="ntFolderHint" style="margin-top:6px">폴더를 고르면 파일 이름만 읽어 올해 최신 번호(예: 2026-108)를 찾고, 그다음 번호 두 개를 채웁니다. 파일은 어디에도 올라가지 않습니다.</div>
+      <div class="nt-two">
+        <label class="field"><span class="flabel" id="ntDoc1Label">①</span><input type="text" id="ntDoc1"></label>
+        <label class="field"><span class="flabel" id="ntDoc2Label">②</span><input type="text" id="ntDoc2"></label>
+      </div>
+    </div>
+    <div class="save-row" style="margin-bottom:22px">
+      <button class="save-btn" id="ntPrintBtn">공문 2장 출력</button>
+      <span class="nt-hint err" id="ntPrintHint" style="margin:0"></span>
+    </div>
+    <div class="panel-section">
+      <details id="ntSettings">
+        <summary>공문 설정 (처음 한 번 입력)</summary>
+        <div class="nt-hint">본인용 페이지의 참여 정보와 함께 저장됩니다. GitHub 저장소나 외부 공유 링크에는 들어가지 않습니다.</div>
+        <label class="field"><span class="flabel">회사명</span><input type="text" data-nt="company"></label>
+        <label class="field"><span class="flabel">로고 이미지</span><input type="file" id="ntLogo" accept="image/*"></label>
+        <div class="nt-hint" id="ntLogoHint"></div>
+        <label class="field"><span class="flabel">주소·연락처 줄</span><textarea data-nt="address"></textarea></label>
+        <label class="field"><span class="flabel">발신</span><input type="text" data-nt="sender"></label>
+        <label class="field"><span class="flabel">입금 계좌 (본문 2번 괄호 안)</span><input type="text" data-nt="account"></label>
+        <label class="field"><span class="flabel">수신처 ① 약칭</span><input type="text" data-nt="r1name"></label>
+        <label class="field"><span class="flabel">수신처 ① 수신</span><input type="text" data-nt="r1to"></label>
+        <label class="field"><span class="flabel">수신처 ① 참조 (없으면 비움)</span><input type="text" data-nt="r1cc"></label>
+        <label class="field"><span class="flabel">수신처 ② 약칭</span><input type="text" data-nt="r2name"></label>
+        <label class="field"><span class="flabel">수신처 ② 수신</span><input type="text" data-nt="r2to"></label>
+        <label class="field"><span class="flabel">수신처 ② 참조 (없으면 비움)</span><input type="text" data-nt="r2cc"></label>
+        <label class="field"><span class="flabel">제목</span><input type="text" data-nt="title"></label>
+        <div class="nt-two">
+          <label class="field"><span class="flabel">문서번호 앞말</span><input type="text" data-nt="docPrefix"></label>
+          <label class="field"><span class="flabel">청약수수료율 (%)</span><input type="text" data-nt="feeRate"></label>
+        </div>
+        <label class="field"><span class="flabel">하단 서명</span><textarea data-nt="signer"></textarea></label>
+        <div class="save-row">
+          <button class="save-btn" id="ntSettingsSave">설정 저장</button>
+          <button class="btn-ghost" id="ntSettingsPaste">한 번에 붙여넣기</button>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<div id="noticePrint"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -2996,7 +3110,7 @@ async function syncRecordsNow(){
   try {
     const artifact = await getArtifactNs();
     if (!artifact) { failRecordsSync("no-namespace"); return; }
-    const payload = JSON.stringify({ updatedAt: recordsUpdatedAt, nav: navValue, records, uwLinks });
+    const payload = JSON.stringify({ updatedAt: recordsUpdatedAt, nav: navValue, records, uwLinks, noticeSettings });
     await artifact.publish({ [SHARED_RECORDS_FILE]: payload });
     // 성공 — 다음에 실패하면 다시 알려줄 수 있게 경고 플래그를 푼다.
     recordsSyncWarned = false;
@@ -3036,6 +3150,10 @@ async function loadSharedRecords(){
       navValue = data.nav;
       const navInput = document.getElementById("navInput");
       if (navInput) navInput.value = navValue;
+    }
+    if (data.noticeSettings) {
+      noticeSettings = Object.assign(noticeSettings, data.noticeSettings);
+      try { localStorage.setItem(NOTICE_KEY, JSON.stringify(noticeSettings)); } catch(e) {}
     }
     if (data.uwLinks) {
       uwLinks = Object.assign(uwLinks, data.uwLinks);
@@ -3567,6 +3685,246 @@ document.addEventListener("click", e => {
   if (chip) { openPanel(Number(chip.dataset.deal)); return; }
 });
 
+/* ---------- 청약 공문 출력 ----------
+   청약일에 수신처 두 곳(투자일임 고객)으로 보내는 "IPO 수요예측 청약 대금 납입"
+   공문을 엑셀 양식(공문 시트 좌/우 두 장) 그대로 브라우저 인쇄로 찍는다.
+   회사·계좌·수신처 같은 고정 문구는 코드(공개 저장소)에 넣지 않고 noticeSettings로
+   받아 참여 정보와 같은 경로(localStorage + records.json)에 저장한다.
+   배정주식 수는 종목별 records.noticeShares1/2, 공모가를 고쳐 쓰면 noticePrice. */
+const NOTICE_KEY = "ipoCalendarNotice_v1";
+const NOTICE_DEFAULTS = {
+  company: "", logo: "", address: "", sender: "", account: "",
+  r1name: "수신처①", r1to: "", r1cc: "", r2name: "수신처②", r2to: "", r2cc: "",
+  title: "IPO 수요예측 청약 대금 납입", docPrefix: "", feeRate: "1",
+  payTime: "오전 10시", signer: "", lastDoc: "",
+};
+let noticeSettings = (() => {
+  try { return Object.assign({}, NOTICE_DEFAULTS, JSON.parse(localStorage.getItem(NOTICE_KEY) || "{}")); }
+  catch(e) { return Object.assign({}, NOTICE_DEFAULTS); }
+})();
+function saveNoticeSettings(){
+  try { localStorage.setItem(NOTICE_KEY, JSON.stringify(noticeSettings)); } catch(e) {}
+  persistRecords(); // 같은 payload로 다른 기기까지 동기화된다
+}
+function noticeRecipientName(n){ return noticeSettings["r" + n + "name"] || ("수신처" + (n === 1 ? "①" : "②")); }
+function escHtml(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" })[c]); }
+function wonFmt(n){ return Math.round(n).toLocaleString("ko-KR"); }
+
+// "투자운용 2026-108호" ↔ {year, no}. 엑셀 K6 수식처럼 번호는 세 자리로 맞춘다.
+function docNoString(year, no){
+  const p = (noticeSettings.docPrefix || "").trim();
+  return `${p ? p + " " : ""}${year}-${String(no).padStart(3, "0")}호`;
+}
+function parseDocNo(s){
+  const m = /(\d{4})\s*-\s*(\d{1,4})/.exec(s || "");
+  return m ? { year: Number(m[1]), no: Number(m[2]) } : null;
+}
+
+let ntDealIdx = null;
+function openNoticePanel(idx){
+  ntDealIdx = idx;
+  const dl = deals[idx], rec = records[dl.name];
+  const dartPrice = dartData[dl.name] ? dartPricePerShare(dartData[dl.name].offering) : null;
+  document.getElementById("ntDealName").textContent = `${dl.name} · 청약 ${fmtRange(dl.sub[0], dl.sub[1])} · 납입 ${fmt(dl.pay)}`;
+  document.getElementById("ntName").value = dl.name;
+  document.getElementById("ntPrice").value = rec.noticePrice != null ? rec.noticePrice : (dartPrice || "");
+  document.getElementById("ntPriceHint").textContent = dartPrice
+    ? `DART 증권신고서 기준 확정공모가 ${wonFmt(dartPrice)}원${rec.noticePrice != null && rec.noticePrice !== dartPrice ? " (직접 고친 값 사용 중)" : ""}`
+    : "DART 확정공모가가 아직 없습니다 — 직접 입력하세요.";
+  document.getElementById("ntPayDate").value = dl.pay || "";
+  document.getElementById("ntPayTime").value = noticeSettings.payTime || "";
+  document.getElementById("ntShares1").value = rec.noticeShares1 != null ? rec.noticeShares1 : "";
+  document.getElementById("ntShares2").value = rec.noticeShares2 != null ? rec.noticeShares2 : "";
+  document.getElementById("ntShares1Label").textContent = noticeRecipientName(1);
+  document.getElementById("ntShares2Label").textContent = noticeRecipientName(2);
+  document.getElementById("ntDoc1Label").textContent = "① " + noticeRecipientName(1);
+  document.getElementById("ntDoc2Label").textContent = "② " + noticeRecipientName(2);
+  const last = parseDocNo(noticeSettings.lastDoc);
+  const year = today.getFullYear();
+  if (last && last.year === year) {
+    document.getElementById("ntDoc1").value = docNoString(year, last.no + 1);
+    document.getElementById("ntDoc2").value = docNoString(year, last.no + 2);
+    setNtFolderHint(`이 페이지에서 마지막으로 쓴 번호는 ${noticeSettings.lastDoc}입니다. 그사이 다른 공문이 나갔다면 폴더로 다시 확인하세요.`);
+  } else {
+    document.getElementById("ntDoc1").value = "";
+    document.getElementById("ntDoc2").value = "";
+    setNtFolderHint("폴더를 고르면 파일 이름만 읽어 올해 최신 번호(예: 2026-108)를 찾고, 그다음 번호 두 개를 채웁니다. 파일은 어디에도 올라가지 않습니다.");
+  }
+  document.getElementById("ntPrintHint").textContent = "";
+  fillNoticeSettingsForm();
+  document.getElementById("ntSettings").open = !noticeSettings.company;
+  updateNoticeSum();
+  document.getElementById("ntPanel").classList.add("show");
+  document.getElementById("ntBackdrop").classList.add("show");
+}
+function closeNoticePanel(){
+  document.getElementById("ntPanel").classList.remove("show");
+  document.getElementById("ntBackdrop").classList.remove("show");
+}
+function setNtFolderHint(text, isErr){
+  const el = document.getElementById("ntFolderHint");
+  el.textContent = text;
+  el.classList.toggle("err", !!isErr);
+}
+function fillNoticeSettingsForm(){
+  document.querySelectorAll("#ntPanel [data-nt]").forEach(el => { el.value = noticeSettings[el.dataset.nt] || ""; });
+  document.getElementById("ntLogoHint").textContent = noticeSettings.logo ? "로고가 등록되어 있습니다. 바꾸려면 새 이미지를 고르세요." : "";
+}
+
+function noticeNumbers(){
+  const price = Number(document.getElementById("ntPrice").value) || 0;
+  const rate = (Number(noticeSettings.feeRate) || 0) / 100;
+  return [1, 2].map(n => {
+    const shares = Number(document.getElementById("ntShares" + n).value) || 0;
+    const amount = shares * price, fee = amount * rate;
+    return { shares, price, amount, fee, total: amount + fee };
+  });
+}
+function updateNoticeSum(){
+  document.getElementById("ntSum").innerHTML = noticeNumbers().map((v, i) =>
+    `${escHtml(noticeRecipientName(i + 1))}: 청약금액 <b>${wonFmt(v.amount)}</b> + 수수료 ${wonFmt(v.fee)} = 총 <b>${wonFmt(v.total)}</b>원`
+  ).join("<br>");
+}
+
+function fmtLongKoDate(iso){
+  if (!iso) return "";
+  const dt = d(iso);
+  return `${dt.getFullYear()}년 ${dt.getMonth() + 1}월 ${dt.getDate()}일 ${"일월화수목금토"[dt.getDay()]}요일`;
+}
+function noticePageHtml(n, docNo, v){
+  const S = noticeSettings;
+  const to = S["r" + n + "to"], cc = S["r" + n + "cc"];
+  const metaRow = (k, val, right) => `<div class="k">${k}</div><div>${escHtml(val)}</div><div>${right || ""}</div>`;
+  return `<div class="notice-page">
+    <div class="n-head">${S.logo ? `<img src="${S.logo}" alt="">` : ""}<span class="n-company">${escHtml(S.company)}</span></div>
+    <div class="n-addr">${escHtml(S.address)}</div>
+    <div class="n-rule"></div>
+    <div class="n-meta">
+      ${metaRow("문서번호:", docNo, `발송일: ${isoKey(today)}`)}
+      ${metaRow("발      신:", S.sender)}
+      ${metaRow("수      신:", to)}
+      ${cc ? metaRow("참      조:", cc) : ""}
+      ${metaRow("제      목:", S.title)}
+    </div>
+    <div class="n-rule"></div>
+    <div class="n-body">
+      <p>1. 귀사의 무궁한 발전을 기원합니다.</p>
+      <p>2. 아래와 같이 투자일임으로 참여한 IPO 종목에 대해 배정받은 주식의 청약금 납입을 위하여 당사 계좌 (${escHtml(S.account)})로 입금을 부탁드립니다.</p>
+    </div>
+    <div class="n-center">-     아          래     -</div>
+    <table>
+      <tr><th>종목명</th><th>배정주식 수</th><th>확정 공모가액</th><th>청약금액</th><th>청약수수료</th><th>총 납입금액</th></tr>
+      <tr><td>${escHtml(document.getElementById("ntName").value)}</td><td class="num">${wonFmt(v.shares)}</td><td class="num">${wonFmt(v.price)}</td>
+          <td class="num">${wonFmt(v.amount)}</td><td class="num">${wonFmt(v.fee)}</td><td class="num">₩ ${wonFmt(v.total)}</td></tr>
+      <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="num">₩ ${wonFmt(v.total)}</td></tr>
+    </table>
+    <div class="n-pay"><span>납입일시:</span><span>${fmtLongKoDate(document.getElementById("ntPayDate").value)}</span><span>${escHtml(document.getElementById("ntPayTime").value)}</span></div>
+    <div class="n-sign">${escHtml(S.signer)}</div>
+  </div>`;
+}
+
+function printNotice(){
+  const hint = document.getElementById("ntPrintHint");
+  const missing = [];
+  if (!noticeSettings.company || !noticeSettings.r1to || !noticeSettings.r2to || !noticeSettings.account) missing.push("공문 설정");
+  if (!(Number(document.getElementById("ntPrice").value) > 0)) missing.push("확정 공모가액");
+  if (!(Number(document.getElementById("ntShares1").value) > 0) || !(Number(document.getElementById("ntShares2").value) > 0)) missing.push("배정주식 수");
+  const doc1 = document.getElementById("ntDoc1").value.trim(), doc2 = document.getElementById("ntDoc2").value.trim();
+  if (!doc1 || !doc2) missing.push("문서번호");
+  if (missing.length) { hint.textContent = missing.join(", ") + "을(를) 채워주세요"; return; }
+  hint.textContent = "";
+  const [v1, v2] = noticeNumbers();
+  document.getElementById("noticePrint").innerHTML = noticePageHtml(1, doc1, v1) + noticePageHtml(2, doc2, v2);
+  // 다음에 열 때 이어지는 번호를 제안하려고 마지막으로 쓴 번호를 기억해 둔다.
+  noticeSettings.lastDoc = doc2;
+  saveNoticeSettings();
+  document.body.classList.add("print-notice");
+  window.print();
+}
+window.addEventListener("afterprint", () => document.body.classList.remove("print-notice"));
+
+document.getElementById("pNoticeBtn").addEventListener("click", () => {
+  const idx = currentDealIdx;
+  closePanel();
+  openNoticePanel(idx);
+});
+document.addEventListener("click", e => {
+  const btn = e.target.closest("button[data-notice]");
+  if (btn) openNoticePanel(Number(btn.dataset.notice));
+});
+document.getElementById("ntPanelClose").addEventListener("click", closeNoticePanel);
+document.getElementById("ntBackdrop").addEventListener("click", closeNoticePanel);
+document.getElementById("ntPrintBtn").addEventListener("click", printNotice);
+
+// 배정주식 수·공모가는 입력하는 대로 이 종목 records에 저장(청약 탭 표와 같은 값).
+["ntShares1", "ntShares2", "ntPrice"].forEach(id => {
+  document.getElementById(id).addEventListener("input", updateNoticeSum);
+  document.getElementById(id).addEventListener("change", e => {
+    if (ntDealIdx == null) return;
+    const rec = records[deals[ntDealIdx].name];
+    const field = { ntShares1: "noticeShares1", ntShares2: "noticeShares2", ntPrice: "noticePrice" }[id];
+    rec[field] = e.target.value === "" ? null : Number(e.target.value);
+    persistRecords();
+    renderStageTable("sub");
+  });
+});
+
+// 대외공문 폴더: 파일 이름에서 "올해-번호"를 모두 찾아 가장 큰 번호를 쓴다.
+document.getElementById("ntFolder").addEventListener("change", e => {
+  const files = Array.from(e.target.files || []);
+  const year = today.getFullYear();
+  let best = null;
+  files.forEach(f => {
+    const re = /(\d{4})\s*-\s*(\d{1,4})/g;
+    let m;
+    while ((m = re.exec(f.name))) {
+      if (Number(m[1]) === year && (!best || Number(m[2]) > best.no)) best = { no: Number(m[2]), file: f.name };
+    }
+  });
+  e.target.value = "";
+  if (!files.length) return;
+  if (!best) {
+    setNtFolderHint(`파일 ${files.length}개 중 이름에 "${year}-번호"가 들어간 파일을 찾지 못했습니다. 번호를 직접 입력하세요.`, true);
+    return;
+  }
+  document.getElementById("ntDoc1").value = docNoString(year, best.no + 1);
+  document.getElementById("ntDoc2").value = docNoString(year, best.no + 2);
+  setNtFolderHint(`최신 번호 ${year}-${String(best.no).padStart(3, "0")} ← "${best.file}" (파일 ${files.length}개 확인). 맞는지 확인하세요.`);
+});
+
+document.getElementById("ntSettingsSave").addEventListener("click", () => {
+  document.querySelectorAll("#ntPanel [data-nt]").forEach(el => { noticeSettings[el.dataset.nt] = el.value.trim(); });
+  saveNoticeSettings();
+  showToast("공문 설정이 저장되었습니다");
+  if (ntDealIdx != null) openNoticePanel(ntDealIdx);
+  renderStageTable("sub");
+});
+document.getElementById("ntSettingsPaste").addEventListener("click", () => {
+  const text = window.prompt("공문 설정(JSON)을 붙여넣으세요");
+  if (!text) return;
+  try {
+    const obj = JSON.parse(text);
+    Object.keys(NOTICE_DEFAULTS).forEach(k => { if (k !== "logo" && obj[k] != null) noticeSettings[k] = String(obj[k]); });
+    saveNoticeSettings();
+    fillNoticeSettingsForm();
+    showToast("공문 설정을 불러왔습니다");
+    if (ntDealIdx != null) openNoticePanel(ntDealIdx);
+    renderStageTable("sub");
+  } catch (err) { showToast("형식이 올바르지 않습니다"); }
+});
+document.getElementById("ntLogo").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    noticeSettings.logo = reader.result;
+    saveNoticeSettings();
+    fillNoticeSettingsForm();
+    showToast("로고가 저장되었습니다");
+  };
+  reader.readAsDataURL(f);
+});
+
 /* ---------- 내 일정 (커스텀 이벤트) ----------
    딜 데이터(deals)는 GitHub Actions가 주기적으로 통째로 덮어쓰기 때문에,
    여기 추가하는 일정은 별도 파일(custom-events.json)에 담아 artifact 파일
@@ -3735,6 +4093,10 @@ const STAGE_TABS = {
       { field: "_sub", label: "청약일", type: "ref", get: dl => fmtRange(dl.sub[0], dl.sub[1]) },
       { field: "subQty", label: "청약수량(주)", type: "number" },
       { field: "subDeposit", label: "청약증거금(원)", type: "number" },
+      { field: "noticeShares1", label: () => `공문 배정주식(${noticeRecipientName(1)})`, type: "number" },
+      { field: "noticeShares2", label: () => `공문 배정주식(${noticeRecipientName(2)})`, type: "number" },
+      { field: "_notice", label: "공문", type: "action",
+        html: (dl, idx) => `<button class="allot-row-btn" data-notice="${idx}">공문 출력</button>` },
     ],
   },
   pay: {
@@ -4021,6 +4383,8 @@ function renderStageCell(dl, idx, rec, col){
       return `<td class="stc-ref">${col.get(dl, rec)}</td>`;
     case "computed":
       return `<td class="stc-computed">${col.get(dl, rec)}</td>`;
+    case "action":
+      return `<td>${col.html(dl, idx, rec)}</td>`;
     case "checkbox":
       return `<td><input type="checkbox" data-idx="${idx}" data-field="${col.field}" ${v ? "checked" : ""}></td>`;
     case "select": {
@@ -4046,7 +4410,7 @@ function renderStageTable(key){
   const cfg = STAGE_TABS[key];
   const container = document.getElementById("stage-" + key);
   if (!container) return;
-  const head = cfg.columns.map(c => `<th>${c.label}</th>`).join("");
+  const head = cfg.columns.map(c => `<th>${typeof c.label === "function" ? c.label() : c.label}</th>`).join("");
   const rows = deals.map((dl, idx) => {
     const rec = records[dl.name];
     return `<tr>${cfg.columns.map(col => renderStageCell(dl, idx, rec, col)).join("")}</tr>`;
@@ -4797,6 +5161,7 @@ function fitPrintToOnePage(){
 
 document.getElementById("printBtn").addEventListener("click", () => window.print());
 window.addEventListener("beforeprint", () => {
+  if (document.body.classList.contains("print-notice")) return; // 공문 출력은 캘린더를 안 건드린다
   printMode = true;
   renderCalendar();
   fitPrintToOnePage();
