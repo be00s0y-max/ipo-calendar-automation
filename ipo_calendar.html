@@ -994,6 +994,7 @@
       <details id="ntSettings">
         <summary>공문 설정 (처음 한 번 입력)</summary>
         <div class="nt-hint">본인용 페이지의 참여 정보와 함께 저장됩니다. GitHub 저장소나 외부 공유 링크에는 들어가지 않습니다.</div>
+        <label class="field"><span class="flabel">한 번에 붙여넣기 — 받은 설정 문장 전체를 붙여넣고 "붙여넣은 설정 적용"</span><textarea id="ntSettingsJson" placeholder='{"company": "...", ...}'></textarea></label>
         <label class="field"><span class="flabel">회사명</span><input type="text" data-nt="company"></label>
         <label class="field"><span class="flabel">로고 이미지</span><input type="file" id="ntLogo" accept="image/*"></label>
         <div class="nt-hint" id="ntLogoHint"></div>
@@ -1014,7 +1015,7 @@
         <label class="field"><span class="flabel">하단 서명</span><textarea data-nt="signer"></textarea></label>
         <div class="save-row">
           <button class="save-btn" id="ntSettingsSave">설정 저장</button>
-          <button class="btn-ghost" id="ntSettingsPaste">한 번에 붙여넣기</button>
+          <button class="btn-ghost" id="ntSettingsPaste">붙여넣은 설정 적용</button>
         </div>
       </details>
     </div>
@@ -3900,13 +3901,15 @@ document.getElementById("ntSettingsSave").addEventListener("click", () => {
   renderStageTable("sub");
 });
 document.getElementById("ntSettingsPaste").addEventListener("click", () => {
-  const text = window.prompt("공문 설정(JSON)을 붙여넣으세요");
-  if (!text) return;
+  // prompt() 창은 아티팩트(샌드박스 iframe)에서 막힐 수 있어 입력칸으로 받는다.
+  const text = document.getElementById("ntSettingsJson").value.trim();
+  if (!text) { showToast("먼저 위 칸에 설정을 붙여넣으세요"); return; }
   try {
     const obj = JSON.parse(text);
     Object.keys(NOTICE_DEFAULTS).forEach(k => { if (k !== "logo" && obj[k] != null) noticeSettings[k] = String(obj[k]); });
     saveNoticeSettings();
     fillNoticeSettingsForm();
+    document.getElementById("ntSettingsJson").value = "";
     showToast("공문 설정을 불러왔습니다");
     if (ntDealIdx != null) openNoticePanel(ntDealIdx);
     renderStageTable("sub");
