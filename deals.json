@@ -133,7 +133,9 @@
     ],
     "pay": "2026-08-14",
     "list": "2026-08-21",
-    "dealSizeM": 48280
+    "dealSizeM": 48280,
+    "stockCode": "282620",
+    "finalPrice": 28400
   },
   {
     "name": "니어스랩",
@@ -149,7 +151,9 @@
     ],
     "pay": "2026-08-18",
     "list": "2026-08-24",
-    "dealSizeM": 37492
+    "dealSizeM": 37492,
+    "stockCode": "417030",
+    "finalPrice": 41200
   },
   {
     "name": "해치텍",
@@ -165,7 +169,9 @@
     ],
     "pay": "2026-08-18",
     "list": "2026-08-25",
-    "dealSizeM": 23000
+    "dealSizeM": 23000,
+    "stockCode": "0155E0",
+    "finalPrice": 23000
   },
   {
     "name": "스카이랩스",
@@ -181,7 +187,9 @@
     ],
     "pay": "2026-08-31",
     "list": "2026-09-04",
-    "dealSizeM": 20000
+    "dealSizeM": 20000,
+    "stockCode": "386380",
+    "finalPrice": 10000
   },
   {
     "name": "NH스팩34호",
@@ -197,7 +205,9 @@
     ],
     "pay": "2026-09-04",
     "list": "2026-09-10",
-    "dealSizeM": 17000
+    "dealSizeM": 17000,
+    "stockCode": "0197V0",
+    "finalPrice": 2000
   },
   {
     "name": "네오사피엔스",
@@ -213,7 +223,9 @@
     ],
     "pay": "2026-09-15",
     "list": "2026-09-21",
-    "dealSizeM": 20000
+    "dealSizeM": 20000,
+    "stockCode": "0161M0",
+    "finalPrice": 10000
   },
   {
     "name": "와이즈플래닛컴퍼니",
@@ -229,7 +241,9 @@
     ],
     "pay": "2026-09-17",
     "list": "2026-09-23",
-    "dealSizeM": 19200
+    "dealSizeM": 19200,
+    "stockCode": "0010S0",
+    "finalPrice": 12000
   },
   {
     "name": "KB스팩34호",
@@ -245,7 +259,9 @@
     ],
     "pay": "2026-09-15",
     "list": "2026-09-22",
-    "dealSizeM": 14000
+    "dealSizeM": 14000,
+    "stockCode": "0209J0",
+    "finalPrice": 2000
   },
   {
     "name": "빅웨이브로보틱스",
@@ -261,7 +277,9 @@
     ],
     "pay": "2026-09-18",
     "list": "2026-09-29",
-    "dealSizeM": 28800
+    "dealSizeM": 28800,
+    "stockCode": "0035S0",
+    "finalPrice": 18000
   },
   {
     "name": "글로벌테크놀로지",
@@ -277,7 +295,9 @@
     ],
     "pay": "2026-09-21",
     "list": "2026-09-29",
-    "dealSizeM": 40000
+    "dealSizeM": 40000,
+    "stockCode": "486510",
+    "finalPrice": 10000
   },
   {
     "name": "한국스팩17호",
@@ -293,7 +313,9 @@
     ],
     "pay": "2026-09-15",
     "list": "2026-09-22",
-    "dealSizeM": 14000
+    "dealSizeM": 14000,
+    "stockCode": "0200G0",
+    "finalPrice": 2000
   },
   {
     "name": "덕산넵코어스(구.넵코어스)",
@@ -309,7 +331,9 @@
     ],
     "pay": "2026-09-21",
     "list": "2026-09-30",
-    "dealSizeM": 43800
+    "dealSizeM": 43800,
+    "stockCode": "266690",
+    "finalPrice": 14600
   },
   {
     "name": "브릴스",
@@ -325,7 +349,9 @@
     ],
     "pay": "2026-09-22",
     "list": "2026-10-01",
-    "dealSizeM": 23400
+    "dealSizeM": 23400,
+    "stockCode": "468670",
+    "finalPrice": 19500
   },
   {
     "name": "멜콘(구.에스앤에프솔루션)",
@@ -341,7 +367,9 @@
     ],
     "pay": "2026-10-07",
     "list": "2026-10-15",
-    "dealSizeM": 30750
+    "dealSizeM": 30750,
+    "stockCode": "179880",
+    "finalPrice": 12300
   },
   {
     "name": "진코스텍",
@@ -357,7 +385,9 @@
     ],
     "pay": "2026-10-08",
     "list": "2026-10-15",
-    "dealSizeM": 16614
+    "dealSizeM": 16614,
+    "stockCode": "250030",
+    "finalPrice": 23500
   },
   {
     "name": "엘리스그룹",
@@ -373,7 +403,9 @@
     ],
     "pay": "2026-10-13",
     "list": "2026-10-20",
-    "dealSizeM": 201091
+    "dealSizeM": 201091,
+    "stockCode": "0158S0",
+    "finalPrice": 90500
   },
   {
     "name": "엠에스바이오",
@@ -389,7 +421,9 @@
     ],
     "pay": "2026-10-15",
     "list": "2026-10-22",
-    "dealSizeM": 31200
+    "dealSizeM": 31200,
+    "stockCode": "0013Y0",
+    "finalPrice": 7800
   },
   {
     "name": "디티에스(구.동양티에스)",
@@ -405,7 +439,9 @@
     ],
     "pay": "2026-10-16",
     "list": "2026-10-23",
-    "dealSizeM": 37892
+    "dealSizeM": 37892,
+    "stockCode": "0015M0",
+    "finalPrice": 18500
   },
   {
     "name": "티앤이코리아",
@@ -421,7 +457,9 @@
     ],
     "pay": "2026-10-23",
     "list": null,
-    "dealSizeM": 30240
+    "dealSizeM": 30240,
+    "stockCode": "0053F0",
+    "finalPrice": 15300
   },
   {
     "name": "SK증권스팩14호",
@@ -437,7 +475,9 @@
     ],
     "pay": "2026-10-20",
     "list": "2026-10-27",
-    "dealSizeM": 13000
+    "dealSizeM": 13000,
+    "stockCode": "0205H0",
+    "finalPrice": 2000
   },
   {
     "name": "크리에이츠",
@@ -453,7 +493,8 @@
     ],
     "pay": "2026-10-23",
     "list": null,
-    "dealSizeM": 21000
+    "dealSizeM": 21000,
+    "stockCode": "439270"
   },
   {
     "name": "인텔리빅스",
@@ -469,7 +510,8 @@
     ],
     "pay": "2026-10-26",
     "list": null,
-    "dealSizeM": 19000
+    "dealSizeM": 19000,
+    "stockCode": "420610"
   },
   {
     "name": "래블업",
@@ -485,7 +527,9 @@
     ],
     "pay": "2026-10-27",
     "list": null,
-    "dealSizeM": 41420
+    "dealSizeM": 41420,
+    "stockCode": "0147B0",
+    "finalPrice": null
   },
   {
     "name": "영광(구.영광공작소)",
@@ -501,7 +545,9 @@
     ],
     "pay": "2026-10-27",
     "list": null,
-    "dealSizeM": 31640
+    "dealSizeM": 31640,
+    "stockCode": "359410",
+    "finalPrice": null
   },
   {
     "name": "한화플러스스팩6호",
@@ -517,7 +563,9 @@
     ],
     "pay": "2026-10-23",
     "list": null,
-    "dealSizeM": 12000
+    "dealSizeM": 12000,
+    "stockCode": "0127E0",
+    "finalPrice": null
   },
   {
     "name": "이에스티",
@@ -533,7 +581,9 @@
     ],
     "pay": "2026-10-27",
     "list": null,
-    "dealSizeM": 23320
+    "dealSizeM": 23320,
+    "stockCode": "495910",
+    "finalPrice": null
   },
   {
     "name": "아이엠스팩1호",
@@ -549,7 +599,9 @@
     ],
     "pay": "2026-10-29",
     "list": null,
-    "dealSizeM": 10000
+    "dealSizeM": 10000,
+    "stockCode": "0222E0",
+    "finalPrice": null
   },
   {
     "name": "옵토닉스",
@@ -565,7 +617,9 @@
     ],
     "pay": "2026-11-10",
     "list": null,
-    "dealSizeM": 22000
+    "dealSizeM": 22000,
+    "stockCode": "493260",
+    "finalPrice": null
   },
   {
     "name": "바로팜",
@@ -581,7 +635,9 @@
     ],
     "pay": "2026-11-05",
     "list": null,
-    "dealSizeM": 29192
+    "dealSizeM": 29192,
+    "stockCode": "952366",
+    "finalPrice": null
   },
   {
     "name": "넥스아이",
@@ -597,7 +653,9 @@
     ],
     "pay": "2026-11-06",
     "list": null,
-    "dealSizeM": 52500
+    "dealSizeM": 52500,
+    "stockCode": "493410",
+    "finalPrice": null
   },
   {
     "name": "동원파츠",
@@ -613,7 +671,9 @@
     ],
     "pay": "2026-11-05",
     "list": null,
-    "dealSizeM": 46690
+    "dealSizeM": 46690,
+    "stockCode": "0162D0",
+    "finalPrice": null
   },
   {
     "name": "제논",
@@ -629,7 +689,9 @@
     ],
     "pay": "2026-11-09",
     "list": null,
-    "dealSizeM": 21340
+    "dealSizeM": 21340,
+    "stockCode": "0158J0",
+    "finalPrice": null
   },
   {
     "name": "영광와이케이엠씨",
@@ -645,7 +707,9 @@
     ],
     "pay": "2026-11-09",
     "list": null,
-    "dealSizeM": 21620
+    "dealSizeM": 21620,
+    "stockCode": "345290",
+    "finalPrice": null
   },
   {
     "name": "에이엘로봇",
@@ -661,7 +725,9 @@
     ],
     "pay": "2026-11-11",
     "list": null,
-    "dealSizeM": 37680
+    "dealSizeM": 37680,
+    "stockCode": "471800",
+    "finalPrice": null
   },
   {
     "name": "엠비디",
@@ -677,7 +743,9 @@
     ],
     "pay": "2026-11-17",
     "list": null,
-    "dealSizeM": 19200
+    "dealSizeM": 19200,
+    "stockCode": "498150",
+    "finalPrice": null
   },
   {
     "name": "하나에어로다이내믹스",
@@ -693,7 +761,9 @@
     ],
     "pay": "2026-11-13",
     "list": null,
-    "dealSizeM": 20680
+    "dealSizeM": 20680,
+    "stockCode": "271160",
+    "finalPrice": null
   },
   {
     "name": "다비오",
@@ -709,7 +779,9 @@
     ],
     "pay": "2026-11-13",
     "list": null,
-    "dealSizeM": 12300
+    "dealSizeM": 12300,
+    "stockCode": "0012G0",
+    "finalPrice": null
   },
   {
     "name": "엔키화이트햇",
@@ -725,7 +797,9 @@
     ],
     "pay": "2026-11-17",
     "list": null,
-    "dealSizeM": 22100
+    "dealSizeM": 22100,
+    "stockCode": "0091L0",
+    "finalPrice": null
   },
   {
     "name": "씨앤엠",
@@ -741,7 +815,9 @@
     ],
     "pay": "2026-11-17",
     "list": null,
-    "dealSizeM": 29500
+    "dealSizeM": 29500,
+    "stockCode": "0206M0",
+    "finalPrice": null
   },
   {
     "name": "제이앤티지",
@@ -757,7 +833,9 @@
     ],
     "pay": "2026-11-17",
     "list": null,
-    "dealSizeM": 113520
+    "dealSizeM": 113520,
+    "stockCode": "951425",
+    "finalPrice": null
   },
   {
     "name": "아델",
@@ -773,7 +851,9 @@
     ],
     "pay": "2026-11-26",
     "list": null,
-    "dealSizeM": 39060
+    "dealSizeM": 39060,
+    "stockCode": "0181E0",
+    "finalPrice": null
   },
   {
     "name": "케이엠에프",
@@ -789,6 +869,8 @@
     ],
     "pay": "2026-11-27",
     "list": null,
-    "dealSizeM": 30000
+    "dealSizeM": 30000,
+    "stockCode": "0103V0",
+    "finalPrice": null
   }
 ]

@@ -4,11 +4,11 @@
       15000,
       18000
     ],
-    "qty_unit": 1000,
-    "price_unit": 100,
-    "inst_max": 1050000,
-    "rcept_no": "20260928000196",
-    "report_nm": "[기재정정]증권신고서(지분증권)"
+    "qty_unit": null,
+    "price_unit": null,
+    "inst_max": null,
+    "rcept_no": "20261019000150",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)"
   },
   "인텔리빅스": {
     "band": [
@@ -218,5 +218,13 @@
     "inst_max": 1500000,
     "rcept_no": "20261002000390",
     "report_nm": "증권신고서(지분증권)"
+  },
+  "아이엠스팩1호": {
+    "band": null,
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": null,
+    "rcept_no": "20261008000225",
+    "report_nm": "[기재정정]증권신고서(지분증권)"
   }
 }

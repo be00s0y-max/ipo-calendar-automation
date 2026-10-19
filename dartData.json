@@ -1884,5 +1884,85 @@
       }
     ],
     "lockup": null
+  },
+  "크리에이츠": {
+    "offering": {
+      "offer_shares": 1400000,
+      "offer_amount_expected": 21000000000,
+      "offer_amount_final": 21000000000,
+      "subscription": {
+        "inst_start": "2026년 10월 20일(화)",
+        "inst_end": "2026년 10월 21일(수)"
+      },
+      "payment_date": "2026년 10월 23일"
+    },
+    "demand_summary": {
+      "total_count": 831,
+      "total_qty": 252485853,
+      "competition_rate": 240.46
+    },
+    "price_bands": null,
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "미확약": {
+        "count": 251,
+        "qty": 54947900
+      }
+    }
+  },
+  "SK증권스팩14호": {
+    "offering": {
+      "offer_shares": 6500000,
+      "offer_amount_expected": 13000000000,
+      "offer_amount_final": 13000000000,
+      "subscription": {
+        "inst_start": "2026년 10월 15일",
+        "inst_end": "2026년 10월 16일"
+      },
+      "payment_date": "2026년 10월 20일"
+    },
+    "demand_summary": {
+      "total_count": 1945,
+      "total_qty": 5988330000,
+      "competition_rate": 1228.38
+    },
+    "price_bands": null,
+    "lockup": {
+      "6개월 확약": {
+        "count": 3,
+        "qty": 14625000
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "미확약": {
+        "count": 1942,
+        "qty": 5973705000
+      }
+    }
   }
 }
