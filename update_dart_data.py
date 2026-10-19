@@ -36,13 +36,16 @@ import io
 
 SCRATCH = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRATCH)
-from dart_parser import parse_filing  # noqa: E402
+from dart_parser import parse_filing, parse_demand_terms  # noqa: E402
 
 CORP_CODES_PATH = os.path.join(SCRATCH, "corp_codes.json")
 DEALS_PATH = os.path.join(SCRATCH, "deals.json")
 DART_DATA_PATH = os.path.join(SCRATCH, "dartData.json")
 PROFILES_PATH = os.path.join(SCRATCH, "company_profiles.json")
 RCEPT_PATH = os.path.join(SCRATCH, "filing_rcept.json")
+# 수요예측 참여 조건(희망공모가 밴드·수량/가격 단위·기관 최고한도) — 수요예측 전에
+# 필요한 값이라 [발행조건확정]이 아니라 그때그때 최신 지분증권 신고서(정정 포함)에서 뽑는다.
+DEMAND_INFO_PATH = os.path.join(SCRATCH, "demandInfo.json")
 HTML_PATH = os.path.join(SCRATCH, "ipo_calendar.html")
 
 FILING_NAME_RE = re.compile(r"\[발행조건확정\]증권신고서\((지분증권|증권예탁증권)\)")
@@ -149,6 +152,53 @@ def discover_corp_codes(key, corp_codes):
     return found, unmatched
 
 
+def find_latest_equity_filing(key, corp_code):
+    """corp_code의 가장 최근 지분증권 증권신고서(최초·정정·발행조건확정 중 최신)."""
+    url = (
+        "https://opendart.fss.or.kr/api/list.json"
+        f"?crtfc_key={key}&corp_code={corp_code}&bgn_de=20260101&end_de=20261231"
+        "&page_count=100"
+    )
+    data = json.loads(api_get(url).decode("utf-8"))
+    if data.get("status") != "000":
+        return None
+    items = [it for it in data.get("list", []) if EQUITY_FILING_RE.search(it.get("report_nm", ""))]
+    if not items:
+        return None
+    latest = max(items, key=lambda it: it["rcept_no"])  # 접수번호는 날짜+일련번호라 클수록 최신
+    return latest["rcept_no"], latest["report_nm"]
+
+
+def update_demand_info(key, corp_codes, demand_info, changed, errors):
+    """수요예측이 끝나지 않은(마감 3일 후까지) 딜의 최신 신고서에서 참여 조건을 갱신."""
+    import datetime
+    cutoff = (datetime.date.today() - datetime.timedelta(days=3)).isoformat()
+    for dl in load_json(DEALS_PATH, []):
+        name = dl["name"]
+        cc = corp_codes.get(name)
+        if not cc or (dl.get("demand") or [""])[-1] < cutoff:
+            continue
+        try:
+            found = find_latest_equity_filing(key, cc)
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{name}: 참여조건용 신고서 목록 조회 실패 ({e})")
+            continue
+        if not found or (demand_info.get(name) or {}).get("rcept_no") == found[0]:
+            continue
+        rcept_no, report_nm = found
+        try:
+            tmp_path = os.path.join(SCRATCH, f"_tmp_terms_{cc}.xml")
+            fetch_filing_xml(key, rcept_no, tmp_path)
+            terms = parse_demand_terms(tmp_path)
+            os.remove(tmp_path)
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{name}: 참여조건 파싱 실패 ({e})")
+            continue
+        terms.update({"rcept_no": rcept_no, "report_nm": report_nm})
+        demand_info[name] = terms
+        changed.append(f"{name} 수요예측 조건 ({report_nm}, {rcept_no})")
+
+
 def fetch_filing_xml(key, rcept_no, tmp_path):
     url = f"https://opendart.fss.or.kr/api/document.xml?crtfc_key={key}&rcept_no={rcept_no}"
     raw = api_get(url)
@@ -191,7 +241,7 @@ def replace_block(html, marker, new_body):
     return html[:sm.end()] + new_body + html[em.start():]
 
 
-def regenerate_html(dart_data, profiles, rcept):
+def regenerate_html(dart_data, profiles, rcept, demand_info):
     html = open(HTML_PATH, encoding="utf-8").read()
 
     dart_body = "const dartData = " + js_str(dart_data) + ";"
@@ -203,6 +253,9 @@ def regenerate_html(dart_data, profiles, rcept):
 
     profile_body = "const COMPANY_PROFILE = " + js_str(profiles) + ";"
     html = replace_block(html, "COMPANY_PROFILE", profile_body)
+
+    demand_body = "const DEMAND_INFO = " + js_str(demand_info) + ";"
+    html = replace_block(html, "DEMAND_INFO", demand_body)
 
     open(HTML_PATH, "w", encoding="utf-8").write(html)
 
@@ -238,6 +291,7 @@ def main():
     dart_data = load_json(DART_DATA_PATH, {})
     profiles = load_json(PROFILES_PATH, {})
     rcept = load_json(RCEPT_PATH, {})
+    demand_info = load_json(DEMAND_INFO_PATH, {})
 
     discovered, unmatched = {}, []
     try:
@@ -282,11 +336,14 @@ def main():
             except Exception as e:  # noqa: BLE001
                 errors.append(f"{name}: 기업개요 조회 실패 ({e})")
 
+    update_demand_info(key, corp_codes, demand_info, changed, errors)
+
     if changed:
         save_json(DART_DATA_PATH, dart_data)
         save_json(PROFILES_PATH, profiles)
         save_json(RCEPT_PATH, rcept)
-        regenerate_html(dart_data, profiles, rcept)
+        save_json(DEMAND_INFO_PATH, demand_info)
+        regenerate_html(dart_data, profiles, rcept, demand_info)
 
     if discovered:
         print("corp_code 새로 찾음: " + ", ".join(f"{n}({c})" for n, c in discovered.items()))
@@ -298,7 +355,7 @@ def main():
         for c in changed:
             print("  - " + c)
     else:
-        print("새로 나온 [발행조건확정] 신고서 없음.")
+        print("새로 반영된 신고서 없음.")
     if errors:
         print("오류:")
         for e in errors:

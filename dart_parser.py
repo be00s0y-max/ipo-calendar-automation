@@ -332,6 +332,62 @@ def parse_lockup_breakdown(tables):
     return out
 
 
+def _int(s):
+    return int(s.replace(",", "")) if s else None
+
+
+def parse_demand_terms(path):
+    """수요예측 참여 조건 — 희망공모가 밴드, 신청 수량/가격 단위, 기관 최고한도(주).
+    최초 증권신고서·정정신고서 모두에 들어 있어 수요예측 전에 쓸 수 있다.
+    2026-10 씨앤엠·제이앤티지 신고서 실측 기준:
+      표 "주당 희망공모가액 | 10,000원 ~ 13,000원"
+      표 "수량단위 | 1,000주" / "가격단위 | 100원"
+      표 "구분 | 최고한도 | 최저한도" → "기관투자자 | ...또는 2,059,500주(...) | 1,000주"
+      (또는 "수요예측참가신청관련사항 | 1) 최고한도 : ... 또는 3,182,xxx주")
+    못 찾은 항목은 None으로 둔다(추정하지 않음)."""
+    tables = load_tables(path)
+    band = qty_unit = price_unit = inst_max = None
+    band_re = re.compile(r"([\d,]+)\s*원\s*~\s*([\d,]+)\s*원")
+    unit_re = re.compile(r"([\d,]+)\s*(주|원)")
+    max_re = re.compile(r"최고\s*한도[^\d]{0,200}?또는\s*([\d,]+)\s*주")
+    for t in tables:
+        rows = table_rows(t)
+        header = " ".join(rows[0]) if rows else ""
+        for r in rows:
+            if len(r) < 2:
+                continue
+            label = re.sub(r"\s+", "", r[0])
+            val = r[1]
+            if band is None and "희망공모가" in label:
+                m = band_re.search(val)
+                if m:
+                    band = [_int(m.group(1)), _int(m.group(2))]
+            if qty_unit is None and label == "수량단위":
+                m = unit_re.search(val)
+                if m:
+                    qty_unit = _int(m.group(1))
+            if price_unit is None and label == "가격단위":
+                m = unit_re.search(val)
+                if m:
+                    price_unit = _int(m.group(1))
+            if inst_max is None and "최고한도" in re.sub(r"\s+", "", header) and label == "기관투자자":
+                m = re.search(r"또는\s*([\d,]+)\s*주", r[1])
+                if m:
+                    inst_max = _int(m.group(1))
+        if inst_max is None:
+            flat = " ".join(c for r in rows for c in r)
+            m = max_re.search(flat)
+            if m:
+                inst_max = _int(m.group(1))
+    if inst_max is None:
+        # 문장형: "최고한도는 수요예측 대상 수량 2,059,500주를 초과할 수 없습니다"
+        text = BeautifulSoup(open(path, encoding="utf-8", errors="ignore").read(), "html.parser").get_text(" ")
+        m = re.search(r"최고\s*한도는[^.\d]{0,40}([\d,]+)\s*주", text)
+        if m:
+            inst_max = _int(m.group(1))
+    return {"band": band, "qty_unit": qty_unit, "price_unit": price_unit, "inst_max": inst_max}
+
+
 def parse_filing(path):
     tables = load_tables(path)
     return {
