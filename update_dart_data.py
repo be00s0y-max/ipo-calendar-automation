@@ -15,6 +15,12 @@
      아무 변화도 없었으면 종료코드 3으로 끝낸다(예약 작업이 "재게시 필요 없음"을
      구분할 수 있게).
 
+corp_codes.json은 9/29에 손으로 만든 19개 종목에서 늘어나지 않아, 그 뒤 새로 생긴
+딜은 DART 조회 대상에서 빠져 있었다(확정공모가 등이 계속 비어 있던 원인). 그래서
+1번 전에 deals.json에 있는데 corp_code가 없는 종목을 DART 발행공시 목록에서 회사명으로
+찾아 corp_codes.json에 자동으로 채운다(discover_corp_codes). 이름이 정확히 맞는 것만
+넣고, 못 찾은 종목(스팩처럼 DART 정식 회사명이 다른 경우 등)은 표준출력에 남긴다.
+
 주의: 이미 만들어진 필드(예: 이미 dartData.json에 있는 7개 종목)는 재확인하지
 않는다 — [발행조건확정]은 종목당 보통 한 번만 나오는 최종 문서라 재조회가
 불필요하고, 매번 전체를 다시 긁으면 API 호출이 낭비된다.
@@ -33,12 +39,17 @@ sys.path.insert(0, SCRATCH)
 from dart_parser import parse_filing  # noqa: E402
 
 CORP_CODES_PATH = os.path.join(SCRATCH, "corp_codes.json")
+DEALS_PATH = os.path.join(SCRATCH, "deals.json")
 DART_DATA_PATH = os.path.join(SCRATCH, "dartData.json")
 PROFILES_PATH = os.path.join(SCRATCH, "company_profiles.json")
 RCEPT_PATH = os.path.join(SCRATCH, "filing_rcept.json")
 HTML_PATH = os.path.join(SCRATCH, "ipo_calendar.html")
 
 FILING_NAME_RE = re.compile(r"\[발행조건확정\]증권신고서\((지분증권|증권예탁증권)\)")
+# 최초 신고서·정정·발행조건확정 모두 이 이름을 포함한다 — 회사명→corp_code 찾기용.
+EQUITY_FILING_RE = re.compile(r"증권신고서\((지분증권|증권예탁증권)\)")
+# corp_code 없이 list.json을 부르면 DART가 조회 기간을 3개월로 제한해서 그 안으로 잡는다.
+DISCOVER_DAYS = 85
 
 
 def load_key():
@@ -85,6 +96,57 @@ def find_new_filing(key, corp_code):
         if FILING_NAME_RE.search(item.get("report_nm", "")):
             return item["rcept_no"], item["report_nm"]
     return None
+
+
+def normalize_corp_name(name):
+    """'멜콘(구.에스앤에프솔루션)' / '(주)멜콘' / '주식회사 멜콘' → '멜콘'."""
+    name = re.sub(r"\(\s*구\s*[.)]?[^)]*\)", "", name or "")
+    name = name.replace("(주)", "").replace("㈜", "").replace("주식회사", "")
+    return re.sub(r"\s+", "", name).lower()
+
+
+def discover_corp_codes(key, corp_codes):
+    """deals.json에 있지만 corp_codes.json에 없는 종목의 corp_code를, 최근
+    DISCOVER_DAYS일 발행공시(pblntf_ty=C) 중 지분증권 증권신고서를 낸 회사명과
+    대조해 찾는다. 같은 이름에 corp_code가 둘 이상이면 넣지 않는다.
+    반환: (새로 찾은 {종목명: corp_code}, 못 찾은 종목명 목록)"""
+    import datetime
+    deals = load_json(DEALS_PATH, [])
+    # 청약이 한 달보다 더 지난 딜은 확정 신고서를 찾을 일이 없으니 빼서 출력 잡음을 줄인다.
+    cutoff = (datetime.date.today() - datetime.timedelta(days=30)).isoformat()
+    missing = [dl["name"] for dl in deals
+               if dl["name"] not in corp_codes and (dl.get("sub") or [""])[-1] >= cutoff]
+    if not missing:
+        return {}, []
+    end = datetime.date.today()
+    begin = end - datetime.timedelta(days=DISCOVER_DAYS)
+    by_name = {}
+    page = 1
+    while True:
+        url = (
+            "https://opendart.fss.or.kr/api/list.json"
+            f"?crtfc_key={key}&bgn_de={begin:%Y%m%d}&end_de={end:%Y%m%d}"
+            f"&pblntf_ty=C&page_count=100&page_no={page}"
+        )
+        data = json.loads(api_get(url).decode("utf-8"))
+        if data.get("status") == "013":  # 조회된 데이터 없음
+            break
+        if data.get("status") != "000":
+            raise RuntimeError(f"DART list.json 오류: {data.get('status')} {data.get('message')}")
+        for item in data.get("list", []):
+            if EQUITY_FILING_RE.search(item.get("report_nm", "")):
+                by_name.setdefault(normalize_corp_name(item.get("corp_name")), set()).add(item["corp_code"])
+        if page >= data.get("total_page", 1):
+            break
+        page += 1
+    found, unmatched = {}, []
+    for name in missing:
+        codes = by_name.get(normalize_corp_name(name), set())
+        if len(codes) == 1:
+            found[name] = next(iter(codes))
+        else:
+            unmatched.append(name)
+    return found, unmatched
 
 
 def fetch_filing_xml(key, rcept_no, tmp_path):
@@ -177,6 +239,15 @@ def main():
     profiles = load_json(PROFILES_PATH, {})
     rcept = load_json(RCEPT_PATH, {})
 
+    discovered, unmatched = {}, []
+    try:
+        discovered, unmatched = discover_corp_codes(key, corp_codes)
+    except Exception as e:  # noqa: BLE001 — 못 찾아도 기존 종목 조회는 계속한다
+        print(f"corp_code 자동 찾기 실패 ({e})")
+    if discovered:
+        corp_codes.update(discovered)
+        save_json(CORP_CODES_PATH, corp_codes)
+
     pending = [name for name in corp_codes if name not in rcept]
     changed = []
     errors = []
@@ -217,6 +288,10 @@ def main():
         save_json(RCEPT_PATH, rcept)
         regenerate_html(dart_data, profiles, rcept)
 
+    if discovered:
+        print("corp_code 새로 찾음: " + ", ".join(f"{n}({c})" for n, c in discovered.items()))
+    if unmatched:
+        print("corp_code 못 찾음(DART 회사명이 다르거나 신고서가 3개월보다 오래됨): " + ", ".join(unmatched))
     print(f"확인 대상: {len(pending)}개 종목")
     if changed:
         print("새로 반영됨:")
@@ -229,7 +304,7 @@ def main():
         for e in errors:
             print("  ! " + e)
 
-    sys.exit(0 if changed else 3)
+    sys.exit(0 if changed or discovered else 3)
 
 
 if __name__ == "__main__":
