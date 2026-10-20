@@ -552,27 +552,31 @@
      빨간 일(日) 숫자, 얇은 점선 그리드, 한 줄짜리 일정 텍스트)을 그대로
      재현한다. */
   .print-header { display: none; }
-  @page notice { size: A4 portrait; margin: 16mm 15mm; }
+  /* 청약 공문 — 엑셀 "공문" 시트(A2:H34)를 칸 단위로 그대로 옮긴 격자.
+     열 너비는 엑셀 너비×8px(맑은 고딕 기본 숫자폭), 행 높이는 pt 그대로,
+     인쇄는 엑셀 페이지 설정(A4 세로, 배율 82%, 여백 좌우 0.71in·상하 0.75in)과 같게. */
+  @page notice { size: A4 portrait; margin: 0.748in 0.709in; }
   .notice-page {
-    page: notice; break-after: page; color: #000; background: #fff;
-    font-family: "Malgun Gothic", "맑은 고딕", var(--font-kr); font-size: 11pt; line-height: 1.45;
+    page: notice; break-after: page; color: #000; background: #fff; position: relative;
+    width: 775px; zoom: 0.82;
+    font-family: "맑은 고딕", "Malgun Gothic", var(--font-kr); font-size: 11pt;
   }
   .notice-page:last-child { break-after: auto; }
-  .notice-page .n-head { display: flex; align-items: center; justify-content: center; gap: 14px; min-height: 46px; }
-  .notice-page .n-head img { height: 34px; }
-  .notice-page .n-company { font-size: 18pt; font-weight: 700; }
-  .notice-page .n-addr { text-align: center; font-size: 9.5pt; margin-top: 8px; }
-  .notice-page .n-rule { border-top: 2.5px solid #000; margin: 14px 0 18px; }
-  .notice-page .n-meta { display: grid; grid-template-columns: 78px 1fr auto; row-gap: 9px; column-gap: 6px; }
-  .notice-page .n-meta .k { white-space: pre; }
-  .notice-page .n-body p { margin: 0 0 12px; padding-left: 78px; white-space: pre-line; }
-  .notice-page .n-center { text-align: center; margin: 26px 0 20px; }
-  .notice-page table { border-collapse: collapse; width: calc(100% - 78px); margin-left: 78px; font-size: 10pt; }
-  .notice-page th, .notice-page td { border: 1px solid #000; padding: 6px 6px; text-align: center; }
-  .notice-page td.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .notice-page td.blank { border: none; }
-  .notice-page .n-pay { margin: 40px 0 0 78px; display: flex; gap: 24px; }
-  .notice-page .n-sign { text-align: center; font-size: 18pt; font-weight: 700; margin-top: 110px; white-space: pre-line; line-height: 1.5; }
+  /* 회색 띠·표 머리 음영이 인쇄에서 빠지지 않게 */
+  .notice-page, .notice-page * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .notice-page table.xl { border-collapse: collapse; table-layout: fixed; width: 775px; }
+  .notice-page table.xl td { padding: 0 2px; vertical-align: middle; white-space: nowrap; overflow: visible; line-height: 1.25; }
+  .notice-page table.xl td.c { text-align: center; }
+  .notice-page table.xl td.r { text-align: right; }
+  .notice-page table.xl td.wrap { white-space: pre-line; }
+  .notice-page table.xl td.t10 { font-size: 10pt; }
+  .notice-page table.xl td.big { font-size: 18pt; font-weight: 700; }
+  .notice-page table.xl td.bd { border: 1px solid #000; }
+  .notice-page table.xl td.hd { background: #d9d9d9; }
+  .notice-page table.xl td.acc { text-align: right; padding-right: 8px; }
+  .notice-page .won { display: flex; justify-content: space-between; padding: 0 6px 0 2px; }
+  .notice-page .bar { position: absolute; left: 1px; width: 761px; height: 15.5px; background: #d2d2d2; }
+  .notice-page .logo { position: absolute; left: 165px; top: 2px; width: 117px; height: 41px; object-fit: fill; }
   @media print {
     @page { size: landscape; margin: 6mm; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
@@ -973,6 +977,7 @@
         <label class="field"><span class="flabel">납입일</span><input type="date" id="ntPayDate"></label>
         <label class="field"><span class="flabel">납입 시각</span><input type="text" id="ntPayTime"></label>
       </div>
+      <label class="checkline"><input type="checkbox" id="ntFee"><span>청약수수료 적용 (끄면 수수료 0원, "-"로 표시)</span></label>
     </div>
     <div class="panel-section">
       <h3>배정주식 수 (입력하면 이 종목에 저장됩니다)</h3>
@@ -985,6 +990,7 @@
     <div class="panel-section">
       <h3>문서번호</h3>
       <label class="pdf-fill-btn">대외공문 폴더에서 최신 번호 확인<input type="file" id="ntFolder" webkitdirectory multiple hidden></label>
+      <label class="pdf-fill-btn">파일 직접 고르기<input type="file" id="ntFolderFiles" multiple hidden></label>
       <div class="nt-hint" id="ntFolderHint" style="margin-top:6px">폴더를 고르면 파일 이름만 읽어 올해 최신 번호(예: 2026-108)를 찾고, 그다음 번호 두 개를 채웁니다. 파일은 어디에도 올라가지 않습니다.</div>
       <div class="nt-two">
         <label class="field"><span class="flabel" id="ntDoc1Label">①</span><input type="text" id="ntDoc1"></label>
@@ -5070,7 +5076,7 @@ function termsHtml(dl){
    엑셀 표기("신한금융투자GIB", "LS증권(구,이베스트증권)")와 딜 주간사 표기
    ("신한투자증권", "LS증권")가 달라서 brokerKey로 맞춘다. */
 const ACCOUNT_KEY = "ipoCalendarAccounts_v1";
-const ACCOUNT_TYPES = ["코스닥벤처", "일임"];
+const ACCOUNT_TYPES = ["코스닥벤처", "일임", "H일임"];
 let accountBook = (() => {
   try { return JSON.parse(localStorage.getItem(ACCOUNT_KEY) || "{}"); } catch(e) { return {}; }
 })();
@@ -5129,7 +5135,9 @@ document.getElementById("acctApply").addEventListener("click", () => {
   try {
     const obj = JSON.parse(text);
     if (!obj || typeof obj !== "object" || Array.isArray(obj)) throw new Error("bad");
-    accountBook = obj;
+    Object.entries(obj).forEach(([broker, accts]) => {
+      accountBook[broker] = Object.assign({}, accountBook[broker] || {}, accts);
+    });
     try { localStorage.setItem(ACCOUNT_KEY, JSON.stringify(accountBook)); } catch(e) {}
     persistRecords();
     document.getElementById("acctJson").value = "";
@@ -5188,6 +5196,7 @@ function openNoticePanel(idx){
   document.getElementById("ntPrice").value = rec.noticePrice != null ? rec.noticePrice : (dartPrice || dl.finalPrice || "");
   document.getElementById("ntPayDate").value = dartPay || dl.pay || "";
   document.getElementById("ntPayTime").value = noticeSettings.payTime || "";
+  document.getElementById("ntFee").checked = !rec.noticeNoFee; // 종목마다 기억(수수료 없는 주관사도 있어서)
   // 직접 넣은 값이 없으면 수요예측 펀드별 배정주수(일임=수신처①, H일임=수신처②)를 쓴다.
   const fundAllot = n => (rec.funds && rec.funds[n] && rec.funds[n].allot != null) ? rec.funds[n].allot : "";
   document.getElementById("ntShares1").value = rec.noticeShares1 != null ? rec.noticeShares1 : fundAllot("일임");
@@ -5230,7 +5239,7 @@ function fillNoticeSettingsForm(){
 
 function noticeNumbers(){
   const price = Number(document.getElementById("ntPrice").value) || 0;
-  const rate = (Number(noticeSettings.feeRate) || 0) / 100;
+  const rate = document.getElementById("ntFee").checked ? (Number(noticeSettings.feeRate) || 0) / 100 : 0;
   return [1, 2].map(n => {
     const shares = Number(document.getElementById("ntShares" + n).value) || 0;
     const amount = shares * price, fee = amount * rate;
@@ -5248,36 +5257,55 @@ function fmtLongKoDate(iso){
   const dt = d(iso);
   return `${dt.getFullYear()}년 ${dt.getMonth() + 1}월 ${dt.getDate()}일 ${"일월화수목금토"[dt.getDay()]}요일`;
 }
+// 엑셀 "공문" 시트 격자: A~H 열 너비(px), 2~34행 높이(pt, 비어 있으면 기본 16.5pt).
+const XL_COLS = [70, 132, 97, 103, 92, 92, 108, 81];
+const XL_ROW_PT = { 2: 34.5, 3: 9, 4: 23.25, 5: 38.25, 6: 25.5, 7: 25.5, 8: 25.5, 9: 25.5, 10: 25.5, 11: 38.25,
+  12: 30, 13: 45, 16: 29.25, 17: 26.25, 18: 24, 20: 24, 27: 18, 33: 59.25, 34: 26.25 };
+const xlRowPx = r => (XL_ROW_PT[r] || 16.5) * 4 / 3;
+function xlRowTop(r){ let y = 0; for (let i = 2; i < r; i++) y += xlRowPx(i); return y; }
+// 회계 서식(_-* #,##0_-): 0이면 "-", 아니면 천 단위 쉼표. ₩ 서식은 ₩ 왼쪽·숫자 오른쪽.
+const accFmt = n => (Math.round(n) === 0 ? "-" : wonFmt(n));
+const wonCell = n => `<div class="won"><span>₩</span><span>${accFmt(n)}</span></div>`;
 function noticePageHtml(n, docNo, v){
   const S = noticeSettings;
   const to = S["r" + n + "to"], cc = S["r" + n + "cc"];
-  const metaRow = (k, val, right) => `<div class="k">${k}</div><div>${escHtml(val)}</div><div>${right || ""}</div>`;
-  return `<div class="notice-page">
-    <div class="n-head">${S.logo ? `<img src="${S.logo}" alt="">` : ""}<span class="n-company">${escHtml(S.company)}</span></div>
-    <div class="n-addr">${escHtml(S.address)}</div>
-    <div class="n-rule"></div>
-    <div class="n-meta">
-      ${metaRow("문서번호:", docNo, `발송일: ${isoKey(today)}`)}
-      ${metaRow("발      신:", S.sender)}
-      ${metaRow("수      신:", to)}
-      ${cc ? metaRow("참      조:", cc) : ""}
-      ${metaRow("제      목:", S.title)}
-    </div>
-    <div class="n-rule"></div>
-    <div class="n-body">
-      <p>1. 귀사의 무궁한 발전을 기원합니다.</p>
-      <p>2. 아래와 같이 투자일임으로 참여한 IPO 종목에 대해 배정받은 주식의 청약금 납입을 위하여 당사 계좌 (${escHtml(S.account)})로 입금을 부탁드립니다.</p>
-    </div>
-    <div class="n-center">-     아          래     -</div>
-    <table>
-      <tr><th>종목명</th><th>배정주식 수</th><th>확정 공모가액</th><th>청약금액</th><th>청약수수료</th><th>총 납입금액</th></tr>
-      <tr><td>${escHtml(document.getElementById("ntName").value)}</td><td class="num">${wonFmt(v.shares)}</td><td class="num">${wonFmt(v.price)}</td>
-          <td class="num">${wonFmt(v.amount)}</td><td class="num">${wonFmt(v.fee)}</td><td class="num">₩ ${wonFmt(v.total)}</td></tr>
-      <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="num">₩ ${wonFmt(v.total)}</td></tr>
-    </table>
-    <div class="n-pay"><span>납입일시:</span><span>${fmtLongKoDate(document.getElementById("ntPayDate").value)}</span><span>${escHtml(document.getElementById("ntPayTime").value)}</span></div>
-    <div class="n-sign">${escHtml(S.signer)}</div>
-  </div>`;
+  // 참조가 없는 수신처(엑셀 오른쪽 장)는 제목이 9행으로 올라간다.
+  const meta = [["발      신:", S.sender], ["수      신:", to]];
+  if (cc) meta.push(["참      조:", cc]);
+  meta.push(["제      목:", S.title]);
+  // 행번호 → 그 행의 칸들 [시작열(0=A), 칸 수, 클래스, 내용]
+  const cells = {
+    2: [[3, 5, "big", escHtml(S.company)]],
+    4: [[0, 8, "c", escHtml(S.address)]],
+    6: [[0, 1, "", "문서번호:"], [1, 5, "", escHtml(docNo)], [6, 1, "r", "발송일:"], [7, 1, "", isoKey(today)]],
+    12: [[1, 7, "", "1. 귀사의 무궁한 발전을 기원합니다."]],
+    13: [[1, 7, "wrap", `2. 아래와 같이 투자일임으로 참여한 IPO 종목에 대해 배정받은 주식의 청약금 납입을 위하여 당사 \n계좌 (${escHtml(S.account)})로 입금을 부탁드립니다.`]],
+    16: [[0, 8, "c", "-     아          래     -".replace(/ /g, "&nbsp;")]],
+    18: ["종목명", "배정주식 수", "확정 공모가액", "청약금액", "청약수수료", "총 납입금액"].map((h, i) => [1 + i, 1, "c t10 bd hd", h]),
+    19: [[1, 1, "c t10 bd wrap", escHtml(document.getElementById("ntName").value)],
+         [2, 1, "acc t10 bd", accFmt(v.shares)], [3, 1, "acc t10 bd", accFmt(v.price)],
+         [4, 1, "acc t10 bd", accFmt(v.amount)], [5, 1, "acc t10 bd", accFmt(v.fee)], [6, 1, "t10 bd", wonCell(v.total)]],
+    20: [[6, 1, "t10 bd hd", wonCell(v.total)]],
+    27: [[1, 1, "r", "납입일시:"], [2, 2, "c", fmtLongKoDate(document.getElementById("ntPayDate").value)], [4, 1, "", escHtml(document.getElementById("ntPayTime").value)]],
+    33: [[0, 8, "c big wrap", escHtml(S.signer)]],
+  };
+  meta.forEach(([k, val], i) => { cells[7 + i] = [[0, 1, "", k.replace(/ /g, "&nbsp;")], [1, 7, "", escHtml(val)]]; });
+  let rows = "";
+  for (let r = 2; r <= 34; r++) {
+    const list = cells[r] || [];
+    let html = "", col = 0;
+    list.slice().sort((a, b) => a[0] - b[0]).forEach(([c, span, cls, content]) => {
+      for (; col < c; col++) html += "<td></td>";
+      html += `<td${span > 1 ? ` colspan="${span}"` : ""}${cls ? ` class="${cls}"` : ""}>${content}</td>`;
+      col = c + span;
+    });
+    for (; col < 8; col++) html += "<td></td>";
+    rows += `<tr style="height:${xlRowPx(r)}px">${html}</tr>`;
+  }
+  const colgroup = `<colgroup>${XL_COLS.map(w => `<col style="width:${w}px">`).join("")}</colgroup>`;
+  // 회색 띠(엑셀 그림 2·3): 5행 18px, 11행 17px 아래에 높이 15.5px
+  const bars = `<div class="bar" style="top:${xlRowTop(5) + 18}px"></div><div class="bar" style="top:${xlRowTop(11) + 17}px"></div>`;
+  return `<div class="notice-page">${S.logo ? `<img class="logo" src="${S.logo}" alt="">` : ""}${bars}<table class="xl">${colgroup}${rows}</table></div>`;
 }
 
 function printNotice(){
@@ -5317,9 +5345,9 @@ function noticeFileHtml(pagesHtml){
     .map(r => r.cssText).join("\n");
   const title = escHtml(`청약공문_${document.getElementById("ntName").value}`);
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${title}</title><style>
-@page { size: A4 portrait; margin: 16mm 15mm; }
+@page { size: A4 portrait; margin: 0.748in 0.709in; }
 body { margin: 0; background: #fff; }
-@media screen { body { background: #e9ebef; } .notice-page { width: 180mm; min-height: 265mm; margin: 12px auto; padding: 16mm 15mm; box-sizing: content-box; box-shadow: 0 1px 4px rgba(0,0,0,.2); } }
+@media screen { body { background: #e9ebef; padding: 12px 0; } .notice-page { margin: 0 auto 16px; padding: 70px 68px; box-shadow: 0 1px 4px rgba(0,0,0,.2); } }
 ${css}
 </style></head><body>${pagesHtml}
 <script>addEventListener("load", () => setTimeout(() => window.print(), 300));<\/script></body></html>`;
@@ -5357,6 +5385,12 @@ document.getElementById("ntFileBtn").addEventListener("click", () => {
 });
 
 // 배정주식 수·공모가는 입력하는 대로 이 종목 records에 저장(청약 탭 표와 같은 값).
+document.getElementById("ntFee").addEventListener("change", e => {
+  if (ntDealIdx == null) return;
+  records[deals[ntDealIdx].name].noticeNoFee = !e.target.checked;
+  persistRecords();
+  updateNoticeSum();
+});
 ["ntShares1", "ntShares2", "ntPrice"].forEach(id => {
   document.getElementById(id).addEventListener("input", updateNoticeSum);
   document.getElementById(id).addEventListener("change", e => {
@@ -5370,27 +5404,44 @@ document.getElementById("ntFileBtn").addEventListener("click", () => {
 });
 
 // 대외공문 폴더: 파일 이름에서 "올해-번호"를 모두 찾아 가장 큰 번호를 쓴다.
-document.getElementById("ntFolder").addEventListener("change", e => {
+// 대외공문 폴더: 파일 이름에서 올해 문서번호를 찾아 가장 큰 번호를 쓴다.
+// "…2026-108호…"처럼 '호'가 붙은 것을 우선 보고, 없으면 "2026-108"(뒤에 -숫자가
+// 이어지는 날짜 2026-10-12 같은 건 제외)을 본다. 하위 폴더 파일도 포함.
+function latestDocNo(names, year){
+  const pick = re => {
+    let best = null;
+    names.forEach(name => {
+      let m;
+      re.lastIndex = 0;
+      while ((m = re.exec(name))) {
+        if (Number(m[1]) === year && (!best || Number(m[2]) > best.no)) best = { no: Number(m[2]), file: name };
+      }
+    });
+    return best;
+  };
+  return pick(/(\d{4})\s*-\s*(\d{1,4})\s*호/g) || pick(/(\d{4})\s*-\s*(\d{1,4})(?!\s*-?\s*\d)/g);
+}
+function onDocFiles(e){
   const files = Array.from(e.target.files || []);
-  const year = today.getFullYear();
-  let best = null;
-  files.forEach(f => {
-    const re = /(\d{4})\s*-\s*(\d{1,4})/g;
-    let m;
-    while ((m = re.exec(f.name))) {
-      if (Number(m[1]) === year && (!best || Number(m[2]) > best.no)) best = { no: Number(m[2]), file: f.name };
-    }
-  });
   e.target.value = "";
-  if (!files.length) return;
+  if (!files.length) {
+    setNtFolderHint("선택된 파일이 없습니다. 폴더 선택이 안 되면 '파일 직접 고르기'로 폴더 안 파일들을 모두 선택해 주세요.", true);
+    return;
+  }
+  const year = today.getFullYear();
+  const names = files.map(f => f.webkitRelativePath || f.name);
+  const best = latestDocNo(names, year);
   if (!best) {
-    setNtFolderHint(`파일 ${files.length}개 중 이름에 "${year}-번호"가 들어간 파일을 찾지 못했습니다. 번호를 직접 입력하세요.`, true);
+    const sample = names.slice(0, 3).map(n => `"${n.split("/").pop()}"`).join(", ");
+    setNtFolderHint(`파일 ${files.length}개를 받았지만 이름에서 "${year}-번호"를 찾지 못했습니다 (예: ${sample}). 번호를 직접 입력하세요.`, true);
     return;
   }
   document.getElementById("ntDoc1").value = docNoString(year, best.no + 1);
   document.getElementById("ntDoc2").value = docNoString(year, best.no + 2);
-  setNtFolderHint(`최신 번호 ${year}-${String(best.no).padStart(3, "0")} ← "${best.file}" (파일 ${files.length}개 확인). 맞는지 확인하세요.`);
-});
+  setNtFolderHint(`최신 번호 ${year}-${String(best.no).padStart(3, "0")} ← "${best.file.split("/").pop()}" (파일 ${files.length}개 확인). 맞는지 확인하세요.`);
+}
+document.getElementById("ntFolder").addEventListener("change", onDocFiles);
+document.getElementById("ntFolderFiles").addEventListener("change", onDocFiles);
 
 document.getElementById("ntSettingsSave").addEventListener("click", () => {
   document.querySelectorAll("#ntPanel [data-nt]").forEach(el => { noticeSettings[el.dataset.nt] = el.value.trim(); });
