@@ -4315,6 +4315,7 @@ async function loadSharedRecords(){
       // deals에 없는(지나간) 종목도 그대로 남겨둬야 나중에 안 사라진다.
       records[name] = Object.assign(records[name] || {}, data.records[name]);
       migrateNoticeShares(records[name]);
+      applyCommitRules(records[name]);
     });
     if (data.nav != null) {
       navValue = data.nav;
@@ -4873,11 +4874,31 @@ const FUND_GROUPS = [
   { group: "H일임", funds: ["H일임"] },
 ];
 const COMMIT_OPTIONS = ["", "미확약", "15일", "1개월", "3개월", "6개월"];
+// 확약여부: 신탁은 코벤과 같고(코벤 값을 따라감), 일임(전북)은 항상 미확약.
+const KOVEN_FUNDS = FUND_GROUPS[0].funds, TRUST_FUNDS = FUND_GROUPS[1].funds;
+function kovenCommit(rec){
+  const funds = rec.funds || {};
+  return KOVEN_FUNDS.map(f => funds[f] && funds[f].commit).find(Boolean) || "";
+}
+function fixedCommit(rec, fund){
+  if (fund === "일임") return "미확약";
+  if (TRUST_FUNDS.includes(fund)) return kovenCommit(rec);
+  return null; // 직접 고르는 펀드(코벤·H일임)
+}
+function applyCommitRules(rec, kc){
+  if (!rec.funds) return;
+  if (kc == null) kc = kovenCommit(rec);
+  TRUST_FUNDS.forEach(f => { if (rec.funds[f]) rec.funds[f].commit = kc; });
+  if (rec.funds["일임"]) rec.funds["일임"].commit = "미확약";
+}
+Object.values(records).forEach(r => applyCommitRules(r));
 function fundsHtml(dl, idx){
   const funds = records[dl.name].funds || {};
   let totalQty = 0, totalAllot = 0;
   const body = FUND_GROUPS.map(g => g.funds.map((f, i) => {
     const v = funds[f] || {};
+    const fixed = fixedCommit(records[dl.name], f);
+    const commit = fixed != null ? fixed : v.commit;
     if (v.joined && v.qty) totalQty += v.qty;
     if (v.allot) totalAllot += v.allot;
     const attrs = `data-fund="${escHtml(f)}" data-fidx="${idx}"`;
@@ -4888,7 +4909,7 @@ function fundsHtml(dl, idx){
       <td><input type="number" ${attrs} data-ffield="price" value="${v.price != null ? v.price : ""}"></td>
       <td><input type="number" ${attrs} data-ffield="qty" value="${v.qty != null ? v.qty : ""}"></td>
       <td><input type="number" ${attrs} data-ffield="allot" value="${v.allot != null ? v.allot : ""}"></td>
-      <td><select ${attrs} data-ffield="commit">${COMMIT_OPTIONS.map(o => `<option value="${o}" ${v.commit === o ? "selected" : ""}>${o || "미지정"}</option>`).join("")}</select></td>
+      <td><select ${attrs} data-ffield="commit" ${fixed != null ? `disabled title="${f === "일임" ? "일임은 항상 미확약" : "신탁은 코벤 확약여부를 따라갑니다"}"` : ""}>${COMMIT_OPTIONS.map(o => `<option value="${o}" ${commit === o ? "selected" : ""}>${o || "미지정"}</option>`).join("")}</select></td>
     </tr>`;
   }).join("")).join("");
   return `<table class="stage-table fund-table"><thead><tr><th>구분</th><th>펀드</th><th>참여</th><th>참여가격(원)</th><th>신청수량(주)</th><th>배정주수</th><th>확약여부</th></tr></thead>
@@ -4904,6 +4925,13 @@ document.addEventListener("change", e => {
   const f = rec.funds[el.dataset.fund] = rec.funds[el.dataset.fund] || {};
   const field = el.dataset.ffield;
   f[field] = el.type === "checkbox" ? el.checked : el.type === "number" ? (el.value === "" ? null : Number(el.value)) : el.value;
+  if (field === "commit" || field === "joined" || field === "qty" || field === "price" || field === "allot") {
+    applyCommitRules(rec, field === "commit" && KOVEN_FUNDS.includes(el.dataset.fund) ? f.commit : null);
+    document.querySelectorAll(`[data-fidx="${el.dataset.fidx}"][data-ffield="commit"]`).forEach(sel => {
+      const fx = fixedCommit(rec, sel.dataset.fund);
+      if (fx != null) sel.value = fx;
+    });
+  }
   // 참여가격은 펀드 모두 같아서, 한 펀드에 넣으면 참여한 펀드 전부와 표의 참여가격에 같이 넣는다.
   if (field === "price") {
     Object.values(rec.funds).forEach(v => { if (v.joined) v.price = f.price; });
@@ -5003,6 +5031,14 @@ function parseAllotSheet(XLSX, wb){
   const instTotal = ["총주식수(기관)", "총주식수", "참여주식수"].map(k => totalLabels[k]).find(v => v) || null;
   return { name, price, commit, allotTotal, instTotal, funds };
 }
+// 배정 엑셀 파일 이름 앞의 날짜(예: "2026.10.12_코벤.xlsx", "2026-10-12", "20261012") = 수요예측 신청일.
+function fileNameDate(name){
+  const m = String(name || "").match(/(20\d{2})[.\-_ ]?(\d{1,2})[.\-_ ]?(\d{1,2})(?!\d)/);
+  if (!m) return "";
+  const [y, mo, da] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (mo < 1 || mo > 12 || da < 1 || da > 31) return "";
+  return `${y}-${String(mo).padStart(2, "0")}-${String(da).padStart(2, "0")}`;
+}
 function applyAllotSheet(p){
   const idx = deals.findIndex(dl => dl.name === p.name || normalizeDealName(dl.name) === normalizeDealName(p.name));
   if (idx < 0) return `${p.name || "(종목명 없음)"}: 캘린더에서 같은 종목을 찾지 못했습니다`;
@@ -5050,10 +5086,13 @@ function applyAllotSheet(p){
   });
   if (p.price != null) rec.price = p.price;
   rec.joined = true;
+  applyCommitRules(rec);
+  if (p.appliedDate) rec.appliedDate = p.appliedDate;
   syncFundTotals(rec, idx); // 펀드 전체 합 → 표의 신청수량(총)·배정수량(총)
   demandOpen.add(idx);
   return `${dl.name}: ${rows.length}개 펀드 배정 ${fmtNum(rows.reduce((a, x) => a + x.final, 0))}주${p.allotTotal != null ? ` / 배정주수 ${fmtNum(p.allotTotal)}주` : ""}${note}`
     + (hasQty ? ` · 신청 ${fmtNum(rows.reduce((a, x) => a + (x.qty || 0), 0))}주${qtyNote}` : "")
+    + (p.appliedDate ? ` · 신청일 ${p.appliedDate}` : "")
     + (unknown.length ? ` · 목록에 없는 펀드 건너뜀: ${unknown.join(", ")}` : "");
 }
 function normalizeDealName(n){ return String(n || "").replace(/\([^)]*\)/g, "").replace(/\s/g, ""); }
@@ -5069,7 +5108,7 @@ document.getElementById("allotXlsx").addEventListener("change", async e => {
     for (const file of files) {
       try {
         const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
-        msgs.push(applyAllotSheet(parseAllotSheet(XLSX, wb)));
+        msgs.push(applyAllotSheet(Object.assign(parseAllotSheet(XLSX, wb), { appliedDate: fileNameDate(file.name) })));
       } catch (err) { msgs.push(`${file.name}: ${err.message}`); }
     }
     persistRecords();
@@ -5237,6 +5276,7 @@ function setNoticeShares(rec, n, val){
   f.allot = val;
   if (val) f.joined = true;
   delete rec["noticeShares" + n];
+  applyCommitRules(rec);
   const allot = Object.values(rec.funds).reduce((a, v) => a + (v.allot ? v.allot : 0), 0);
   if (allot) rec.allotShares = allot;
 }
