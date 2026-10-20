@@ -4546,8 +4546,8 @@ function renderDigest(){
   const targetKey = isoKey(addDays(today, digestOffset));
   const all = buildEvents();
   const todays = all.filter(ev => isoKey(ev.date) === targetKey);
-  const todo = todays.filter(ev => !isEventDone(deals[ev.dealIdx].name, ev.type));
-  const done = todays.filter(ev => isEventDone(deals[ev.dealIdx].name, ev.type));
+  // 완료 여부와 상관없이 그날 일정은 전부 할 일에 둔다("완료" 줄 없음).
+  const todo = todays;
   const el = document.getElementById("digest");
   const joinedCount = deals.filter(dl => isJoined(records[dl.name])).length;
   const label = digestDayLabel(digestOffset);
@@ -4556,11 +4556,6 @@ function renderDigest(){
   const mine = todo.filter(isTodoChecked), rest = todo.filter(ev => !isTodoChecked(ev));
   const sep = mine.length && rest.length ? `<div class="digest-sep"></div>` : "";
   const todoHtml = todo.length ? mine.map(digestChipHtml).join("") + sep + rest.map(digestChipHtml).join("") : `<span class="none">${label} 일정 없음</span>`;
-  const doneRow = done.length ? `
-    <div class="digest-row done-row">
-      <span class="dl">${label} 완료</span>
-      <div class="chips">${done.map(digestDoneChipHtml).join("")}</div>
-    </div>` : "";
 
   el.innerHTML = `
     <div class="digest-row">
@@ -4574,7 +4569,6 @@ function renderDigest(){
       ${digestOffset !== 0 ? `<button class="today-jump" id="digestToday">오늘로</button>` : ""}
       <span class="count">전체 <b>${deals.length}</b>건 · 참여 확정 <b>${joinedCount}</b>건</span>
     </div>
-    ${doneRow}
   `;
   document.getElementById("digestPrev").addEventListener("click", () => { digestOffset--; renderDigest(); });
   document.getElementById("digestNext").addEventListener("click", () => { digestOffset++; renderDigest(); });
