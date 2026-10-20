@@ -554,11 +554,15 @@
   .print-header { display: none; }
   /* 청약 공문 — 엑셀 "공문" 시트(A2:H34)를 칸 단위로 그대로 옮긴 격자.
      열 너비는 엑셀 너비×8px(맑은 고딕 기본 숫자폭), 행 높이는 pt 그대로,
-     인쇄는 엑셀 페이지 설정(A4 세로, 배율 82%, 여백 좌우 0.71in·상하 0.75in)과 같게. */
-  @page notice { size: A4 portrait; margin: 0.748in 0.709in; }
+     인쇄는 엑셀 페이지 설정(A4 세로, 배율 82%, 여백 좌우 0.71in·상하 0.75in)과 같게.
+     배율: 실제 엑셀 출력본(대외공문 2026-100호 스캔)과 재 보니 같은 82%에서 가로·세로 모두
+     약 1.45% 더 커서 0.832로 맞춤. 브라우저 여백을 0으로 두면 머리글·바닥글(날짜·주소)이
+     들어갈 자리가 없어 찍히지 않으므로, 엑셀 여백은 페이지 안쪽 여백(padding)으로 준다
+     (padding은 zoom이 곱해지므로 0.832로 나눈 값). */
+  @page notice { size: A4 portrait; margin: 0; }
   .notice-page {
     page: notice; break-after: page; color: #000; background: #fff; position: relative;
-    width: 775px; zoom: 0.82;
+    width: 775px; zoom: 0.832; padding: 86.3px 0 0 81.8px; box-sizing: content-box;
     font-family: "맑은 고딕", "Malgun Gothic", var(--font-kr); font-size: 11pt;
   }
   .notice-page:last-child { break-after: auto; }
@@ -568,7 +572,7 @@
   .notice-page table.xl td { padding: 0 2px; vertical-align: middle; white-space: nowrap; overflow: visible; line-height: 1.25; }
   .notice-page table.xl td.c { text-align: center; }
   .notice-page table.xl td.r { text-align: right; }
-  .notice-page table.xl td.wrap { white-space: pre-line; }
+  .notice-page table.xl td.wrap { white-space: pre-line; line-height: 1.48; } /* 엑셀 줄바꿈 칸의 줄 간격(출력본 실측) */
   .notice-page table.xl td.t10 { font-size: 10pt; }
   .notice-page table.xl td.big { font-size: 18pt; font-weight: 700; }
   .notice-page table.xl td.big .seal { font-size: 9pt; font-weight: 400; }
@@ -576,8 +580,8 @@
   .notice-page table.xl td.hd { background: #d9d9d9; }
   .notice-page table.xl td.acc { text-align: right; padding-right: 8px; }
   .notice-page .won { display: flex; justify-content: space-between; padding: 0 6px 0 2px; }
-  .notice-page .bar { position: absolute; left: 1px; width: 761px; height: 15.5px; background: #d2d2d2; }
-  .notice-page .logo { position: absolute; left: 165px; top: 2px; width: 117px; height: 41px; object-fit: fill; }
+  .notice-page .bar { position: absolute; left: calc(81.8px + 1px); width: 761px; height: 15.5px; background: #d2d2d2; }
+  .notice-page .logo { position: absolute; left: calc(81.8px + 165px); top: calc(86.3px + 2px); width: 117px; height: 41px; object-fit: fill; }
   @media print {
     @page { size: landscape; margin: 6mm; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
@@ -5306,7 +5310,7 @@ function noticePageHtml(n, docNo, v){
   }
   const colgroup = `<colgroup>${XL_COLS.map(w => `<col style="width:${w}px">`).join("")}</colgroup>`;
   // 회색 띠(엑셀 그림 2·3): 5행 18px, 11행 17px 아래에 높이 15.5px
-  const bars = `<div class="bar" style="top:${xlRowTop(5) + 18}px"></div><div class="bar" style="top:${xlRowTop(11) + 17}px"></div>`;
+  const bars = `<div class="bar" style="top:${86.3 + xlRowTop(5) + 18}px"></div><div class="bar" style="top:${86.3 + xlRowTop(11) + 17}px"></div>`;
   return `<div class="notice-page">${S.logo ? `<img class="logo" src="${S.logo}" alt="">` : ""}${bars}<table class="xl">${colgroup}${rows}</table></div>`;
 }
 
@@ -5347,9 +5351,9 @@ function noticeFileHtml(pagesHtml){
     .map(r => r.cssText).join("\n");
   const title = escHtml(`청약공문_${document.getElementById("ntName").value}`);
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${title}</title><style>
-@page { size: A4 portrait; margin: 0.748in 0.709in; }
+@page { size: A4 portrait; margin: 0; }
 body { margin: 0; background: #fff; }
-@media screen { body { background: #e9ebef; padding: 12px 0; } .notice-page { margin: 0 auto 16px; padding: 70px 68px; box-shadow: 0 1px 4px rgba(0,0,0,.2); } }
+@media screen { body { background: #e9ebef; padding: 12px 0; } .notice-page { margin: 0 auto 16px; padding-right: 81.8px; padding-bottom: 86.3px; box-shadow: 0 1px 4px rgba(0,0,0,.2); } }
 ${css}
 </style></head><body>${pagesHtml}
 <script>addEventListener("load", () => setTimeout(() => window.print(), 300));<\/script></body></html>`;
