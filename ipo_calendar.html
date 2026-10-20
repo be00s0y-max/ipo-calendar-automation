@@ -4208,8 +4208,15 @@ function buildCompactEvents(dealsList){
   });
   return map;
 }
+// 수요예측 "참여" = 참여가격·신청수량·배정수량 중 하나라도 적었거나, 펀드별 표에서
+// 어느 펀드든 참여 체크·가격·수량·배정주수를 적은 종목. (예전 "신청함/참여함" 체크 대신)
+function isJoined(rec){
+  if (!rec) return false;
+  if (rec.price != null || rec.qty != null || rec.allotShares != null) return true;
+  return Object.values(rec.funds || {}).some(v => v && (v.joined || v.price != null || v.qty != null || v.allot != null));
+}
 function currentFilteredDeals(){
-  return deals.filter(dl => filterMode !== "joined" || records[dl.name].joined);
+  return deals.filter(dl => filterMode !== "joined" || isJoined(records[dl.name]));
 }
 
 /* ---------- participation records ----------
@@ -4307,6 +4314,7 @@ async function loadSharedRecords(){
     Object.keys(data.records).forEach(name => {
       // deals에 없는(지나간) 종목도 그대로 남겨둬야 나중에 안 사라진다.
       records[name] = Object.assign(records[name] || {}, data.records[name]);
+      migrateNoticeShares(records[name]);
     });
     if (data.nav != null) {
       navValue = data.nav;
@@ -4355,7 +4363,25 @@ deals.forEach(dl => {
     openPrice: null, closePrice: null,
   };
   records[dl.name] = Object.assign(seed, stored[dl.name] || {});
+  migrateNoticeShares(records[dl.name]);
 });
+// 예전 공문 화면에만 적어 둔 배정주식(noticeShares1/2)을 수요예측 일임(전북)·H일임(인성)
+// 배정주수로 옮긴다. 펀드 쪽에 이미 값이 있으면 그 값을 그대로 둔다.
+function migrateNoticeShares(rec){
+  let moved = false;
+  [[1, "일임"], [2, "H일임"]].forEach(([n, fund]) => {
+    const v = rec["noticeShares" + n];
+    if (v == null) return;
+    rec.funds = rec.funds || {};
+    const f = rec.funds[fund] = rec.funds[fund] || {};
+    if (f.allot == null) { f.allot = v; if (v) f.joined = true; moved = true; }
+    delete rec["noticeShares" + n];
+  });
+  if (moved) {
+    const allot = Object.values(rec.funds).reduce((a, v) => a + (v.allot ? v.allot : 0), 0);
+    if (allot) rec.allotShares = allot;
+  }
+}
 
 /* ---------- 기준 NAV (배정비중 계산용, 전역 설정) ---------- */
 const NAV_KEY = "ipoCalendarNav_v1";
@@ -4401,7 +4427,7 @@ function isAllotEstimated(dl){
 function buildEvents(){
   const events = [];
   deals.forEach((dl, idx) => {
-    if (filterMode === "joined" && !records[dl.name].joined) return;
+    if (filterMode === "joined" && !isJoined(records[dl.name])) return;
     const push = (dt, type) => { if (dt) events.push({ dealIdx: idx, date: dt, type }); };
     const demandStart = d(dl.demand[0]), demandEnd = d(dl.demand[1]);
     push(demandStart, "demand-start");
@@ -4487,7 +4513,7 @@ function mezzChipsHtml(evs){
 function isEventDone(dealName, type){
   const rec = records[dealName];
   switch (type) {
-    case "demand-start": case "demand-day3": case "demand-end": return !!rec.joined;
+    case "demand-start": case "demand-day3": case "demand-end": return isJoined(rec);
     case "allot": return rec.allotShares != null || rec.allotAmount != null;
     case "sub-start": case "sub-end": return rec.subQty != null || !!rec.noticeDone; // 청약일 할 일 = 공문 발송
     case "pay": return !!rec.payConfirmed || rec.payAmount != null;
@@ -4522,7 +4548,7 @@ function renderDigest(){
   const todo = todays.filter(ev => !isEventDone(deals[ev.dealIdx].name, ev.type));
   const done = todays.filter(ev => isEventDone(deals[ev.dealIdx].name, ev.type));
   const el = document.getElementById("digest");
-  const joinedCount = deals.filter(dl => records[dl.name].joined).length;
+  const joinedCount = deals.filter(dl => isJoined(records[dl.name])).length;
   const label = digestDayLabel(digestOffset);
 
   // 나의 일정(TO DO에서 저장한 항목)을 위에, 나머지를 점선 아래에 — 캘린더 칸과 같은 구분.
@@ -4838,8 +4864,8 @@ document.addEventListener("input", e => {
 
 /* ---------- 수요예측 펀드별 참여 ----------
    같은 종목에 코벤·신탁·일임·H일임 여러 펀드로 들어가서, 펀드마다 참여 여부·
-   가격·수량·확약을 records[종목].funds[펀드명]에 따로 둔다. 표의 "참여함"은
-   어느 한 펀드라도 참여로 체크하면 같이 켜진다(캘린더 "참여" 필터와 연동). */
+   가격·수량·확약을 records[종목].funds[펀드명]에 따로 둔다. 어느 한 펀드라도
+   값을 적으면 그 종목은 "참여"로 본다(isJoined, 캘린더 "참여" 필터와 연동). */
 const FUND_GROUPS = [
   { group: "코벤", funds: ["코스닥벤처-1", "코스닥벤처-2", "코스닥벤처-3", "코스닥벤처-4", "코스닥벤처-5", "코스닥벤처-6"] },
   { group: "신탁", funds: ["프라임J-1", "프라임J-2", "프라임J-FA", "프로젝트-1", "J스페셜-1", "프라임J-5"] },
@@ -4890,12 +4916,7 @@ document.addEventListener("change", e => {
   syncFundTotals(rec, el.dataset.fidx);
   persistRecords();
   showToast("저장되었습니다");
-  if (field === "joined" && el.checked && !rec.joined) {
-    rec.joined = true;
-    const box = document.querySelector(`#stage-demand tr[data-row="${el.dataset.fidx}"] input[data-field="joined"]`);
-    if (box) box.checked = true;
-    rerender();
-  }
+  rerender(); // 펀드에 값을 적으면 그 종목이 "참여"로 잡혀 캘린더·할 일에 반영
 });
 
 // 펀드 합계 → 표의 신청수량, 화면의 합계 숫자. 표 전체를 다시 그리면 입력 중인
@@ -5226,6 +5247,7 @@ document.addEventListener("change", e => {
   persistRecords();
   showToast("저장되었습니다");
   renderStageTable("demand");
+  rerender();
 });
 
 let ntDealIdx = null;
@@ -5676,9 +5698,7 @@ const STAGE_TABS = {
     columns: [
       { field: "_name", label: "종목 / 주간사", type: "ref-name-toggle" },
       { field: "_demand", label: "수요예측일", type: "ref", get: dl => fmtRange(dl.demand[0], dl.demand[1]) },
-      { field: "applied", label: "신청함", type: "checkbox" },
       { field: "appliedDate", label: "신청일", type: "date" },
-      { field: "joined", label: "참여함", type: "checkbox" },
       { field: "price", label: "참여가격(원)", type: "number" },
       { field: "qty", label: "신청수량(총)", type: "number" },
       { field: "allotShares", label: "배정수량(총)", type: "number" },
@@ -6559,7 +6579,7 @@ function renderInfoList(){
         <td class="stc-ref">${dd && dd.demand_summary ? dd.demand_summary.competition_rate.toFixed(1) + " : 1" : "—"}</td>
         <td>${dd ? priceBandBar(dd.price_bands) : `<span class="info-none">—</span>`}</td>
         <td>${dd ? lockupBar(dd.lockup) : `<span class="info-none">—</span>`}</td>
-        <td>${rec.joined ? `<span style="color:var(--ink);font-weight:700">참여</span>` : `<span class="info-none">—</span>`}</td>
+        <td>${isJoined(rec) ? `<span style="color:var(--ink);font-weight:700">참여</span>` : `<span class="info-none">—</span>`}</td>
       </tr>`;
     }).join("");
   if (!rows) { container.innerHTML = `<div class="info-none" style="padding:16px">"${infoSearchQuery}" 검색 결과가 없습니다.</div>`; return; }
@@ -7309,10 +7329,10 @@ function xlsxRowFor(dl, rowNum){
   const listD = dl.list ? d(dl.list) : null;
   const afterMonths = (n) => listD ? excelSerial(addMonths(listD, n)) : null;
 
-  // 참여가격: 신청했지만 참여 안 한 건은 원본 파일 관례대로 "드랍"으로 적는다.
+  // 참여가격: 신청일만 적고 참여 데이터가 없는 건은 원본 파일 관례대로 "드랍"으로 적는다.
   let priceCell = null;
   if (rec.price != null) priceCell = rec.price;
-  else if (rec.applied && !rec.joined) priceCell = "드랍";
+  else if (rec.appliedDate && !isJoined(rec)) priceCell = "드랍";
 
   const r = rowNum;
   return {
