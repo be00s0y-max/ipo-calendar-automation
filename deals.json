@@ -456,7 +456,7 @@
       "2026-10-21"
     ],
     "pay": "2026-10-23",
-    "list": null,
+    "list": "2026-10-29",
     "dealSizeM": 30240,
     "stockCode": "0053F0",
     "finalPrice": 15300
@@ -563,7 +563,7 @@
       "2026-10-21"
     ],
     "pay": "2026-10-23",
-    "list": null,
+    "list": "2026-10-30",
     "dealSizeM": 12000,
     "stockCode": "0127E0",
     "finalPrice": 2000
