@@ -1461,7 +1461,10 @@
     "conv_period_start": "2027-10-20",
     "conv_period_end": "2031-09-20",
     "refixing": "아니오",
-    "rcept_no": "20261007000391"
+    "rcept_no": "20261007000391",
+    "put_start": "2028-08-21",
+    "put_end": "2028-09-20",
+    "put_redemption": "2028-10-20"
   },
   "01559637_CB_2": {
     "name": "블루엠텍",
@@ -1653,7 +1656,10 @@
     "conv_period_start": "2027-10-20",
     "conv_period_end": "2031-09-20",
     "refixing": "아니오",
-    "rcept_no": "20261012000285"
+    "rcept_no": "20261012000285",
+    "put_start": "2029-02-19",
+    "put_end": "2029-03-21",
+    "put_redemption": "2029-04-20"
   },
   "01514227_CB_2": {
     "name": "씨어스",
