@@ -510,9 +510,10 @@
       "2026-10-22"
     ],
     "pay": "2026-10-26",
-    "list": null,
+    "list": "2026-10-30",
     "dealSizeM": 19000,
-    "stockCode": "420610"
+    "stockCode": "420610",
+    "finalPrice": 9000
   },
   {
     "name": "래블업",

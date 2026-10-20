@@ -2087,5 +2087,44 @@
         "qty": 0
       }
     }
+  },
+  "인텔리빅스": {
+    "offering": {
+      "offer_shares": 2500000,
+      "offer_amount_final": 22500000000,
+      "subscription": {
+        "inst_start": "2026년 10월 21일(수)",
+        "inst_end": "2026년 10월 22일(목)"
+      },
+      "payment_date": "2026년 10월 26일"
+    },
+    "demand_summary": {
+      "total_count": 2357,
+      "total_qty": 2314316000,
+      "competition_rate": 1234.3
+    },
+    "price_bands": null,
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 3,
+        "qty": 4940000
+      },
+      "미확약": {
+        "count": 184,
+        "qty": 282353000
+      }
+    }
   }
 }
