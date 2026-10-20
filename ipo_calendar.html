@@ -571,6 +571,7 @@
   .notice-page table.xl td.wrap { white-space: pre-line; }
   .notice-page table.xl td.t10 { font-size: 10pt; }
   .notice-page table.xl td.big { font-size: 18pt; font-weight: 700; }
+  .notice-page table.xl td.big .seal { font-size: 9pt; font-weight: 400; }
   .notice-page table.xl td.bd { border: 1px solid #000; }
   .notice-page table.xl td.hd { background: #d9d9d9; }
   .notice-page table.xl td.acc { text-align: right; padding-right: 8px; }
@@ -5287,7 +5288,8 @@ function noticePageHtml(n, docNo, v){
          [4, 1, "acc t10 bd", accFmt(v.amount)], [5, 1, "acc t10 bd", accFmt(v.fee)], [6, 1, "t10 bd", wonCell(v.total)]],
     20: [[6, 1, "t10 bd hd", wonCell(v.total)]],
     27: [[1, 1, "r", "납입일시:"], [2, 2, "c", fmtLongKoDate(document.getElementById("ntPayDate").value)], [4, 1, "", escHtml(document.getElementById("ntPayTime").value)]],
-    33: [[0, 8, "c big wrap", escHtml(S.signer)]],
+    // 실제 출력본(대외공문 2026-100~104호)처럼 "(직인생략)" 같은 괄호 부분은 작고 가늘게
+    33: [[0, 8, "c big wrap", escHtml(S.signer).replace(/(\([^)]*\))/g, '<span class="seal">$1</span>')]],
   };
   meta.forEach(([k, val], i) => { cells[7 + i] = [[0, 1, "", k.replace(/ /g, "&nbsp;")], [1, 7, "", escHtml(val)]]; });
   let rows = "";
