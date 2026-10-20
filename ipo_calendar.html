@@ -4875,6 +4875,7 @@ const FUND_GROUPS = [
 ];
 const COMMIT_OPTIONS = ["", "미확약", "15일", "1개월", "3개월", "6개월"];
 // 확약여부: 신탁은 코벤과 같고(코벤 값을 따라감), 일임(전북)은 항상 미확약.
+// H일임(인성)은 기본으로 코벤을 따라가되 직접 고를 수 있다(commitManual). "미지정"을 고르면 다시 코벤을 따라간다.
 const KOVEN_FUNDS = FUND_GROUPS[0].funds, TRUST_FUNDS = FUND_GROUPS[1].funds;
 function kovenCommit(rec){
   const funds = rec.funds || {};
@@ -4885,11 +4886,16 @@ function fixedCommit(rec, fund){
   if (TRUST_FUNDS.includes(fund)) return kovenCommit(rec);
   return null; // 직접 고르는 펀드(코벤·H일임)
 }
+function hilimCommit(rec){
+  const f = rec.funds && rec.funds["H일임"];
+  return f && f.commitManual ? f.commit : kovenCommit(rec);
+}
 function applyCommitRules(rec, kc){
   if (!rec.funds) return;
   if (kc == null) kc = kovenCommit(rec);
   TRUST_FUNDS.forEach(f => { if (rec.funds[f]) rec.funds[f].commit = kc; });
   if (rec.funds["일임"]) rec.funds["일임"].commit = "미확약";
+  if (rec.funds["H일임"] && !rec.funds["H일임"].commitManual) rec.funds["H일임"].commit = kc;
 }
 Object.values(records).forEach(r => applyCommitRules(r));
 function fundsHtml(dl, idx){
@@ -4898,7 +4904,7 @@ function fundsHtml(dl, idx){
   const body = FUND_GROUPS.map(g => g.funds.map((f, i) => {
     const v = funds[f] || {};
     const fixed = fixedCommit(records[dl.name], f);
-    const commit = fixed != null ? fixed : v.commit;
+    const commit = fixed != null ? fixed : f === "H일임" ? hilimCommit(records[dl.name]) : v.commit;
     if (v.joined && v.qty) totalQty += v.qty;
     if (v.allot) totalAllot += v.allot;
     const attrs = `data-fund="${escHtml(f)}" data-fidx="${idx}"`;
@@ -4925,10 +4931,13 @@ document.addEventListener("change", e => {
   const f = rec.funds[el.dataset.fund] = rec.funds[el.dataset.fund] || {};
   const field = el.dataset.ffield;
   f[field] = el.type === "checkbox" ? el.checked : el.type === "number" ? (el.value === "" ? null : Number(el.value)) : el.value;
+  if (field === "commit" && el.dataset.fund === "H일임") {
+    if (f.commit) f.commitManual = true; else delete f.commitManual;
+  }
   if (field === "commit" || field === "joined" || field === "qty" || field === "price" || field === "allot") {
     applyCommitRules(rec, field === "commit" && KOVEN_FUNDS.includes(el.dataset.fund) ? f.commit : null);
     document.querySelectorAll(`[data-fidx="${el.dataset.fidx}"][data-ffield="commit"]`).forEach(sel => {
-      const fx = fixedCommit(rec, sel.dataset.fund);
+      const fx = sel.dataset.fund === "H일임" ? hilimCommit(rec) : fixedCommit(rec, sel.dataset.fund);
       if (fx != null) sel.value = fx;
     });
   }
