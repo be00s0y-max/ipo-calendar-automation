@@ -993,6 +993,7 @@
     </div>
     <div class="save-row" style="margin-bottom:22px">
       <button class="save-btn" id="ntPrintBtn">공문 2장 출력</button>
+      <button class="btn-ghost" id="ntFileBtn">인쇄용 파일로 저장</button>
       <span class="nt-hint err" id="ntPrintHint" style="margin:0"></span>
     </div>
     <div class="panel-section">
@@ -5187,8 +5188,10 @@ function openNoticePanel(idx){
   document.getElementById("ntPrice").value = rec.noticePrice != null ? rec.noticePrice : (dartPrice || dl.finalPrice || "");
   document.getElementById("ntPayDate").value = dartPay || dl.pay || "";
   document.getElementById("ntPayTime").value = noticeSettings.payTime || "";
-  document.getElementById("ntShares1").value = rec.noticeShares1 != null ? rec.noticeShares1 : "";
-  document.getElementById("ntShares2").value = rec.noticeShares2 != null ? rec.noticeShares2 : "";
+  // 직접 넣은 값이 없으면 수요예측 펀드별 배정주수(일임=수신처①, H일임=수신처②)를 쓴다.
+  const fundAllot = n => (rec.funds && rec.funds[n] && rec.funds[n].allot != null) ? rec.funds[n].allot : "";
+  document.getElementById("ntShares1").value = rec.noticeShares1 != null ? rec.noticeShares1 : fundAllot("일임");
+  document.getElementById("ntShares2").value = rec.noticeShares2 != null ? rec.noticeShares2 : fundAllot("H일임");
   document.getElementById("ntShares1Label").textContent = noticeRecipientName(1);
   document.getElementById("ntShares2Label").textContent = noticeRecipientName(2);
   document.getElementById("ntDoc1Label").textContent = "① " + noticeRecipientName(1);
@@ -5288,12 +5291,54 @@ function printNotice(){
   if (missing.length) { hint.textContent = missing.join(", ") + "을(를) 채워주세요"; return; }
   hint.textContent = "";
   const [v1, v2] = noticeNumbers();
-  document.getElementById("noticePrint").innerHTML = noticePageHtml(1, doc1, v1) + noticePageHtml(2, doc2, v2);
+  const pagesHtml = noticePageHtml(1, doc1, v1) + noticePageHtml(2, doc2, v2);
+  document.getElementById("noticePrint").innerHTML = pagesHtml;
   // 다음에 열 때 이어지는 번호를 제안하려고 마지막으로 쓴 번호를 기억해 둔다.
   noticeSettings.lastDoc = doc2;
   saveNoticeSettings();
+  // 아티팩트(샌드박스 iframe)에선 alert처럼 인쇄 창도 막혀 print()가 아무 일 없이
+  // 끝난다 — 인쇄 창이 실제로 열렸는지(beforeprint)를 보고, 안 열렸으면 공문 2장을
+  // 인쇄용 파일로 저장해 준다(열면 바로 인쇄 창이 뜸).
+  let opened = false;
+  const onBefore = () => { opened = true; };
+  window.addEventListener("beforeprint", onBefore);
   document.body.classList.add("print-notice");
   window.print();
+  window.removeEventListener("beforeprint", onBefore);
+  if (!opened) {
+    document.body.classList.remove("print-notice");
+    saveNoticeFile(pagesHtml);
+  }
+}
+function noticeFileHtml(pagesHtml){
+  const css = Array.from(document.styleSheets)
+    .flatMap(ss => { try { return Array.from(ss.cssRules); } catch (e) { return []; } })
+    .filter(r => r.selectorText && r.selectorText.includes("notice-page"))
+    .map(r => r.cssText).join("\n");
+  const title = escHtml(`청약공문_${document.getElementById("ntName").value}`);
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${title}</title><style>
+@page { size: A4 portrait; margin: 16mm 15mm; }
+body { margin: 0; background: #fff; }
+@media screen { body { background: #e9ebef; } .notice-page { width: 180mm; min-height: 265mm; margin: 12px auto; padding: 16mm 15mm; box-sizing: content-box; box-shadow: 0 1px 4px rgba(0,0,0,.2); } }
+${css}
+</style></head><body>${pagesHtml}
+<script>addEventListener("load", () => setTimeout(() => window.print(), 300));<\/script></body></html>`;
+}
+async function saveNoticeFile(pagesHtml){
+  const hint = document.getElementById("ntPrintHint");
+  const name = document.getElementById("ntName").value.trim() || "공문";
+  const filename = `청약공문_${name}_${isoKey(today)}.html`;
+  try {
+    if (typeof claude === "undefined" || !claude.use) throw Object.assign(new Error("이 화면에서는 인쇄도 파일 저장도 쓸 수 없습니다"), { code: "unavailable" });
+    const downloads = await withTimeout(claude.use("downloads"), 8000, "다운로드 기능 초기화");
+    if (!downloads) throw Object.assign(new Error("이 화면에서는 파일 저장이 지원되지 않습니다"), { code: "unavailable" });
+    await withTimeout(downloads.save({ filename, data: noticeFileHtml(pagesHtml) }), 60000, "파일 저장");
+    hint.style.color = "var(--ink-dim)";
+    hint.textContent = "인쇄 창이 이 화면에선 막혀 있어 파일로 저장했습니다 — 받은 파일을 열면 바로 인쇄 창이 뜹니다.";
+  } catch (e) {
+    hint.style.color = "";
+    hint.textContent = e && e.code === "declined" ? "파일 저장을 취소했습니다." : `인쇄·저장 실패: ${e && e.message ? e.message : e}`;
+  }
 }
 window.addEventListener("afterprint", () => document.body.classList.remove("print-notice"));
 
@@ -5304,6 +5349,12 @@ document.addEventListener("click", e => {
 document.getElementById("ntPanelClose").addEventListener("click", closeNoticePanel);
 document.getElementById("ntBackdrop").addEventListener("click", closeNoticePanel);
 document.getElementById("ntPrintBtn").addEventListener("click", printNotice);
+// 인쇄 창 대신 바로 파일로 받고 싶을 때(같은 확인 절차를 거친 뒤 저장).
+document.getElementById("ntFileBtn").addEventListener("click", () => {
+  const realPrint = window.print;
+  window.print = () => {}; // 인쇄 창은 건너뛰고 아래 파일 저장으로 바로 간다
+  try { printNotice(); } finally { window.print = realPrint; }
+});
 
 // 배정주식 수·공모가는 입력하는 대로 이 종목 records에 저장(청약 탭 표와 같은 값).
 ["ntShares1", "ntShares2", "ntPrice"].forEach(id => {
