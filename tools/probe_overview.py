@@ -21,9 +21,13 @@ for name in ("이에스티", "씨아이에스케미칼", "래블업", "엘리스
     soup = BeautifulSoup(open("/tmp/f.xml", "rb").read(), "html.parser")
     n = 0
     for t in soup.find_all("table"):
+        if t.find("table") is not None:
+            continue  # 표를 감싼 바깥 표는 건너뜀
+        txt = clean(t.get_text(" "))
+        if len(txt) > 3000 or not VAL.search(txt) or txt.startswith("주"):
+            continue
         rows = table_rows(t)
-        txt = " ".join(" ".join(r) for r in rows)
-        if VAL.search(txt) and len(rows) <= 25 and not txt.startswith("주"):
+        if len(rows) <= 25:
             print(f"  -- table ({len(rows)} rows)")
             for r in rows:
                 print("     ", " | ".join(clean(c) for c in r)[:230])
