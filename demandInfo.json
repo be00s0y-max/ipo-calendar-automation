@@ -349,7 +349,6 @@
     "inst_max": 3182000,
     "val_model": "EV/EBITDA",
     "val_multiple": 21.25,
-    "val_fair": 0,
     "val_discount": [
       46.49,
       35.34
@@ -389,7 +388,6 @@
     "inst_max": 1500000,
     "val_model": "PER",
     "val_multiple": 18.53,
-    "val_fair": 13018901267,
     "val_discount": [
       46.94,
       37.04
@@ -672,7 +670,6 @@
     "inst_max": 1666500,
     "val_model": "EV/EBITDA",
     "val_multiple": 27.13,
-    "val_fair": 38954,
     "val_discount": [
       33.65,
       14.7
