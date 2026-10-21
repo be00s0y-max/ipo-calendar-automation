@@ -423,38 +423,51 @@ def parse_overview(path):
     if summary:
         for r in summary:
             cells = [re.sub(r"\s+", " ", c).strip() for c in r]
-            joined = re.sub(r"\s+", "", " ".join(cells))
+            # 항목명 칸만 본다 — 맨 끝 "참고사항" 칸에 "(3) 주당 평가가액 산출" 같은 글이 있어서
+            # 전체 행으로 찾으면 EBITDA·비지배지분 행이 주당 평가가액으로 잡혔다(2026-10 엘리스그룹·제이앤티지).
+            li = 1 if cells and cells[0] in list("①②③④⑤⑥⑦⑧⑨") and len(cells) > 1 else 0
+            joined = re.sub(r"\s+", "", cells[li]) if cells else ""
+            vals = cells[li + 1:]
             if cells and re.sub(r"\s+", "", cells[0]) == "평가모형" and len(cells) > 1:
                 out["val_model"] = cells[1]
                 continue
             model = out["val_model"]
             if model and out["val_multiple"] is None and re.search(r"(유사기업|비교회사|비교기업|적용)", joined) \
                     and re.sub(r"\s+", "", model) in joined and "적용산식" not in joined:
-                for c in cells[2:] if cells[0] in "①②③④⑤⑥⑦" else cells[1:]:
+                for c in vals:
                     m = num_re.match(c)
                     if m and "." in m.group(1) or (m and m.group(2) == "배"):
                         out["val_multiple"] = float(m.group(1).replace(",", ""))
                         break
             if out["val_fair"] is None and "주당평가가액" in joined and "할인율" not in joined:
-                for c in cells[1:]:
+                for c in vals:
                     m = num_re.match(c)
                     if m and m.group(2) != "배" and "." not in m.group(1):
-                        out["val_fair"] = int(m.group(1).replace(",", ""))
+                        v = int(m.group(1).replace(",", ""))
+                        if 0 < v < 10_000_000:  # 주당 가액이 아닌 큰 금액(원 단위 총액 등)은 버린다
+                            out["val_fair"] = v
                         break
             if out["val_discount"] is None and "할인율" in joined:
-                m = re.search(r"([\d.]+)\s*%\s*~\s*([\d.]+)\s*%", " ".join(cells))
+                m = re.search(r"([\d.]+)\s*%\s*~\s*([\d.]+)\s*%", " ".join(vals))
                 if m:
                     out["val_discount"] = [float(m.group(1)), float(m.group(2))]
     text = re.sub(r"\s+", " ", soup.get_text(" "))
     shares = re.findall(r"상장\s*예정\s*주식\s*수(?:\([^)]{0,30}\))?[^\d]{0,40}?([\d,]{6,})\s*주", text)
     if shares:
         out["listed_shares"] = _int(shares[-1])
+    # 사업의 개요 뒤 "당사는 …니다." 문장들 중 회사 소개다운 문장(설립·기업·전문·영위·업체·플랫폼)을 먼저,
+    # 없으면 첫 문장. 매출 비중·개발 전략 같은 문장이 먼저 나오는 신고서가 있다(2026-10 동원파츠·아델).
+    intro = re.compile(r"설립|기업|전문|영위|업체|플랫폼|제조|회사")
+    first = None
     i = text.find("사업의 개요")
     while i >= 0 and out["biz"] is None:
-        m = re.search(r"(?:당사|동사)는\s[^.]{10,400}?니다\.", text[i:i + 8000])
-        if m:
-            out["biz"] = m.group(0)
+        for m in re.finditer(r"(?:당사|동사)는\s[^.]{10,400}?니다\.", text[i:i + 8000]):
+            first = first or m.group(0)
+            if intro.search(m.group(0)):
+                out["biz"] = m.group(0)
+                break
         i = text.find("사업의 개요", i + 6)
+    out["biz"] = out["biz"] or first
     return out
 
 
