@@ -209,6 +209,14 @@
   .xl-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); cursor: pointer; margin-left: auto; flex: none; }
   .stage-search .nt-hint + .xl-btn { margin-left: 0; }
   .xl-btn:hover { border-color: #1d6f42; }
+  .acct-pick { position: relative; flex: none; }
+  .acct-pick summary { list-style: none; }
+  .acct-pick summary::-webkit-details-marker { display: none; }
+  .acct-pick summary.xl-btn { margin-left: 0; }
+  .acct-pick summary.xl-btn:hover, .acct-pick[open] summary.xl-btn { border-color: var(--accent); }
+  .acct-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: min(460px, 86vw); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 12px 14px; }
+  .acct-pop .nt-hint { text-align: left; margin: 0 0 8px !important; }
+  .acct-pop textarea { width: 100%; min-height: 80px; box-sizing: border-box; padding: 8px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-size: 12px; }
   .stage-head h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; }
   .stage-head p { margin: 0; font-size: 12.5px; color: var(--ink-dim); }
   .nav-setting {
@@ -869,12 +877,6 @@
       <label class="nav-setting">기준 NAV (원)
         <input type="number" id="navInput" min="0" step="1" placeholder="예: 50000000000">
       </label>
-      <details id="acctSetup" style="margin-top:10px">
-        <summary class="nt-hint" style="cursor:pointer;margin:0">계좌 목록 붙여넣기</summary>
-        <div class="nt-hint" style="margin-top:8px">본인용 페이지의 참여 정보와 함께 저장됩니다. GitHub 저장소나 외부 공유 링크에는 들어가지 않습니다.</div>
-        <textarea id="acctJson" style="width:100%;max-width:640px;min-height:60px;box-sizing:border-box;padding:8px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-size:12px" placeholder='{"한국투자증권": {"코스닥벤처": "...", "일임": "..."}}'></textarea>
-        <div><button class="btn-ghost" id="acctApply" style="margin-top:6px">붙여넣은 계좌 적용</button></div>
-      </details>
     </div>
     <div class="stage-search"><input type="text" class="tab-search" data-stage-search="demand" placeholder="종목명 검색">
       <span class="nt-hint" id="allotXlsxStatus"></span>
@@ -882,6 +884,16 @@
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="4" fill="#1d6f42"/><path d="M7 7l4 5-4 5M17 7l-4 5 4 5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
         <input type="file" id="allotXlsx" accept=".xlsx,.xlsm,.xls" multiple hidden>
       </label>
+      <details id="acctSetup" class="acct-pick">
+        <summary class="xl-btn" title="계좌 목록 붙여넣기">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 10v7M9.7 10v7M14.3 10v7M19 10v7" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round"/><path d="M3.5 19.5h17" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </summary>
+        <div class="acct-pop">
+          <div class="nt-hint" style="margin:0 0 8px"><b>계좌 목록 붙여넣기</b> — 본인용 페이지의 참여 정보와 함께 저장됩니다. GitHub 저장소나 외부 공유 링크에는 들어가지 않습니다.</div>
+          <textarea id="acctJson" placeholder='{"한국투자증권": {"코스닥벤처": "...", "일임": "..."}}'></textarea>
+          <div><button class="btn-ghost" id="acctApply" style="margin-top:6px">붙여넣은 계좌 적용</button></div>
+        </div>
+      </details>
     </div>
     <div class="stage-table-wrap" id="stage-demand"></div>
   </div>
@@ -6043,6 +6055,10 @@ document.addEventListener("click", e => {
   const btn = e.target.closest(".acct-copy[data-copy]");
   if (!btn) return;
   copyText(btn.dataset.copy).then(ok => showToast(ok ? `복사됨: ${btn.dataset.copy}` : "복사가 막혔습니다 — 길게 눌러 직접 복사하세요"));
+});
+document.addEventListener("click", e => { // 바깥을 누르면 계좌 붙여넣기 창을 닫는다
+  const d = document.getElementById("acctSetup");
+  if (d && d.open && !d.contains(e.target)) d.open = false;
 });
 document.getElementById("acctApply").addEventListener("click", () => {
   const text = document.getElementById("acctJson").value.trim();
