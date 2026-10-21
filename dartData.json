@@ -2126,5 +2126,225 @@
         "qty": 282353000
       }
     }
+  },
+  "래블업": {
+    "offering": {
+      "offer_shares": 2180000,
+      "offer_amount_expected": 41420000000,
+      "offer_amount_final": 41420000000,
+      "subscription": {
+        "inst_start": "2026년 10월 22일 (목)",
+        "inst_end": "2026년 10월 23일 (금)"
+      },
+      "payment_date": "2026년 10월 27일"
+    },
+    "demand_summary": {
+      "total_count": 1129,
+      "total_qty": 446593000,
+      "competition_rate": 284.53
+    },
+    "price_bands": null,
+    "lockup": {
+      "미확약": {
+        "count": 1118,
+        "qty": 437265000
+      },
+      "15일 확약": {
+        "count": 4,
+        "qty": 4383000
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 3,
+        "qty": 1473000
+      },
+      "6개월 확약": {
+        "count": 4,
+        "qty": 3472000
+      }
+    }
+  },
+  "영광(구.영광공작소)": {
+    "offering": {
+      "offer_shares": 2260000,
+      "offer_amount_expected": 31640000000,
+      "offer_amount_final": 38420000000,
+      "subscription": {
+        "inst_start": "2026년 10월 22일(목)",
+        "inst_end": "2026년 10월 23일(금)"
+      },
+      "payment_date": "2026년 10월 27일"
+    },
+    "demand_summary": {
+      "total_count": 2276,
+      "total_qty": 1695117000,
+      "competition_rate": 1000.07
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 17,
+        "count_pct": "0.75%",
+        "qty": 18805000,
+        "qty_pct": "1.11%"
+      },
+      {
+        "band": "17000원(상단) 초과",
+        "count": 28,
+        "count_pct": "1.23%",
+        "qty": 18936000,
+        "qty_pct": "1.12%"
+      },
+      {
+        "band": "17000원(상단)",
+        "count": 2210,
+        "count_pct": "97.10%",
+        "qty": 1637958000,
+        "qty_pct": "96.63%"
+      },
+      {
+        "band": "14000원(하단) 초과 ~ 17000원(상단) 미만",
+        "count": 1,
+        "count_pct": "0.04%",
+        "qty": 1000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "14000(하단)",
+        "count": 20,
+        "count_pct": "0.88%",
+        "qty": 19417000,
+        "qty_pct": "1.15%"
+      },
+      {
+        "band": "14000원(하단) 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "합계",
+        "count": 2276,
+        "count_pct": "100.00%",
+        "qty": 1695117000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 11,
+        "qty": 10630000
+      },
+      "3개월 확약": {
+        "count": 5,
+        "qty": 1197000
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 7,
+        "qty": 2889000
+      },
+      "미확약": {
+        "count": 2253,
+        "qty": 1680401000
+      }
+    }
+  },
+  "이에스티": {
+    "offering": {
+      "offer_shares": 2200000,
+      "offer_amount_expected": 23320000000,
+      "offer_amount_final": 27280000000,
+      "subscription": {
+        "inst_start": "2026년 10월 22일(목)",
+        "inst_end": "2026년 10월 23일(금)"
+      },
+      "payment_date": "2026년 10월 27일"
+    },
+    "demand_summary": {
+      "total_count": 1571,
+      "total_qty": 1039659000,
+      "competition_rate": 630.1
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "12,400원(상단) 초과",
+        "count": 18,
+        "count_pct": "1.15%",
+        "qty": 15837000,
+        "qty_pct": "1.52%"
+      },
+      {
+        "band": "12,400원(상단)",
+        "count": 1226,
+        "count_pct": "78.04%",
+        "qty": 836594000,
+        "qty_pct": "80.47%"
+      },
+      {
+        "band": "10,600원(하단) 초과 ~ 12,400원(상단) 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "10,600원(하단)",
+        "count": 234,
+        "count_pct": "14.89%",
+        "qty": 145766000,
+        "qty_pct": "14.02%"
+      },
+      {
+        "band": "10,600원(하단) 미만",
+        "count": 93,
+        "count_pct": "5.92%",
+        "qty": 41462000,
+        "qty_pct": "3.99%"
+      },
+      {
+        "band": "합계",
+        "count": 1571,
+        "count_pct": "100.00%",
+        "qty": 1039659000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 11,
+        "qty": 818000
+      },
+      "3개월 확약": {
+        "count": 1,
+        "qty": 21000
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 1,
+        "qty": 1650000
+      },
+      "미확약": {
+        "count": 1558,
+        "qty": 1037170000
+      }
+    }
   }
 }

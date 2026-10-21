@@ -352,5 +352,32 @@
     "hm_url": "www.intellivix.com",
     "phn_no": "02-581-3883",
     "est_dt": "20000613"
+  },
+  "래블업": {
+    "stock_code": "",
+    "ceo_nm": "신정규",
+    "corp_cls": "E",
+    "adres": "서울특별시 강남구 선릉로 577 (역삼동, 조선내화빌딩) 8층",
+    "hm_url": "www.lablup.com/",
+    "phn_no": "07082002587",
+    "est_dt": "20150420"
+  },
+  "영광(구.영광공작소)": {
+    "stock_code": "",
+    "ceo_nm": "허철기",
+    "corp_cls": "E",
+    "adres": "울산광역시 울주군 온산읍 이진리 261 (주)영광",
+    "hm_url": "",
+    "phn_no": "052-240-2419",
+    "est_dt": "19990616"
+  },
+  "이에스티": {
+    "stock_code": "",
+    "ceo_nm": "김영곤",
+    "corp_cls": "E",
+    "adres": "경기도 오산시 가장산업서북로 103-14 (지곶동)",
+    "hm_url": "www.estech.asia",
+    "phn_no": "031-831-5653",
+    "est_dt": "20160405"
   }
 }
