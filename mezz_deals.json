@@ -1680,7 +1680,10 @@
     "conv_period_start": "2027-10-21",
     "conv_period_end": "2031-09-21",
     "refixing": "아니오",
-    "rcept_no": "20261013000138"
+    "rcept_no": "20261013000138",
+    "put_start": "2029-02-20",
+    "put_end": "2029-03-22",
+    "put_redemption": "2029-04-21"
   },
   "01412725_BW_1": {
     "name": "두산퓨얼셀",
