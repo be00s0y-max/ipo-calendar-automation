@@ -965,7 +965,6 @@
       <button type="button" class="subtab" data-reply-view="sbi">SBI저축은행 회신</button>
     </div>
     <div id="replyViewSbi" hidden>
-    <p class="reply-desc">코스닥벤처 4·5호 값으로 메일 양식 표를 만듭니다. "표 복사" 후 메일에 붙여넣으세요.</p>
     <div class="reply-bar">
       <span class="reply-mode"><span class="lbl">종목</span><button type="button" class="reply-chip" data-rp-mode="search">검색</button><button type="button" class="reply-chip" data-rp-mode="period">기간</button><button type="button" class="reply-chip on" data-rp-mode="rec">추천</button></span>
       <span class="spacer"></span>
@@ -975,7 +974,7 @@
     <div class="reply-ctl">
       <span class="reply-sub" id="rpSearchCtl" hidden><input type="text" class="tab-search" id="replySearch" placeholder="종목 이름 검색"></span>
       <span class="reply-sub" id="rpPeriodCtl" hidden><span class="hint">수요예측 시작일</span><input type="date" id="rpFrom"> ~ <input type="date" id="rpTo"></span>
-      <span class="reply-sub" id="rpRecCtl"><span class="hint">4·5호 배정이 들어왔고 납입일이 7일 전 이후인 종목</span></span>
+      <span class="reply-sub" id="rpRecCtl"></span>
       <span class="reply-count" id="replyCount"></span>
       <button class="reply-link" id="replyClear">전체 해제</button>
     </div>
@@ -983,17 +982,16 @@
     <div class="reply-preview" id="replyPreview"></div>
     </div>
     <div id="replyViewStatus">
-      <p class="reply-desc">참여한 종목의 참여가격·참여일자·참여수량·배정수량·확약여부입니다. 펀드를 고르면 펀드별로, 안 고르면 종목 합계로 나옵니다. "엑셀용 복사" 후 엑셀에 붙여넣으면 값으로 들어갑니다.</p>
       <div class="reply-bar">
         <span class="reply-mode"><span class="lbl">종목</span><button type="button" class="reply-chip" data-status-mode="search">검색</button><button type="button" class="reply-chip" data-status-mode="period">기간</button><button type="button" class="reply-chip on" data-status-mode="rec">추천</button></span>
-        <details class="fund-pick" id="stFundPick"><summary><span class="lbl">펀드</span><span class="val" id="stFundSum">종목 합계</span></summary><div class="fund-pop" id="stFundPop"></div></details>
+        <span class="reply-mode"><span class="lbl">펀드</span><details class="fund-pick" id="stFundPick"><summary><span class="val" id="stFundSum">종목 합계</span></summary><div class="fund-pop" id="stFundPop"></div></details></span>
         <span class="spacer"></span>
         <button class="pdf-fill-btn" id="stCopy">엑셀용 복사</button>
       </div>
       <div class="reply-ctl">
         <span class="reply-sub" id="stSearchCtl" hidden><input type="text" class="tab-search" id="stSearch" placeholder="종목 이름 검색"></span>
         <span class="reply-sub" id="stPeriodCtl" hidden><span class="hint">수요예측 시작일</span><input type="date" id="stFrom"> ~ <input type="date" id="stTo"></span>
-        <span class="reply-sub" id="stRecCtl"><span class="hint">수요예측을 시작했고 납입이 아직 안 끝난 참여 종목</span></span>
+        <span class="reply-sub" id="stRecCtl"></span>
         <span class="reply-count" id="stCount"></span>
         <button class="reply-link" id="stClear">전체 해제</button>
       </div>
