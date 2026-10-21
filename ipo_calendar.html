@@ -201,8 +201,9 @@
   .reply-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   .reply-chip.on .sub { color: rgba(255,255,255,.75); }
   .reply-preview { background: #fff; color: #000; padding: 16px; border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; }
-  .stage-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
-  .stage-title-row h2 { margin: 0 !important; }
+  /* 제목 영역과 표 사이 구분선 + 그 아래 검색(배정 현황 하위 탭 줄과 같은 선) */
+  .stage-search { border-top: 1px solid var(--border); padding-top: 12px; margin: 4px 0 10px; display: flex; }
+  .stage-search .tab-search { width: 220px; }
   .stage-head h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; }
   .stage-head p { margin: 0; font-size: 12.5px; color: var(--ink-dim); }
   .nav-setting {
@@ -859,7 +860,7 @@
 
   <div class="tab-panel" id="tab-demand">
     <div class="stage-head">
-      <div class="stage-title-row"><h2>수요예측</h2><input type="text" class="tab-search" data-stage-search="demand" placeholder="종목명 검색"></div>
+      <h2>수요예측</h2>
       <label class="nav-setting">기준 NAV (원)
         <input type="number" id="navInput" min="0" step="1" placeholder="예: 50000000000">
       </label>
@@ -874,6 +875,7 @@
         <div><button class="btn-ghost" id="acctApply" style="margin-top:6px">붙여넣은 계좌 적용</button></div>
       </details>
     </div>
+    <div class="stage-search"><input type="text" class="tab-search" data-stage-search="demand" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-demand"></div>
   </div>
 
@@ -941,7 +943,7 @@
     <div class="stage-head">
       <h2>청약</h2>
     </div>
-    <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="sub" placeholder="종목명 검색"></div>
+    <div class="stage-search"><input type="text" class="tab-search" data-stage-search="sub" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-sub"></div>
   </div>
 
@@ -949,7 +951,7 @@
     <div class="stage-head">
       <h2>납입</h2>
     </div>
-    <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="pay" placeholder="종목명 검색"></div>
+    <div class="stage-search"><input type="text" class="tab-search" data-stage-search="pay" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-pay"></div>
   </div>
 
@@ -5711,6 +5713,7 @@ function applyCommitRules(rec, kc){
   TRUST_FUNDS.forEach(f => { if (rec.funds[f]) rec.funds[f].commit = kc; });
   if (rec.funds["일임"]) rec.funds["일임"].commit = "미확약";
   if (rec.funds["H일임"] && !rec.funds["H일임"].commitManual) rec.funds["H일임"].commit = kc;
+  if (kc) rec.commit = kc; // 종목 줄 확약여부도 코벤을 따라간다(캘린더 확약 표시 등이 rec.commit을 씀)
 }
 Object.values(records).forEach(r => applyCommitRules(r));
 function fundsHtml(dl, idx){
@@ -5755,6 +5758,8 @@ document.addEventListener("change", e => {
       const fx = sel.dataset.fund === "H일임" ? hilimCommit(rec) : fixedCommit(rec, sel.dataset.fund);
       if (fx != null) sel.value = fx;
     });
+    const main = document.querySelector(`#stage-demand tr[data-row="${el.dataset.fidx}"] select[data-field="commit"]`);
+    if (main) main.value = rec.commit || "";
   }
   // 참여가격은 펀드 모두 같아서, 한 펀드에 넣으면 참여한 펀드 전부와 표의 참여가격에 같이 넣는다.
   if (field === "price") {
@@ -6949,6 +6954,16 @@ document.addEventListener("change", e => {
   else if (el.type === "number") value = el.value === "" ? null : Number(el.value);
   else value = el.value;
   records[dl.name][field] = value;
+  // 종목 줄 확약여부를 바꾸면 코벤 펀드(값이 있는 것)에 넣고 신탁·H일임 규칙을 다시 적용한다
+  if (field === "commit" && el.closest("#stage-demand")) {
+    const rec = records[dl.name];
+    KOVEN_FUNDS.forEach(f => { if (rec.funds && rec.funds[f]) rec.funds[f].commit = value; });
+    applyCommitRules(rec, value);
+    document.querySelectorAll(`[data-fidx="${idx}"][data-ffield="commit"]`).forEach(sel => {
+      const fx = sel.dataset.fund === "H일임" ? hilimCommit(rec) : fixedCommit(rec, sel.dataset.fund);
+      sel.value = fx != null ? fx : ((rec.funds[sel.dataset.fund] || {}).commit || "");
+    });
+  }
   persistRecords();
   showToast("저장되었습니다");
   const panel = el.closest(".tab-panel");
