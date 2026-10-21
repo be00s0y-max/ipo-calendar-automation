@@ -8257,7 +8257,7 @@ function xlsxRowFor(dl, rowNum){
     AA: { v: rec.allotShares != null ? rec.allotShares : null, t: "n" },
     AB: { v: rec.allotAmount != null ? rec.allotAmount : null, t: "n" },
     AC: { f: `IF(OR(AB${r}="",H${r}=""),"",AB${r}/(H${r}*100000000))`, t: "pct" },
-    AD: { v: navValue != null ? navValue : null, t: "n" },
+    AD: { v: null, t: "n" },                                             // 기준 NAV(입력칸 삭제, 비워둠)
     AE: { f: `IF(OR(AB${r}="",AD${r}=""),"",AB${r}/AD${r})`, t: "pct" },
     AF: { v: null, t: "n" },                                             // 매매금액(수기)
     AG: { f: `IF(OR(AF${r}="",AB${r}=""),"",(AF${r}-AB${r})/AB${r})`, t: "pct" },
