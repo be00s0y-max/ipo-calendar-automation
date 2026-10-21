@@ -150,6 +150,14 @@
   .tab-panel.active { display: block; }
 
   .stage-head { margin-bottom: 16px; }
+  .reply-controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-start; margin-bottom: 14px; }
+  .reply-picks { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 420px; }
+  .reply-picks label { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 4px 9px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); cursor: pointer; }
+  .reply-picks label .sub { color: var(--ink-faint); font-size: 11px; }
+  .reply-opts { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 12.5px; }
+  .reply-opts label { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .reply-opts input[type=number] { width: 70px; flex: none; }
+  .reply-preview { background: #fff; color: #000; padding: 16px; border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; }
   .stage-head h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; }
   .stage-head p { margin: 0; font-size: 12.5px; color: var(--ink-dim); }
   .nav-setting {
@@ -691,6 +699,7 @@
     <button class="tabbtn" data-tab="sub">청약</button>
     <button class="tabbtn" data-tab="pay">납입</button>
     <button class="tabbtn" data-tab="list">상장</button>
+    <button class="tabbtn" data-tab="reply">배정 회신</button>
   </div>
 
   <div class="tab-panel" id="tab-todo">
@@ -902,6 +911,22 @@
     </div>
     <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="pay" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-pay"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-reply">
+    <div class="stage-head">
+      <h2>배정 회신</h2>
+      <p>공모주 배정수량 요청 메일 회신용 표입니다. 종목을 고르면 수요예측 탭에 저장된 코스닥벤처 4·5호 값으로 표를 만들고, "표 복사" 후 메일에 붙여넣으면 됩니다.</p>
+    </div>
+    <div class="reply-controls">
+      <div class="reply-picks" id="replyPicks"></div>
+      <div class="reply-opts">
+        <label>4호 지분율(%) <input type="number" id="replyShare4" step="any"></label>
+        <label>5호 지분율(%) <input type="number" id="replyShare5" step="any"></label>
+        <button class="pdf-fill-btn" id="replyCopy">표 복사 (메일에 붙여넣기)</button>
+      </div>
+    </div>
+    <div class="reply-preview" id="replyPreview"></div>
   </div>
 
   <div class="tab-panel" id="tab-list">
@@ -4918,6 +4943,103 @@ function overviewHtml(dl){
   if (t.rcept_no) html += `<div class="nt-hint" style="margin:6px 0 0">출처: <a class="stc-link" href="https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${t.rcept_no}" target="_blank" rel="noopener">${escHtml(t.report_nm || "증권신고서")} (${t.rcept_no.slice(0,8)})</a></div>`;
   return html;
 }
+/* ---------- 배정 회신 (공모주 배정수량 요청 메일 양식) ----------
+   2026-10 SBI저축은행 요청 메일의 표 그대로: 종목마다 [종목명] + 표
+   (펀드(일임)명 | 수요예측 참여가격 | 수요예측 참여일자 | 수요예측 참여수량 | 펀드 배정주식수량 | 확약 여부 | 지분율).
+   참여가격·확약 여부는 세 줄 병합, 마지막 빈 줄은 지분율 칸에 "%"만. 값은 수요예측 탭 펀드별 표
+   (코스닥벤처-4·5)와 신청일(배정 엑셀 파일 이름 날짜)에서 가져온다. 지분율은 설정값(noticeSettings). */
+const REPLY_FUNDS = [
+  { key: "코스닥벤처-4", label: "프라임코스닥벤처일반제4호", share: "replyShare4" },
+  { key: "코스닥벤처-5", label: "프라임코스닥벤처일반제5호", share: "replyShare5" },
+];
+let replyPicked = null; // 종목명 Set (처음 열 때 기본 선택)
+function replyCandidates(){
+  return deals.map((dl, idx) => ({ dl, idx, rec: records[dl.name] }))
+    .filter(x => x.rec && x.rec.funds && REPLY_FUNDS.some(f => x.rec.funds[f.key] && (x.rec.funds[f.key].qty != null || x.rec.funds[f.key].allot != null)))
+    .sort((a, b) => String(b.dl.demand[0]).localeCompare(String(a.dl.demand[0])));
+}
+function replyTableHtml(dl, rec){
+  const B = "border:1px solid #000;padding:2px 6px;";
+  const H = B + "background:#d9e1f2;font-weight:700;text-align:center;";
+  const funds = REPLY_FUNDS.map(f => rec.funds[f.key] || {});
+  const price = funds.map(v => v.price).find(v => v != null) ?? rec.price;
+  const commit = kovenCommit(rec) || funds.map(v => v.commit).find(Boolean) || "";
+  const date = rec.appliedDate || "";
+  const share = n => noticeSettings[n] != null && noticeSettings[n] !== "" ? noticeSettings[n] : 30;
+  const rows = REPLY_FUNDS.map((f, i) => {
+    const v = funds[i];
+    return `<tr>
+      <td style="${B}">${escHtml(f.label)}</td>
+      ${i === 0 ? `<td rowspan="3" style="${B}">${price != null ? price : ""}</td>` : ""}
+      <td style="${B}">${escHtml(date)}</td>
+      <td style="${B}">${v.qty != null ? v.qty : ""}</td>
+      <td style="${B}text-align:right;">${v.allot != null ? v.allot : ""}</td>
+      ${i === 0 ? `<td rowspan="3" style="${B}">${escHtml(commit)}</td>` : ""}
+      <td style="${B}text-align:right;">${escHtml(share(f.share))}%</td>
+    </tr>`;
+  }).join("");
+  return `<p style="margin:18px 0 6px;font-family:'맑은 고딕','Malgun Gothic',sans-serif;font-size:10pt;">[${escHtml(dl.name)}]</p>
+<table style="border-collapse:collapse;font-family:'맑은 고딕','Malgun Gothic',sans-serif;font-size:10pt;">
+  <tr>
+    <td style="${H}width:200px;">펀드(일임)명</td>
+    <td style="${H}width:100px;">수요예측<br><br>참여가격</td>
+    <td style="${H}width:110px;">수요예측<br>참여일자*</td>
+    <td style="${H}width:110px;">수요예측<br><br>참여수량</td>
+    <td style="${H}width:140px;">펀드 배정주식수량<br><br>(단위:주)</td>
+    <td style="${H}width:80px;">확약 여부</td>
+    <td style="${H}width:150px;">SBI저축은행 지분율<br><br>(운용펀드기준, %)</td>
+  </tr>
+  ${rows}
+  <tr><td style="${B}">&nbsp;</td><td style="${B}"></td><td style="${B}"></td><td style="${B}"></td><td style="${B}text-align:right;">%</td></tr>
+</table>`;
+}
+function renderReplyTab(){
+  const cands = replyCandidates();
+  if (!replyPicked) {
+    // 기본 선택: 4·5호 배정주수가 0보다 크고(엑셀의 0은 배정 전) 납입일이 7일 전 이후인 종목
+    const t = isoKey(addDays(today, -7));
+    replyPicked = new Set(cands.filter(x => REPLY_FUNDS.some(f => (x.rec.funds[f.key] || {}).allot > 0) && x.dl.pay && x.dl.pay >= t).map(x => x.dl.name));
+  }
+  document.getElementById("replyPicks").innerHTML = cands.length ? cands.map(x =>
+    `<label><input type="checkbox" data-reply-pick="${escHtml(x.dl.name)}" ${replyPicked.has(x.dl.name) ? "checked" : ""}>${escHtml(x.dl.name)}<span class="sub">${x.dl.pay ? "납입 " + fmt(x.dl.pay) : ""}</span></label>`).join("")
+    : `<span class="acct-none">수요예측 탭에 코스닥벤처 4·5호 값이 있는 종목이 없습니다.</span>`;
+  ["replyShare4", "replyShare5"].forEach(k => { document.getElementById(k).value = noticeSettings[k] != null && noticeSettings[k] !== "" ? noticeSettings[k] : 30; });
+  const picked = cands.filter(x => replyPicked.has(x.dl.name));
+  document.getElementById("replyPreview").innerHTML = picked.length
+    ? picked.map(x => replyTableHtml(x.dl, x.rec)).join("")
+    : `<span style="color:#666">위에서 종목을 고르세요.</span>`;
+}
+document.addEventListener("change", e => {
+  const pick = e.target.closest("input[data-reply-pick]");
+  if (pick) {
+    if (pick.checked) replyPicked.add(pick.dataset.replyPick); else replyPicked.delete(pick.dataset.replyPick);
+    renderReplyTab();
+    return;
+  }
+  if (e.target.id === "replyShare4" || e.target.id === "replyShare5") {
+    noticeSettings[e.target.id] = e.target.value;
+    saveNoticeSettings();
+    renderReplyTab();
+  }
+});
+document.getElementById("replyCopy").addEventListener("click", async () => {
+  const box = document.getElementById("replyPreview");
+  if (!box.querySelector("table")) { showToast("먼저 종목을 고르세요"); return; }
+  const html = box.innerHTML, text = box.innerText;
+  try {
+    // 메일(아웃룩 등)에 표 모양 그대로 붙도록 HTML로 복사
+    await navigator.clipboard.write([new ClipboardItem({ "text/html": new Blob([html], { type: "text/html" }), "text/plain": new Blob([text], { type: "text/plain" }) })]);
+    showToast("표를 복사했습니다 — 메일에 붙여넣으세요");
+  } catch (err) {
+    // 막히면 미리보기를 선택해서 복사(서식 유지)
+    const range = document.createRange(); range.selectNodeContents(box);
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e2) {}
+    sel.removeAllRanges();
+    showToast(ok ? "표를 복사했습니다 — 메일에 붙여넣으세요" : "복사가 막혔습니다 — 표를 드래그해서 직접 복사하세요");
+  }
+});
 function closePanel(){
   panel.classList.remove("show");
   backdrop.classList.remove("show");
@@ -6911,6 +7033,7 @@ function applyAppState(state){
   if (key === "info") renderInfoTab();
   if (key === "mezz") renderMezzTab();
   if (key === "todo") renderTodoTab();
+  if (key === "reply") renderReplyTab();
 }
 function navigateTo(state){
   applyAppState(state);
