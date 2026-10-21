@@ -204,6 +204,11 @@
   /* 제목 영역과 표 사이 구분선 + 그 아래 검색(배정 현황 하위 탭 줄과 같은 선) */
   .stage-search { border-top: 1px solid var(--border); padding-top: 12px; margin: 4px 0 10px; display: flex; }
   .stage-search .tab-search { width: 220px; }
+  .stage-search { align-items: center; gap: 10px; }
+  .stage-search .nt-hint { margin: 0 0 0 auto; text-align: right; }
+  .xl-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); cursor: pointer; margin-left: auto; flex: none; }
+  .stage-search .nt-hint + .xl-btn { margin-left: 0; }
+  .xl-btn:hover { border-color: #1d6f42; }
   .stage-head h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; }
   .stage-head p { margin: 0; font-size: 12.5px; color: var(--ink-dim); }
   .nav-setting {
@@ -864,10 +869,6 @@
       <label class="nav-setting">기준 NAV (원)
         <input type="number" id="navInput" min="0" step="1" placeholder="예: 50000000000">
       </label>
-      <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <label class="pdf-fill-btn">배정 엑셀 불러오기 (여러 개 가능)<input type="file" id="allotXlsx" accept=".xlsx,.xlsm,.xls" multiple hidden></label>
-        <span class="nt-hint" id="allotXlsxStatus" style="margin:0">참여주식수 엑셀 첫 시트에서 펀드별 신청수량(집계표)·배정주수(최종배분주수)·참여가격을 읽어 채웁니다.</span>
-      </div>
       <details id="acctSetup" style="margin-top:10px">
         <summary class="nt-hint" style="cursor:pointer;margin:0">계좌 목록 붙여넣기</summary>
         <div class="nt-hint" style="margin-top:8px">본인용 페이지의 참여 정보와 함께 저장됩니다. GitHub 저장소나 외부 공유 링크에는 들어가지 않습니다.</div>
@@ -875,7 +876,13 @@
         <div><button class="btn-ghost" id="acctApply" style="margin-top:6px">붙여넣은 계좌 적용</button></div>
       </details>
     </div>
-    <div class="stage-search"><input type="text" class="tab-search" data-stage-search="demand" placeholder="종목명 검색"></div>
+    <div class="stage-search"><input type="text" class="tab-search" data-stage-search="demand" placeholder="종목명 검색">
+      <span class="nt-hint" id="allotXlsxStatus"></span>
+      <label class="xl-btn" title="배정 엑셀 불러오기 (여러 개 가능) — 참여주식수 엑셀 첫 시트의 펀드별 신청수량·배정주수·참여가격, 파일 이름 날짜는 신청일">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="4" fill="#1d6f42"/><path d="M7 7l4 5-4 5M17 7l-4 5 4 5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <input type="file" id="allotXlsx" accept=".xlsx,.xlsm,.xls" multiple hidden>
+      </label>
+    </div>
     <div class="stage-table-wrap" id="stage-demand"></div>
   </div>
 
