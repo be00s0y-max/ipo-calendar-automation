@@ -168,6 +168,11 @@
   .reply-count { font-size: 12px; color: var(--ink-faint); }
   .reply-share { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--ink-dim); white-space: nowrap; }
   .reply-share input[type=number] { width: 52px !important; min-width: 0; padding: 3px 4px; text-align: right; flex: none; }
+  .reply-funds { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 14px; padding-top: 10px; border-top: 1px dashed var(--border); }
+  .reply-funds .lbl { font-size: 12px; color: var(--ink-faint); margin-right: 2px; }
+  .reply-funds .grp { font-size: 12px; font-weight: 700; color: var(--ink-dim); border: none; background: none; cursor: pointer; padding: 4px 2px 4px 8px; }
+  .reply-funds .grp:hover { color: var(--accent); }
+  .reply-funds .reply-chip { padding: 3px 9px; font-size: 12px; }
   .reply-picks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .reply-chip { display: inline-flex; align-items: baseline; gap: 5px; font-size: 12.5px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--ink); cursor: pointer; }
   .reply-chip .sub { color: var(--ink-faint); font-size: 11px; }
@@ -714,7 +719,7 @@
     <button class="tabbtn" data-tab="demand">수요예측</button>
     <button class="tabbtn" data-tab="sub">청약</button>
     <button class="tabbtn" data-tab="pay">납입</button>
-    <button class="tabbtn" data-tab="reply">배정 회신</button>
+    <button class="tabbtn" data-tab="reply">배정 현황</button>
   </div>
 
   <div class="tab-panel" id="tab-todo">
@@ -930,14 +935,14 @@
 
   <div class="tab-panel" id="tab-reply">
     <div class="stage-head">
-      <h2>배정 회신</h2>
-      <p>수요예측 탭에 저장된 값으로 회신용 표를 만듭니다.</p>
+      <h2>배정 현황</h2>
+      <p>수요예측 탭에 저장된 값으로 배정 현황 표를 만듭니다.</p>
     </div>
     <div class="subtabs">
-      <button type="button" class="subtab on" data-reply-view="sbi">SBI저축은행 회신</button>
-      <button type="button" class="subtab" data-reply-view="status">배정 현황</button>
+      <button type="button" class="subtab on" data-reply-view="status">공통</button>
+      <button type="button" class="subtab" data-reply-view="sbi">SBI저축은행 회신</button>
     </div>
-    <div id="replyViewSbi">
+    <div id="replyViewSbi" hidden>
     <p class="reply-desc">코스닥벤처 4·5호 값으로 메일 양식 표를 만듭니다. "표 복사" 후 메일에 붙여넣으세요.</p>
     <div class="reply-bar">
       <input type="text" class="tab-search" id="replySearch" placeholder="종목 검색">
@@ -950,8 +955,8 @@
     <div class="reply-picks" id="replyPicks"></div>
     <div class="reply-preview" id="replyPreview"></div>
     </div>
-    <div id="replyViewStatus" hidden>
-      <p class="reply-desc">참여한 종목의 참여가격·참여일자·참여수량(총)·배정수량(총)·확약여부입니다. "엑셀용 복사" 후 엑셀에 붙여넣으면 값으로 들어갑니다.</p>
+    <div id="replyViewStatus">
+      <p class="reply-desc">참여한 종목의 참여가격·참여일자·참여수량·배정수량·확약여부입니다. 펀드를 고르면 펀드별로, 안 고르면 종목 합계로 나옵니다. "엑셀용 복사" 후 엑셀에 붙여넣으면 값으로 들어갑니다.</p>
       <div class="reply-bar">
         <span class="seg"><button type="button" class="on" data-status-mode="pick">종목 선택</button><button type="button" data-status-mode="period">수요예측 기간</button></span>
         <span class="reply-sub" id="stPickCtl"><input type="text" class="tab-search" id="stSearch" placeholder="종목 검색"><button class="reply-link" id="stClear">전체 해제</button><span class="reply-count" id="stCount"></span></span>
@@ -960,6 +965,7 @@
         <button class="pdf-fill-btn" id="stCopy">엑셀용 복사</button>
       </div>
       <div class="reply-picks" id="stPicks"></div>
+      <div class="reply-funds" id="stFunds"></div>
       <div class="reply-preview" id="stPreview"></div>
     </div>
   </div>
@@ -5398,10 +5404,10 @@ document.addEventListener("click", e => {
   if (!pick) return;
   const n = pick.dataset.replyPick;
   if (replyPicked.has(n)) replyPicked.delete(n); else replyPicked.add(n);
-  renderReplyTab();
+  keepScroll(renderReplyTab);
 });
 document.getElementById("replySearch").addEventListener("input", () => renderReplyPicks());
-document.getElementById("replyClear").addEventListener("click", () => { replyPicked.clear(); renderReplyTab(); });
+document.getElementById("replyClear").addEventListener("click", () => { replyPicked.clear(); keepScroll(renderReplyTab); });
 document.addEventListener("change", e => {
   if (e.target.id === "replyShare4" || e.target.id === "replyShare5") {
     noticeSettings[e.target.id] = e.target.value;
@@ -5433,6 +5439,14 @@ document.getElementById("replyCopy").addEventListener("click", async () => {
    기간으로 뽑는다. 복사는 탭 구분 텍스트(숫자에 쉼표 없이)라 엑셀에 값으로 붙는다. */
 let stMode = "pick";
 const stPicked = new Set();
+const stFunds = new Set(); // 비어 있으면 종목 합계, 고르면 펀드별 줄
+let replyView = "status";  // 하위 탭: "status"(공통) | "sbi"
+function fundCommit(rec, fund){
+  const fx = fixedCommit(rec, fund);
+  if (fx != null) return fx;
+  if (fund === "H일임") return hilimCommit(rec);
+  return ((rec.funds || {})[fund] || {}).commit || "";
+}
 function statusCandidates(){
   return deals.filter(dl => isJoined(records[dl.name]))
     .sort((a, b) => String(b.demand[0]).localeCompare(String(a.demand[0])));
@@ -5444,13 +5458,24 @@ function statusRows(){
     const f = document.getElementById("stFrom").value, t = document.getElementById("stTo").value;
     list = statusCandidates().filter(dl => (!f || dl.demand[0] >= f) && (!t || dl.demand[0] <= t));
   }
-  return list.sort((a, b) => String(a.demand[0]).localeCompare(String(b.demand[0]))).map(dl => {
+  list.sort((a, b) => String(a.demand[0]).localeCompare(String(b.demand[0])));
+  if (!stFunds.size) return list.map(dl => {
     const rec = records[dl.name];
-    return { name: dl.name, price: rec.price, date: rec.appliedDate || "", qty: rec.qty, allot: rec.allotShares,
+    return { name: dl.name, fund: "", price: rec.price, date: rec.appliedDate || "", qty: rec.qty, allot: rec.allotShares,
              commit: kovenCommit(rec) || rec.commit || "" };
   });
+  // 펀드별: 고른 펀드 중 그 종목에 값이 있는 펀드만 한 줄씩(펀드 순서는 수요예측 탭 표 순서)
+  const order = FUND_GROUPS.flatMap(g => g.funds).filter(f => stFunds.has(f));
+  return list.flatMap(dl => {
+    const rec = records[dl.name], funds = rec.funds || {};
+    return order.filter(f => funds[f] && (funds[f].joined || funds[f].qty != null || funds[f].allot != null))
+      .map(f => ({ name: dl.name, fund: f, price: funds[f].price != null ? funds[f].price : rec.price, date: rec.appliedDate || "",
+                   qty: funds[f].qty, allot: funds[f].allot, commit: fundCommit(rec, f) }));
+  });
 }
-const STATUS_HEAD = ["종목명", "수요예측 참여가격", "수요예측 참여일자", "수요예측 참여수량", "배정수량", "확약여부"];
+function statusHead(){
+  return ["종목명"].concat(stFunds.size ? ["펀드"] : [], ["수요예측 참여가격", "수요예측 참여일자", "수요예측 참여수량", "배정수량", "확약여부"]);
+}
 function renderStatusTab(){
   document.querySelectorAll("[data-status-mode]").forEach(b => b.classList.toggle("on", b.dataset.statusMode === stMode));
   document.getElementById("stPickCtl").hidden = stMode !== "pick";
@@ -5468,38 +5493,64 @@ function renderStatusTab(){
   } else {
     picks.hidden = true;
   }
+  document.getElementById("stFunds").innerHTML = `<span class="lbl">펀드</span>`
+    + `<button type="button" class="reply-chip ${stFunds.size ? "" : "on"}" data-st-fund="">종목 합계</button>`
+    + FUND_GROUPS.map(g => (g.funds.length > 1 ? `<button type="button" class="grp" data-st-group="${escHtml(g.group)}" title="${escHtml(g.group)} 전체 선택/해제">${escHtml(g.group)}</button>` : "")
+      + g.funds.map(f => `<button type="button" class="reply-chip ${stFunds.has(f) ? "on" : ""}" data-st-fund="${escHtml(f)}">${escHtml(f)}</button>`).join("")).join("");
   const rows = statusRows();
-  if (stMode === "period") document.getElementById("stPeriodCount").textContent = `${rows.length}개 종목`;
+  if (stMode === "period") document.getElementById("stPeriodCount").textContent = `${new Set(rows.map(r => r.name)).size}개 종목`;
   const C = "border:1px solid #000;padding:2px 8px;white-space:nowrap;text-align:center;";
   const R = "border:1px solid #000;padding:2px 8px;white-space:nowrap;text-align:right;";
   const H = C + "background:#d9e1f2;font-weight:700;";
   document.getElementById("stPreview").innerHTML = rows.length
     ? `<table style="border-collapse:collapse;font-family:'맑은 고딕','Malgun Gothic',sans-serif;font-size:10pt;">
-        <tr>${STATUS_HEAD.map(h => `<td style="${H}">${h}</td>`).join("")}</tr>
-        ${rows.map(r => `<tr><td style="${C}">${escHtml(r.name)}</td><td style="${R}">${fmtNum(r.price)}</td><td style="${C}">${escHtml(r.date)}</td><td style="${R}">${fmtNum(r.qty)}</td><td style="${R}">${fmtNum(r.allot)}</td><td style="${C}">${escHtml(r.commit)}</td></tr>`).join("")}
+        <tr>${statusHead().map(h => `<td style="${H}">${h}</td>`).join("")}</tr>
+        ${rows.map(r => `<tr><td style="${C}">${escHtml(r.name)}</td>${stFunds.size ? `<td style="${C}">${escHtml(r.fund)}</td>` : ""}<td style="${R}">${fmtNum(r.price)}</td><td style="${C}">${escHtml(r.date)}</td><td style="${R}">${fmtNum(r.qty)}</td><td style="${R}">${fmtNum(r.allot)}</td><td style="${C}">${escHtml(r.commit)}</td></tr>`).join("")}
       </table>`
-    : `<span style="color:#666">${stMode === "pick" ? "위에서 종목을 고르세요." : "이 기간에 수요예측을 시작한 참여 종목이 없습니다."}</span>`;
+    : `<span style="color:#666">${stMode === "pick" && !stPicked.size ? "위에서 종목을 고르세요." : stFunds.size ? "고른 펀드에 값이 있는 종목이 없습니다." : "이 기간에 수요예측을 시작한 참여 종목이 없습니다."}</span>`;
+}
+// 하위 탭을 바꾸거나 표가 짧아질 때 페이지가 위로 튀지 않게: 탭 높이를 그대로 붙잡아 두고 스크롤 위치를 되돌린다.
+function keepScroll(fn){
+  const y = window.scrollY, box = document.getElementById("tab-reply");
+  box.style.minHeight = box.offsetHeight + "px";
+  fn();
+  window.scrollTo(0, y);
+}
+function renderReplyView(){
+  document.querySelectorAll("[data-reply-view]").forEach(b => b.classList.toggle("on", b.dataset.replyView === replyView));
+  document.getElementById("replyViewSbi").hidden = replyView !== "sbi";
+  document.getElementById("replyViewStatus").hidden = replyView !== "status";
+  if (replyView === "status") renderStatusTab(); else renderReplyTab();
 }
 document.addEventListener("click", e => {
   const view = e.target.closest("[data-reply-view]");
-  if (view) {
-    document.querySelectorAll("[data-reply-view]").forEach(b => b.classList.toggle("on", b === view));
-    document.getElementById("replyViewSbi").hidden = view.dataset.replyView !== "sbi";
-    document.getElementById("replyViewStatus").hidden = view.dataset.replyView !== "status";
-    if (view.dataset.replyView === "status") renderStatusTab(); else renderReplyTab();
-    return;
-  }
+  if (view) { replyView = view.dataset.replyView; keepScroll(renderReplyView); return; }
   const mode = e.target.closest("[data-status-mode]");
-  if (mode) { stMode = mode.dataset.statusMode; renderStatusTab(); return; }
+  if (mode) { stMode = mode.dataset.statusMode; keepScroll(renderStatusTab); return; }
   const pick = e.target.closest("[data-st-pick]");
   if (pick) {
     const n = pick.dataset.stPick;
     if (stPicked.has(n)) stPicked.delete(n); else stPicked.add(n);
-    renderStatusTab();
+    keepScroll(renderStatusTab);
+    return;
+  }
+  const grp = e.target.closest("[data-st-group]");
+  if (grp) {
+    const g = FUND_GROUPS.find(x => x.group === grp.dataset.stGroup);
+    const all = g.funds.every(f => stFunds.has(f));
+    g.funds.forEach(f => all ? stFunds.delete(f) : stFunds.add(f));
+    keepScroll(renderStatusTab);
+    return;
+  }
+  const fund = e.target.closest("[data-st-fund]");
+  if (fund) {
+    const f = fund.dataset.stFund;
+    if (!f) stFunds.clear(); else if (stFunds.has(f)) stFunds.delete(f); else stFunds.add(f);
+    keepScroll(renderStatusTab);
   }
 });
 document.getElementById("stSearch").addEventListener("input", renderStatusTab);
-document.getElementById("stClear").addEventListener("click", () => { stPicked.clear(); renderStatusTab(); });
+document.getElementById("stClear").addEventListener("click", () => { stPicked.clear(); keepScroll(renderStatusTab); });
 ["stFrom", "stTo"].forEach(id => document.getElementById(id).addEventListener("change", renderStatusTab));
 (() => { // 기간 기본값: 최근 30일
   document.getElementById("stFrom").value = isoKey(addDays(today, -30));
@@ -5509,8 +5560,8 @@ document.getElementById("stCopy").addEventListener("click", () => {
   const rows = statusRows();
   if (!rows.length) { showToast("복사할 종목이 없습니다"); return; }
   const v = x => x == null ? "" : String(x);
-  const tsv = [STATUS_HEAD.join("\t")].concat(rows.map(r => [r.name, v(r.price), r.date, v(r.qty), v(r.allot), r.commit].join("\t"))).join("\n");
-  copyText(tsv).then(ok => showToast(ok ? `${rows.length}개 종목을 복사했습니다 — 엑셀에 붙여넣으세요` : "복사가 막혔습니다"));
+  const tsv = [statusHead().join("\t")].concat(rows.map(r => [r.name].concat(stFunds.size ? [r.fund] : [], [v(r.price), r.date, v(r.qty), v(r.allot), r.commit]).join("\t"))).join("\n");
+  copyText(tsv).then(ok => showToast(ok ? `${rows.length}줄을 복사했습니다 — 엑셀에 붙여넣으세요` : "복사가 막혔습니다"));
 });
 function closePanel(){
   panel.classList.remove("show");
@@ -7495,7 +7546,7 @@ function applyAppState(state){
   if (key === "info") renderInfoTab();
   if (key === "mezz") renderMezzTab();
   if (key === "todo") renderTodoTab();
-  if (key === "reply") renderReplyTab();
+  if (key === "reply") renderReplyView();
 }
 function navigateTo(state){
   applyAppState(state);
