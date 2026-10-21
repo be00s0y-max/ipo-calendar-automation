@@ -153,6 +153,9 @@
   .subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
   .subtab { border: none; background: none; padding: 7px 12px; font-size: 13px; color: var(--ink-dim); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
   .subtab.on { color: var(--accent); font-weight: 700; border-bottom-color: var(--accent); }
+  .reply-mode { display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; }
+  .reply-mode .lbl { font-size: 12px; color: var(--ink-faint); margin-right: 2px; }
+  .reply-mode .reply-chip { padding: 3px 9px; font-size: 12px; }
   .reply-desc { margin: 0 0 10px; font-size: 12.5px; color: var(--ink-dim); }
   .reply-sub { display: inline-flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
   .reply-sub[hidden], .reply-picks[hidden] { display: none; }
@@ -958,7 +961,7 @@
     <div id="replyViewStatus">
       <p class="reply-desc">참여한 종목의 참여가격·참여일자·참여수량·배정수량·확약여부입니다. 펀드를 고르면 펀드별로, 안 고르면 종목 합계로 나옵니다. "엑셀용 복사" 후 엑셀에 붙여넣으면 값으로 들어갑니다.</p>
       <div class="reply-bar">
-        <span class="seg"><button type="button" class="on" data-status-mode="pick">종목 선택</button><button type="button" data-status-mode="period">수요예측 기간</button></span>
+        <span class="reply-mode"><span class="lbl">선택</span><button type="button" class="reply-chip on" data-status-mode="pick">종목 선택</button><button type="button" class="reply-chip" data-status-mode="period">수요예측 기간</button></span>
         <span class="reply-sub" id="stPickCtl"><input type="text" class="tab-search" id="stSearch" placeholder="종목 검색"><button class="reply-link" id="stClear">전체 해제</button><span class="reply-count" id="stCount"></span></span>
         <span class="reply-sub" id="stPeriodCtl" hidden><input type="date" id="stFrom"> ~ <input type="date" id="stTo"><span class="reply-count" id="stPeriodCount"></span></span>
         <span class="spacer"></span>
