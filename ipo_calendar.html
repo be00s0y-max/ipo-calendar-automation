@@ -890,7 +890,7 @@
         </summary>
         <div class="acct-pop">
           <div class="nt-hint" style="margin:0 0 8px"><b>계좌 목록 붙여넣기</b> — 본인용 페이지의 참여 정보와 함께 저장됩니다. GitHub 저장소나 외부 공유 링크에는 들어가지 않습니다.</div>
-          <textarea id="acctJson" placeholder='{"한국투자증권": {"코스닥벤처": "...", "일임": "..."}}'></textarea>
+          <textarea id="acctJson" placeholder='{"한국투자증권": {"코스닥벤처": "...", "신탁": "...", "일임": "..."}}'></textarea>
           <div><button class="btn-ghost" id="acctApply" style="margin-top:6px">붙여넣은 계좌 적용</button></div>
         </div>
       </details>
@@ -6003,7 +6003,7 @@ function termsHtml(dl){
    엑셀 표기("신한금융투자GIB", "LS증권(구,이베스트증권)")와 딜 주간사 표기
    ("신한투자증권", "LS증권")가 달라서 brokerKey로 맞춘다. */
 const ACCOUNT_KEY = "ipoCalendarAccounts_v1";
-const ACCOUNT_TYPES = ["코스닥벤처", "일임", "H일임"];
+const ACCOUNT_TYPES = ["코스닥벤처", "신탁", "일임", "H일임"];
 let accountBook = (() => {
   try { return JSON.parse(localStorage.getItem(ACCOUNT_KEY) || "{}"); } catch(e) { return {}; }
 })();
