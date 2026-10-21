@@ -5277,7 +5277,8 @@ function overviewHtml(dl){
       sub.push(`밴드 기준 ${m(t.band[0])} ~ ${m(t.band[1])}배` + (fixed ? ` · 확정 ${m(fixed)}배` : ""));
     }
     if (t.val_fair) sub.push(`주당 평가가액 ${won(t.val_fair)}`);
-    if (t.val_discount) sub.push(`할인율 ${t.val_discount[0]}% ~ ${t.val_discount[1]}%`);
+    // 밴드 하단~상단에 맞춰 큰 할인율부터(신고서마다 적힌 순서가 다름: 브릴스·영광와이케이엠씨 등은 작은 값부터)
+    if (t.val_discount) sub.push(`할인율 ${Math.max(...t.val_discount)}% ~ ${Math.min(...t.val_discount)}%`);
     html += row("밸류에이션 (주관사)", v + sub.map(x => `<span class="sub">${x}</span>`).join(""));
   }
   if (t.listed_shares && t.band) {
