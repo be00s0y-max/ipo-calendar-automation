@@ -425,14 +425,17 @@ def parse_overview(path):
             cells = [re.sub(r"\s+", " ", c).strip() for c in r]
             # 항목명 칸만 본다 — 맨 끝 "참고사항" 칸에 "(3) 주당 평가가액 산출" 같은 글이 있어서
             # 전체 행으로 찾으면 EBITDA·비지배지분 행이 주당 평가가액으로 잡혔다(2026-10 엘리스그룹·제이앤티지).
-            li = 1 if cells and cells[0] in list("①②③④⑤⑥⑦⑧⑨") and len(cells) > 1 else 0
+            # 첫 열 "적용근거"(rowspan으로 행마다 반복)와 ①② 번호 칸은 건너뛰고, colspan으로 반복된 항목명도 뺀다.
+            li = 0
+            while li < len(cells) - 1 and (re.sub(r"\s+", "", cells[li]) == "적용근거" or cells[li] in list("①②③④⑤⑥⑦⑧⑨")):
+                li += 1
             joined = re.sub(r"\s+", "", cells[li]) if cells else ""
-            vals = cells[li + 1:]
+            vals = [c for c in cells[li + 1:] if c != cells[li]]
             if cells and re.sub(r"\s+", "", cells[0]) == "평가모형" and len(cells) > 1:
                 out["val_model"] = cells[1]
                 continue
             model = out["val_model"]
-            if model and out["val_multiple"] is None and re.search(r"(유사기업|비교회사|비교기업|적용)", joined) \
+            if model and out["val_multiple"] is None and re.search(r"(유사기업|유사회사|비교회사|비교기업|비교대상|적용)", joined) \
                     and re.sub(r"\s+", "", model) in joined and "적용산식" not in joined:
                 for c in vals:
                     m = num_re.match(c)
