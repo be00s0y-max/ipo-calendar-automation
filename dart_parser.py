@@ -397,6 +397,67 @@ def parse_demand_terms(path):
     return {"band": band, "qty_unit": qty_unit, "price_unit": price_unit, "inst_max": inst_max}
 
 
+def parse_overview(path):
+    """공모개요 — 주관사 밸류에이션 요약, 상장예정주식수, 사업의 개요 첫 문장.
+    2026-10 이에스티·씨아이에스케미칼·래블업·엘리스그룹 신고서 실측 기준:
+      '인수인의 의견' 요약표 "평가방법 | 상대가치법" / "평가모형 | PER"(또는 EV/EBITDA) /
+      "② | 유사기업 PER | 31.65배"(엘리스는 "② | 유사기업 EV/EBITDA | 배 | 27.13") /
+      "주당 평가가액 | 16,649원" / "④ | 주당 평가가액에 대한 할인율 | 36.04% ~ 25.23%"
+      문장 "상장예정주식수는 13,914,200주", "상장예정주식수(보통주) 14,541,508주" — 정정 전/후가
+      같이 실린 신고서가 있어 마지막 값을 쓴다.
+      "사업의 개요" 뒤 첫 "당사는 …니다." 문장.
+    못 찾은 항목은 None(추정하지 않음)."""
+    content = open(path, encoding="utf-8", errors="ignore").read()
+    soup = BeautifulSoup(content, "html.parser")
+    out = {"val_model": None, "val_multiple": None, "val_fair": None, "val_discount": None,
+           "listed_shares": None, "biz": None}
+    num_re = re.compile(r"^([\d,]+(?:\.\d+)?)\s*(배|원|원/주)?$")
+    summary = None
+    for t in soup.find_all("table"):
+        if t.find("table") is not None:
+            continue  # 표를 감싼 바깥 표
+        rows = table_rows(t)
+        labels = {re.sub(r"\s+", "", r[0]) for r in rows if r}
+        if "평가방법" in labels and "평가모형" in labels:
+            summary = rows  # 정정 전/후 두 개면 뒤엣것
+    if summary:
+        for r in summary:
+            cells = [re.sub(r"\s+", " ", c).strip() for c in r]
+            joined = re.sub(r"\s+", "", " ".join(cells))
+            if cells and re.sub(r"\s+", "", cells[0]) == "평가모형" and len(cells) > 1:
+                out["val_model"] = cells[1]
+                continue
+            model = out["val_model"]
+            if model and out["val_multiple"] is None and re.search(r"(유사기업|비교회사|비교기업|적용)", joined) \
+                    and re.sub(r"\s+", "", model) in joined and "적용산식" not in joined:
+                for c in cells[2:] if cells[0] in "①②③④⑤⑥⑦" else cells[1:]:
+                    m = num_re.match(c)
+                    if m and "." in m.group(1) or (m and m.group(2) == "배"):
+                        out["val_multiple"] = float(m.group(1).replace(",", ""))
+                        break
+            if out["val_fair"] is None and "주당평가가액" in joined and "할인율" not in joined:
+                for c in cells[1:]:
+                    m = num_re.match(c)
+                    if m and m.group(2) != "배" and "." not in m.group(1):
+                        out["val_fair"] = int(m.group(1).replace(",", ""))
+                        break
+            if out["val_discount"] is None and "할인율" in joined:
+                m = re.search(r"([\d.]+)\s*%\s*~\s*([\d.]+)\s*%", " ".join(cells))
+                if m:
+                    out["val_discount"] = [float(m.group(1)), float(m.group(2))]
+    text = re.sub(r"\s+", " ", soup.get_text(" "))
+    shares = re.findall(r"상장\s*예정\s*주식\s*수(?:\([^)]{0,30}\))?[^\d]{0,40}?([\d,]{6,})\s*주", text)
+    if shares:
+        out["listed_shares"] = _int(shares[-1])
+    i = text.find("사업의 개요")
+    while i >= 0 and out["biz"] is None:
+        m = re.search(r"(?:당사|동사)는\s[^.]{10,400}?니다\.", text[i:i + 8000])
+        if m:
+            out["biz"] = m.group(0)
+        i = text.find("사업의 개요", i + 6)
+    return out
+
+
 def parse_filing(path):
     tables = load_tables(path)
     return {

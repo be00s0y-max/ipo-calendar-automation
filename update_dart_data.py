@@ -36,7 +36,7 @@ import io
 
 SCRATCH = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRATCH)
-from dart_parser import parse_filing, parse_demand_terms  # noqa: E402
+from dart_parser import parse_filing, parse_demand_terms, parse_overview  # noqa: E402
 
 CORP_CODES_PATH = os.path.join(SCRATCH, "corp_codes.json")
 DEALS_PATH = os.path.join(SCRATCH, "deals.json")
@@ -191,6 +191,11 @@ def list_equity_filings(key, corp_code):
 
 
 TERM_FIELDS = ("band", "qty_unit", "price_unit", "inst_max")
+# 공모개요(캘린더 종목 패널): 주관사 밸류에이션·상장예정주식수·사업의 개요 첫 문장. 스팩은 해당 없음.
+# 신고서 하나 읽는 데 30초가량 걸려서, 최신 신고서마다 한 번만 찾고(ov_rcept) 수요예측 시작이
+# 60일 넘게 지난 딜은 건너뛴다. 못 찾은 항목은 다음 신고서(정정 등)가 올라올 때 다시 본다.
+OVERVIEW_FIELDS = ("val_model", "val_multiple", "val_fair", "val_discount", "listed_shares", "biz")
+OVERVIEW_RECENT_DAYS = 60
 MAX_TERM_DOCS = 4  # 최신 신고서에 없는 항목은 이전 신고서에서 이만큼까지 거슬러 찾는다
 
 
@@ -213,10 +218,13 @@ def update_demand_info(key, corp_codes, demand_info, changed, errors):
             continue
         if not filings:
             continue
+        recent = dl["demand"][0] >= (time.strftime("%Y-%m-%d", time.localtime(time.time() - OVERVIEW_RECENT_DAYS * 86400)))
+        want_ov = recent and not spac_key(name) and prev.get("ov_rcept") != filings[0]["rcept_no"]
+        fields = TERM_FIELDS + OVERVIEW_FIELDS if want_ov else TERM_FIELDS
         complete = all(prev.get(f) is not None for f in TERM_FIELDS)
-        if complete and prev.get("rcept_no") == filings[0]["rcept_no"]:
+        if complete and not want_ov and prev.get("rcept_no") == filings[0]["rcept_no"]:
             continue
-        terms = {f: None for f in TERM_FIELDS}
+        terms = {f: None for f in fields}
         failed = []
         for it in filings[:MAX_TERM_DOCS]:
             # 한 문서가 안 받아져도(DART가 ZIP 대신 오류 응답을 주는 경우) 다음 신고서로 넘어간다
@@ -224,22 +232,28 @@ def update_demand_info(key, corp_codes, demand_info, changed, errors):
                 tmp_path = os.path.join(SCRATCH, f"_tmp_terms_{cc}.xml")
                 fetch_filing_xml(key, it["rcept_no"], tmp_path)
                 got = parse_demand_terms(tmp_path)
+                if want_ov:
+                    got.update(parse_overview(tmp_path))
                 os.remove(tmp_path)
             except Exception as e:  # noqa: BLE001
                 failed.append(f"{it['rcept_no']}({e})")
                 continue
-            for f in TERM_FIELDS:
+            for f in fields:
                 if terms[f] is None and got.get(f) is not None:
                     terms[f] = got[f]
-            if all(terms[f] is not None for f in TERM_FIELDS):
+            if all(terms[f] is not None for f in fields):
                 break
         if failed:
             errors.append(f"{name}: 참여조건 신고서 일부 못 받음 — " + ", ".join(failed))
-        for f in TERM_FIELDS:  # 이번에 못 받은 항목은 지난번 값을 지킨다
+        for f in fields:  # 이번에 못 받은 항목은 지난번 값을 지킨다
             if terms[f] is None and prev.get(f) is not None:
                 terms[f] = prev[f]
         if terms["band"] is None and spac_key(name):
             terms["band"] = [2000, 2000]
+        for k, v in prev.items():  # 이번에 안 본 항목(공모개요 등)은 그대로 둔다
+            terms.setdefault(k, v)
+        if want_ov and not failed:
+            terms["ov_rcept"] = filings[0]["rcept_no"]
         terms.update({"rcept_no": filings[0]["rcept_no"], "report_nm": filings[0]["report_nm"]})
         if terms != prev:
             demand_info[name] = terms

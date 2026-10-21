@@ -481,6 +481,8 @@
   .sched-row .k i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
   .sched-row .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
   .sched-row.current-lockup { background: color-mix(in srgb, var(--ev-lockup) 12%, transparent); border-radius: 6px; padding: 7px 8px; margin: 0 -8px; }
+  .ov-biz { font-size: 12.5px; line-height: 1.55; color: var(--ink); margin: 0 0 6px; }
+  .sched-row .v .sub { display: block; font-size: 11px; font-weight: 400; color: var(--ink-faint); text-align: right; }
   .sched-row.current-lockup .v::after { content: " ✓ 확약"; color: var(--ev-lockup); font-weight: 700; font-family: var(--font-kr); }
 
   label.field { display: block; margin-bottom: 12px; }
@@ -924,6 +926,10 @@
     <div class="panel-section">
       <h3>일정</h3>
       <div id="pSchedule"></div>
+    </div>
+    <div class="panel-section">
+      <h3>공모 개요</h3>
+      <div id="pOverview"></div>
     </div>
   </div>
 </div>
@@ -4872,8 +4878,45 @@ function openPanel(idx){
     return `<div class="sched-row ${isCurrentLockup ? "current-lockup" : ""}"><span class="k"><i style="background:${meta.color}"></i>${label}</span><span class="v">${fmtMaybeYear(dateStr)}</span></div>`;
   }).join("") + (!dl.list ? `<div class="sched-row"><span class="k">상장일 · 락업해제</span><span class="v" style="font-family:var(--font-kr);color:var(--ink-faint)">상장일 미정</span></div>` : "");
 
+  document.getElementById("pOverview").innerHTML = overviewHtml(dl);
+
   panel.classList.add("show");
   backdrop.classList.add("show");
+}
+/* 공모 개요 — DART 증권신고서(update_dart_data.py → DEMAND_INFO)의 사업의 개요 첫 문장,
+   희망공모가 밴드, 주관사 밸류에이션 요약표, 상장예정주식수.
+   밴드 기준 배수: PER·PSR·PBR은 공모가 = 주당 평가가액 × (1-할인율)이라 적용 배수 × 밴드 ÷ 주당 평가가액.
+   EV/EBITDA는 순차입금 등이 끼어 이 비례가 안 맞아서 적용 배수·할인율만 보여준다. */
+function overviewHtml(dl){
+  const t = DEMAND_INFO[dl.name] || {};
+  const row = (k, v) => `<div class="sched-row"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  const won = v => fmtNum(Math.round(v)) + "원";
+  const eok = v => fmtNum(Math.round(v / 1e8)) + "억원";
+  const fixed = dl.finalPrice || (dartData[dl.name] ? dartPricePerShare(dartData[dl.name].offering) : null);
+  let html = "";
+  if (t.biz) html += `<p class="ov-biz">${escHtml(t.biz.length > 180 ? t.biz.slice(0, 180) + "…" : t.biz)}</p>`;
+  if (t.band) html += row("공모가 밴드", `${t.band[0] === t.band[1] ? won(t.band[0]) : `${won(t.band[0])} ~ ${won(t.band[1])}`}${fixed ? `<span class="sub">확정 ${won(fixed)}</span>` : ""}`);
+  if (t.val_model) {
+    const model = escHtml(t.val_model);
+    let v = t.val_multiple != null ? `${model} ${t.val_multiple}배` : model;
+    const prop = /^(PER|PSR|PBR)$/i.test(String(t.val_model).replace(/\s/g, ""));
+    let sub = [];
+    if (prop && t.val_multiple != null && t.val_fair && t.band) {
+      const m = p => (t.val_multiple * p / t.val_fair).toFixed(1);
+      sub.push(`밴드 기준 ${m(t.band[0])} ~ ${m(t.band[1])}배` + (fixed ? ` · 확정 ${m(fixed)}배` : ""));
+    }
+    if (t.val_fair) sub.push(`주당 평가가액 ${won(t.val_fair)}`);
+    if (t.val_discount) sub.push(`할인율 ${t.val_discount[0]}% ~ ${t.val_discount[1]}%`);
+    html += row("밸류에이션 (주관사)", v + sub.map(x => `<span class="sub">${x}</span>`).join(""));
+  }
+  if (t.listed_shares && t.band) {
+    html += row("예상 시가총액", `${t.band[0] === t.band[1] ? eok(t.listed_shares * t.band[0]) : `${eok(t.listed_shares * t.band[0])} ~ ${eok(t.listed_shares * t.band[1])}`}`
+      + (fixed ? `<span class="sub">확정가 기준 ${eok(t.listed_shares * fixed)}</span>` : "")
+      + `<span class="sub">상장예정 ${fmtNum(t.listed_shares)}주</span>`);
+  }
+  if (!html) return `<div class="acct-none">아직 DART 증권신고서에서 가져온 값이 없습니다.</div>`;
+  if (t.rcept_no) html += `<div class="nt-hint" style="margin:6px 0 0">출처: <a class="stc-link" href="https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${t.rcept_no}" target="_blank" rel="noopener">${escHtml(t.report_nm || "증권신고서")} (${t.rcept_no.slice(0,8)})</a></div>`;
+  return html;
 }
 function closePanel(){
   panel.classList.remove("show");
