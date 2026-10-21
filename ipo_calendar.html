@@ -174,6 +174,22 @@
   .reply-count { font-size: 12px; color: var(--ink-faint); }
   .reply-share { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--ink-dim); white-space: nowrap; }
   .reply-share input[type=number] { width: 52px !important; min-width: 0; padding: 3px 4px; text-align: right; flex: none; }
+  .fund-pick { position: relative; }
+  .fund-pick summary { list-style: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12.5px; padding: 3px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
+  .fund-pick summary::-webkit-details-marker { display: none; }
+  .fund-pick summary::after { content: "▾"; font-size: 10px; color: var(--ink-faint); }
+  .fund-pick summary .lbl { font-size: 12px; color: var(--ink-faint); }
+  .fund-pick summary .val { font-weight: 600; color: var(--accent); }
+  .fund-pop { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 12px 14px; display: grid; grid-template-columns: repeat(4, auto); gap: 4px 22px; min-width: 520px; }
+  .fund-pop .all { grid-column: 1 / -1; justify-self: start; margin-bottom: 6px; }
+  .fund-col { display: flex; flex-direction: column; gap: 2px; }
+  .grp-h { border: none; background: none; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--ink); cursor: pointer; padding: 3px 0 5px; border-bottom: 2px solid transparent; }
+  .grp-h.on { color: var(--accent); border-bottom-color: var(--accent); }
+  .grp-h.part { color: var(--accent); }
+  .fund-opt { border: none; background: none; text-align: left; font-size: 12px; color: var(--ink-dim); cursor: pointer; padding: 3px 0; white-space: nowrap; }
+  .fund-opt::before { content: "☐ "; }
+  .fund-opt.on { color: var(--accent); font-weight: 600; }
+  .fund-opt.on::before { content: "☑ "; }
   .reply-funds { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 14px; padding-top: 10px; border-top: 1px dashed var(--border); }
   .reply-funds .lbl { font-size: 12px; color: var(--ink-faint); margin-right: 2px; }
   .reply-funds .grp { font-size: 12px; font-weight: 700; color: var(--ink-dim); border: none; background: none; cursor: pointer; padding: 4px 2px 4px 8px; }
@@ -951,12 +967,17 @@
     <div id="replyViewSbi" hidden>
     <p class="reply-desc">코스닥벤처 4·5호 값으로 메일 양식 표를 만듭니다. "표 복사" 후 메일에 붙여넣으세요.</p>
     <div class="reply-bar">
-      <input type="text" class="tab-search" id="replySearch" placeholder="종목 검색">
-      <button class="reply-link" id="replyClear">전체 해제</button>
-      <span class="reply-count" id="replyCount"></span>
+      <span class="reply-mode"><span class="lbl">종목</span><button type="button" class="reply-chip" data-rp-mode="search">검색</button><button type="button" class="reply-chip" data-rp-mode="period">기간</button><button type="button" class="reply-chip on" data-rp-mode="rec">추천</button></span>
       <span class="spacer"></span>
       <span class="reply-share">지분율 4호 <input type="number" id="replyShare4" step="any">% · 5호 <input type="number" id="replyShare5" step="any">%</span>
       <button class="pdf-fill-btn" id="replyCopy">표 복사</button>
+    </div>
+    <div class="reply-ctl">
+      <span class="reply-sub" id="rpSearchCtl" hidden><input type="text" class="tab-search" id="replySearch" placeholder="종목 이름 검색"></span>
+      <span class="reply-sub" id="rpPeriodCtl" hidden><span class="hint">수요예측 시작일</span><input type="date" id="rpFrom"> ~ <input type="date" id="rpTo"></span>
+      <span class="reply-sub" id="rpRecCtl"><span class="hint">4·5호 배정이 들어왔고 납입일이 7일 전 이후인 종목</span></span>
+      <span class="reply-count" id="replyCount"></span>
+      <button class="reply-link" id="replyClear">전체 해제</button>
     </div>
     <div class="reply-picks" id="replyPicks"></div>
     <div class="reply-preview" id="replyPreview"></div>
@@ -965,6 +986,7 @@
       <p class="reply-desc">참여한 종목의 참여가격·참여일자·참여수량·배정수량·확약여부입니다. 펀드를 고르면 펀드별로, 안 고르면 종목 합계로 나옵니다. "엑셀용 복사" 후 엑셀에 붙여넣으면 값으로 들어갑니다.</p>
       <div class="reply-bar">
         <span class="reply-mode"><span class="lbl">종목</span><button type="button" class="reply-chip" data-status-mode="search">검색</button><button type="button" class="reply-chip" data-status-mode="period">기간</button><button type="button" class="reply-chip on" data-status-mode="rec">추천</button></span>
+        <details class="fund-pick" id="stFundPick"><summary><span class="lbl">펀드</span><span class="val" id="stFundSum">종목 합계</span></summary><div class="fund-pop" id="stFundPop"></div></details>
         <span class="spacer"></span>
         <button class="pdf-fill-btn" id="stCopy">엑셀용 복사</button>
       </div>
@@ -976,7 +998,6 @@
         <button class="reply-link" id="stClear">전체 해제</button>
       </div>
       <div class="reply-picks" id="stPicks"></div>
-      <div class="reply-funds" id="stFunds"></div>
       <div class="reply-preview" id="stPreview"></div>
     </div>
   </div>
@@ -5386,22 +5407,50 @@ function replyTableHtml(dl, rec){
 </table>`;
 }
 // 종목 칩: 검색어가 있으면 이름에 들어간 종목만, 없으면 전부. 누르면 선택/해제.
+// 종목 고르기는 공통 탭과 같은 방식: search(이름) | period(수요예측 시작일) | rec(추천: 4·5호 배정 들어오고 납입 7일 이내)
+let rpMode = "rec";
+function rpRecommended(cands){
+  const t = isoKey(addDays(today, -7));
+  return cands.filter(x => REPLY_FUNDS.some(f => (x.rec.funds[f.key] || {}).allot > 0) && x.dl.pay && x.dl.pay >= t);
+}
+function rpShown(cands){
+  if (rpMode === "rec") return rpRecommended(cands);
+  if (rpMode === "period") {
+    const f = document.getElementById("rpFrom").value, t = document.getElementById("rpTo").value;
+    return cands.filter(x => (!f || x.dl.demand[0] >= f) && (!t || x.dl.demand[0] <= t));
+  }
+  const q = (document.getElementById("replySearch").value || "").replace(/\s/g, "").toLowerCase();
+  return q ? cands.filter(x => x.dl.name.replace(/\s/g, "").toLowerCase().includes(q)) : cands;
+}
+function rpSelectShown(){ replyPicked = new Set(rpShown(replyCandidates()).map(x => x.dl.name)); }
 function renderReplyPicks(cands){
   cands = cands || replyCandidates();
-  const q = (document.getElementById("replySearch").value || "").replace(/\s/g, "").toLowerCase();
-  const shown = q ? cands.filter(x => x.dl.name.replace(/\s/g, "").toLowerCase().includes(q)) : cands;
-  document.getElementById("replyPicks").innerHTML = !cands.length
-    ? `<span class="acct-none">수요예측 탭에 코스닥벤처 4·5호 값이 있는 종목이 없습니다.</span>`
-    : shown.length ? shown.map(x => `<button type="button" class="reply-chip ${replyPicked.has(x.dl.name) ? "on" : ""}" data-reply-pick="${escHtml(x.dl.name)}">${escHtml(x.dl.name)}<span class="sub">${x.dl.pay ? "납입 " + fmt(x.dl.pay) : ""}</span></button>`).join("")
-    : `<span class="acct-none">"${escHtml(q)}" 종목이 없습니다.</span>`;
+  document.querySelectorAll("[data-rp-mode]").forEach(b => b.classList.toggle("on", b.dataset.rpMode === rpMode));
+  document.getElementById("rpSearchCtl").hidden = rpMode !== "search";
+  document.getElementById("rpPeriodCtl").hidden = rpMode !== "period";
+  document.getElementById("rpRecCtl").hidden = rpMode !== "rec";
+  const shown = rpShown(cands);
+  const empty = rpMode === "search" ? "검색되는 종목이 없습니다." : rpMode === "period" ? "이 기간에 수요예측을 시작한 종목이 없습니다." : "추천할 종목이 없습니다.";
+  document.getElementById("replyPicks").innerHTML = shown.length
+    ? shown.map(x => `<button type="button" class="reply-chip ${replyPicked.has(x.dl.name) ? "on" : ""}" data-reply-pick="${escHtml(x.dl.name)}">${escHtml(x.dl.name)}<span class="sub">${x.dl.pay ? "납입 " + fmt(x.dl.pay) : ""}</span></button>`).join("")
+    : `<span class="acct-none">${empty}</span>`;
   document.getElementById("replyCount").textContent = `${replyPicked.size}개 선택`;
 }
+document.addEventListener("click", e => {
+  const m = e.target.closest("[data-rp-mode]");
+  if (!m) return;
+  rpMode = m.dataset.rpMode;
+  if (rpMode !== "search") rpSelectShown();
+  keepScroll(renderReplyTab);
+});
+["rpFrom", "rpTo"].forEach(id => document.getElementById(id).addEventListener("change", () => { rpSelectShown(); keepScroll(renderReplyTab); }));
+document.getElementById("rpFrom").value = isoKey(addDays(today, -30));
+document.getElementById("rpTo").value = isoKey(today);
 function renderReplyTab(){
   const cands = replyCandidates();
   if (!replyPicked) {
-    // 기본 선택: 4·5호 배정주수가 0보다 크고(엑셀의 0은 배정 전) 납입일이 7일 전 이후인 종목
-    const t = isoKey(addDays(today, -7));
-    replyPicked = new Set(cands.filter(x => REPLY_FUNDS.some(f => (x.rec.funds[f.key] || {}).allot > 0) && x.dl.pay && x.dl.pay >= t).map(x => x.dl.name));
+    // 기본 선택(추천): 4·5호 배정주수가 0보다 크고(엑셀의 0은 배정 전) 납입일이 7일 전 이후인 종목
+    replyPicked = new Set(rpRecommended(cands).map(x => x.dl.name));
   }
   renderReplyPicks(cands);
   ["replyShare4", "replyShare5"].forEach(k => { document.getElementById(k).value = noticeSettings[k] != null && noticeSettings[k] !== "" ? noticeSettings[k] : 30; });
@@ -5498,6 +5547,31 @@ function statusRows(){
                    qty: funds[f].qty, allot: funds[f].allot, commit: fundCommit(rec, f) }));
   });
 }
+// 표시 이름: 코벤은 펀드 정식 이름(예: 프라임코스닥벤처일반제4호), 나머지는 그대로
+function fundLabel(f){
+  const m = /^코스닥벤처-(\d+)$/.exec(f);
+  return m ? `프라임코스닥벤처일반제${m[1]}호` : f;
+}
+function renderFundPick(){
+  const sum = FUND_GROUPS.map(g => {
+    const n = g.funds.filter(f => stFunds.has(f)).length;
+    return !n ? "" : n === g.funds.length ? g.group : `${g.group} ${n}개`;
+  }).filter(Boolean).join(" · ");
+  document.getElementById("stFundSum").textContent = sum || "종목 합계";
+  document.getElementById("stFundPop").innerHTML =
+    `<button type="button" class="reply-chip all ${stFunds.size ? "" : "on"}" data-st-fund="">종목 합계 (펀드 구분 없이)</button>`
+    + FUND_GROUPS.map(g => {
+      const n = g.funds.filter(f => stFunds.has(f)).length;
+      const cls = n === g.funds.length ? "on" : n ? "part" : "";
+      return `<div class="fund-col"><button type="button" class="grp-h ${cls}" data-st-group="${escHtml(g.group)}">${escHtml(g.group)}</button>`
+        + (g.funds.length > 1 ? g.funds.map(f => `<button type="button" class="fund-opt ${stFunds.has(f) ? "on" : ""}" data-st-fund="${escHtml(f)}">${escHtml(fundLabel(f))}</button>`).join("") : "")
+        + `</div>`;
+    }).join("");
+}
+document.addEventListener("click", e => { // 바깥을 누르면 펀드 선택 창을 닫는다
+  const d = document.getElementById("stFundPick");
+  if (d && d.open && !d.contains(e.target)) d.open = false;
+});
 function statusHead(){
   return ["종목명"].concat(stFunds.size ? ["펀드"] : [], ["수요예측 참여가격", "수요예측 참여일자", "수요예측 참여수량", "배정수량", "확약여부"]);
 }
@@ -5513,10 +5587,7 @@ function renderStatusTab(){
     ? shown.map(dl => `<button type="button" class="reply-chip ${stPicked.has(dl.name) ? "on" : ""}" data-st-pick="${escHtml(dl.name)}">${escHtml(dl.name)}<span class="sub">수요예측 ${fmt(dl.demand[0])}</span></button>`).join("")
     : `<span class="acct-none">${empty}</span>`;
   document.getElementById("stCount").textContent = `${stPicked.size}개 선택`;
-  document.getElementById("stFunds").innerHTML = `<span class="lbl">펀드</span>`
-    + `<button type="button" class="reply-chip ${stFunds.size ? "" : "on"}" data-st-fund="">종목 합계</button>`
-    + FUND_GROUPS.map(g => (g.funds.length > 1 ? `<button type="button" class="grp" data-st-group="${escHtml(g.group)}" title="${escHtml(g.group)} 전체 선택/해제">${escHtml(g.group)}</button>` : "")
-      + g.funds.map(f => `<button type="button" class="reply-chip ${stFunds.has(f) ? "on" : ""}" data-st-fund="${escHtml(f)}">${escHtml(f)}</button>`).join("")).join("");
+  renderFundPick();
   const rows = statusRows();
   const C = "border:1px solid #000;padding:2px 8px;white-space:nowrap;text-align:center;";
   const R = "border:1px solid #000;padding:2px 8px;white-space:nowrap;text-align:right;";
@@ -5524,7 +5595,7 @@ function renderStatusTab(){
   document.getElementById("stPreview").innerHTML = rows.length
     ? `<table style="border-collapse:collapse;font-family:'맑은 고딕','Malgun Gothic',sans-serif;font-size:10pt;">
         <tr>${statusHead().map(h => `<td style="${H}">${h}</td>`).join("")}</tr>
-        ${rows.map(r => `<tr><td style="${C}">${escHtml(r.name)}</td>${stFunds.size ? `<td style="${C}">${escHtml(r.fund)}</td>` : ""}<td style="${R}">${fmtNum(r.price)}</td><td style="${C}">${escHtml(r.date)}</td><td style="${R}">${fmtNum(r.qty)}</td><td style="${R}">${fmtNum(r.allot)}</td><td style="${C}">${escHtml(r.commit)}</td></tr>`).join("")}
+        ${rows.map(r => `<tr><td style="${C}">${escHtml(r.name)}</td>${stFunds.size ? `<td style="${C}">${escHtml(fundLabel(r.fund))}</td>` : ""}<td style="${R}">${fmtNum(r.price)}</td><td style="${C}">${escHtml(r.date)}</td><td style="${R}">${fmtNum(r.qty)}</td><td style="${R}">${fmtNum(r.allot)}</td><td style="${C}">${escHtml(r.commit)}</td></tr>`).join("")}
       </table>`
     : `<span style="color:#666">${!stPicked.size ? "위에서 종목을 고르세요." : "고른 펀드에 값이 있는 종목이 없습니다."}</span>`;
 }
@@ -5584,7 +5655,7 @@ document.getElementById("stCopy").addEventListener("click", () => {
   const rows = statusRows();
   if (!rows.length) { showToast("복사할 종목이 없습니다"); return; }
   const v = x => x == null ? "" : String(x);
-  const tsv = [statusHead().join("\t")].concat(rows.map(r => [r.name].concat(stFunds.size ? [r.fund] : [], [v(r.price), r.date, v(r.qty), v(r.allot), r.commit]).join("\t"))).join("\n");
+  const tsv = [statusHead().join("\t")].concat(rows.map(r => [r.name].concat(stFunds.size ? [fundLabel(r.fund)] : [], [v(r.price), r.date, v(r.qty), v(r.allot), r.commit]).join("\t"))).join("\n");
   copyText(tsv).then(ok => showToast(ok ? `${rows.length}줄을 복사했습니다 — 엑셀에 붙여넣으세요` : "복사가 막혔습니다"));
 });
 function closePanel(){
