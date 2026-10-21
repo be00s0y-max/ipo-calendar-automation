@@ -201,6 +201,8 @@
   .reply-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   .reply-chip.on .sub { color: rgba(255,255,255,.75); }
   .reply-preview { background: #fff; color: #000; padding: 16px; border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; }
+  .stage-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .stage-title-row h2 { margin: 0 !important; }
   .stage-head h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; }
   .stage-head p { margin: 0; font-size: 12.5px; color: var(--ink-dim); }
   .nav-setting {
@@ -857,8 +859,7 @@
 
   <div class="tab-panel" id="tab-demand">
     <div class="stage-head">
-      <h2>수요예측</h2>
-      <p>수요예측 신청 여부와 참여가격·수량·확약여부를 한 표에서 입력합니다. 종목명을 누르면 그 아래에 수요예측 조건(DART 증권신고서), 주관사 계좌, 펀드별 참여 입력칸이 펼쳐집니다.</p>
+      <div class="stage-title-row"><h2>수요예측</h2><input type="text" class="tab-search" data-stage-search="demand" placeholder="종목명 검색"></div>
       <label class="nav-setting">기준 NAV (원)
         <input type="number" id="navInput" min="0" step="1" placeholder="예: 50000000000">
       </label>
@@ -873,7 +874,6 @@
         <div><button class="btn-ghost" id="acctApply" style="margin-top:6px">붙여넣은 계좌 적용</button></div>
       </details>
     </div>
-    <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="demand" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-demand"></div>
   </div>
 
@@ -940,7 +940,6 @@
   <div class="tab-panel" id="tab-sub">
     <div class="stage-head">
       <h2>청약</h2>
-      <p>실제 청약 수량과 청약증거금을 기록합니다.</p>
     </div>
     <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="sub" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-sub"></div>
@@ -949,7 +948,6 @@
   <div class="tab-panel" id="tab-pay">
     <div class="stage-head">
       <h2>납입</h2>
-      <p>납입금액과 납입 확인 여부를 기록합니다.</p>
     </div>
     <div class="tab-search-row" style="justify-content:flex-end;margin:0 0 10px"><input type="text" class="tab-search" data-stage-search="pay" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-pay"></div>
@@ -958,7 +956,6 @@
   <div class="tab-panel" id="tab-reply">
     <div class="stage-head">
       <h2>배정 현황</h2>
-      <p>수요예측 탭에 저장된 값으로 배정 현황 표를 만듭니다.</p>
     </div>
     <div class="subtabs">
       <button type="button" class="subtab on" data-reply-view="status">공통</button>
@@ -969,7 +966,7 @@
       <span class="reply-mode"><span class="lbl">종목</span><button type="button" class="reply-chip" data-rp-mode="search">검색</button><button type="button" class="reply-chip" data-rp-mode="period">기간</button><button type="button" class="reply-chip on" data-rp-mode="rec">추천</button></span>
       <span class="spacer"></span>
       <span class="reply-share">지분율 4호 <input type="number" id="replyShare4" step="any">% · 5호 <input type="number" id="replyShare5" step="any">%</span>
-      <button class="pdf-fill-btn" id="replyCopy">표 복사</button>
+      <button class="pdf-fill-btn" id="replyCopy">복사</button>
     </div>
     <div class="reply-ctl">
       <span class="reply-sub" id="rpSearchCtl" hidden><input type="text" class="tab-search" id="replySearch" placeholder="종목 이름 검색"></span>
@@ -986,7 +983,7 @@
         <span class="reply-mode"><span class="lbl">종목</span><button type="button" class="reply-chip" data-status-mode="search">검색</button><button type="button" class="reply-chip" data-status-mode="period">기간</button><button type="button" class="reply-chip on" data-status-mode="rec">추천</button></span>
         <span class="reply-mode"><span class="lbl">펀드</span><details class="fund-pick" id="stFundPick"><summary><span class="val" id="stFundSum">종목 합계</span></summary><div class="fund-pop" id="stFundPop"></div></details></span>
         <span class="spacer"></span>
-        <button class="pdf-fill-btn" id="stCopy">엑셀용 복사</button>
+        <button class="pdf-fill-btn" id="stCopy">복사</button>
       </div>
       <div class="reply-ctl">
         <span class="reply-sub" id="stSearchCtl" hidden><input type="text" class="tab-search" id="stSearch" placeholder="종목 이름 검색"></span>
