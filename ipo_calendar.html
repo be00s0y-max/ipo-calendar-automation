@@ -874,9 +874,6 @@
   <div class="tab-panel" id="tab-demand">
     <div class="stage-head">
       <h2>수요예측</h2>
-      <label class="nav-setting">기준 NAV (원)
-        <input type="number" id="navInput" min="0" step="1" placeholder="예: 50000000000">
-      </label>
     </div>
     <div class="stage-search"><input type="text" class="tab-search" data-stage-search="demand" placeholder="종목명 검색">
       <span class="nt-hint" id="allotXlsxStatus"></span>
@@ -6997,14 +6994,6 @@ document.addEventListener("change", e => {
   rerender(); // 참여/확약 등은 캘린더 칩·필터에도 영향
 });
 
-document.getElementById("navInput").addEventListener("change", e => {
-  navValue = e.target.value === "" ? null : Number(e.target.value);
-  persistNav();
-  showToast("저장되었습니다");
-  renderAllotRegistry();
-  updateAllotFormRatio();
-});
-if (navValue != null) document.getElementById("navInput").value = navValue;
 
 /* ================= 종목정보(DART) 탭 =================
    파이프라인 탭(신청~상장)과 달리 이 탭은 종목당 딸린 "참고자료"라 입력 폼이
