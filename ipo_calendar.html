@@ -210,6 +210,8 @@
   .stage-search .nt-hint + .xl-btn { margin-left: 0; }
   .xl-btn:hover { border-color: #1d6f42; }
   .acct-pick { position: relative; flex: none; }
+  .bp-line { margin: 6px 0 0; font-size: 12.5px; color: var(--ink-dim); display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline; }
+  .bp-item b { color: var(--accent); font-size: 13.5px; }
   .acct-pick summary { list-style: none; }
   .acct-pick summary::-webkit-details-marker { display: none; }
   .acct-pick summary.xl-btn { margin-left: 0; }
@@ -5983,6 +5985,15 @@ function applyCommitRules(rec, kc){
   if (kc) rec.commit = kc; // 종목 줄 확약여부도 코벤을 따라간다(캘린더 확약 표시 등이 rec.commit을 씀)
 }
 Object.values(records).forEach(r => applyCommitRules(r));
+// 배정 엑셀에서 계산한 NAV 대비 배정 bp(코벤·신탁 각각 전체 기준)
+function allotBpHtml(rec){
+  const b = rec.allotBp;
+  if (!b || !Object.keys(b).length) return "";
+  return `<div class="bp-line">NAV 대비 배정 ${FUND_GROUPS.filter(g => b[g.group]).map(g => {
+    const x = b[g.group];
+    return `<span class="bp-item" title="배정 ${fmtNum(x.shares)}주 × ${fmtNum(x.price)}원 = ${fmtNum(Math.round(x.amount))}원 ÷ 주금납입능력 ${fmtNum(Math.round(x.nav))}원">${g.group} <b>${x.bp.toFixed(2)}bp</b></span>`;
+  }).join("")}</div>`;
+}
 function fundsHtml(dl, idx){
   const funds = records[dl.name].funds || {};
   let totalQty = 0, totalAllot = 0;
@@ -6005,7 +6016,8 @@ function fundsHtml(dl, idx){
   }).join("")).join("");
   return `<table class="stage-table fund-table"><thead><tr><th>구분</th><th>펀드</th><th>참여</th><th>참여가격(원)</th><th>신청수량(주)</th><th>배정주수</th><th>확약여부</th></tr></thead>
     <tbody>${body}</tbody></table>
-    <div class="nt-hint" style="margin:6px 0 0">참여 체크한 펀드 신청수량 합계: <b class="fund-sum" data-fsum="${idx}">${fmtNum(totalQty)}</b>주 · 배정주수 합계: <b class="fund-asum" data-fasum="${idx}">${fmtNum(totalAllot)}</b>주</div>`;
+    <div class="nt-hint" style="margin:6px 0 0">참여 체크한 펀드 신청수량 합계: <b class="fund-sum" data-fsum="${idx}">${fmtNum(totalQty)}</b>주 · 배정주수 합계: <b class="fund-asum" data-fasum="${idx}">${fmtNum(totalAllot)}</b>주</div>
+    ${allotBpHtml(records[dl.name])}`;
 }
 document.addEventListener("change", e => {
   const el = e.target.closest("[data-fund]");
@@ -6097,7 +6109,7 @@ function parseAllotSheet(XLSX, wb){
   const str = v => (v == null ? "" : String(v)).trim();
   const num = v => (typeof v === "number" ? v : (v != null && /^[\d,]+$/.test(str(v)) ? Number(str(v).replace(/,/g, "")) : null));
   const name = (grid[0] || []).map(str).find(Boolean) || "";
-  let hdr = -1, cAllot = -1, cFinal = -1, cQty = -1, cFund = -1, price = null, commit = "";
+  let hdr = -1, cAllot = -1, cFinal = -1, cQty = -1, cFund = -1, cNav = -1, price = null, commit = "";
   const totalLabels = {}; // 헤더 위쪽의 "총 주식수(기관)"·"참여주식수" 등 → 값
   grid.forEach((row, r) => {
     (row || []).forEach((v, c) => {
@@ -6105,6 +6117,7 @@ function parseAllotSheet(XLSX, wb){
       if (t === "최종배분주수") { hdr = r; cFinal = c; }
       if (t === "배정주수") cAllot = c;
       if (t.startsWith("집계표")) cQty = c;
+      if (t.startsWith("주금납입능력") && cNav < 0) cNav = c; // 총계 행(D11) = NAV 기준
       if (/^(총주식수\(기관\)|총주식수|참여주식수)$/.test(t) && !(t in totalLabels)) totalLabels[t] = row.slice(c + 1).map(num).find(x => x != null);
       if (t === "참여가격" && price == null) price = (row.slice(c + 1).map(num).find(x => x != null)) || null;
       if (r < 3 && !commit && /^(미확약|15일|1개월|3개월|6개월)$/.test(t)) commit = t;
@@ -6112,20 +6125,22 @@ function parseAllotSheet(XLSX, wb){
   });
   if (hdr < 0 || cAllot < 0) throw new Error("배정주수/최종배분주수 열을 찾지 못했습니다");
   const funds = [];
-  let allotTotal = null;
+  let allotTotal = null, navTotal = null;
   for (let r = hdr + 1; r < grid.length; r++) {
     const row = grid[r] || [];
     const label = row.map(str).find(Boolean) || "";
-    if (label === "총계") break;
+    if (label === "총계") { if (cNav >= 0) navTotal = num(row[cNav]); break; }
     if (cFund < 0) cFund = row.findIndex(v => str(v));
     const f = str(row[cFund]);
     if (!f) continue;
     if (allotTotal == null && num(row[cAllot]) != null) allotTotal = num(row[cAllot]);
-    funds.push({ fund: f, final: num(row[cFinal]) || 0, qty: cQty >= 0 ? (num(row[cQty]) || 0) : null });
+    funds.push({ fund: f, final: num(row[cFinal]) || 0, qty: cQty >= 0 ? (num(row[cQty]) || 0) : null, nav: cNav >= 0 ? num(row[cNav]) : null });
   }
   // 기관 총 주식수(=신청 목표): "총 주식수(기관)"(코벤 엑셀) → 없으면 위쪽 "참여주식수"(집합투자 엑셀). 0은 무시.
   const instTotal = ["총주식수(기관)", "총주식수", "참여주식수"].map(k => totalLabels[k]).find(v => v) || null;
-  return { name, price, commit, allotTotal, instTotal, funds };
+  // 총계 칸에 값이 없으면(수식만 있고 저장값 없음) 펀드 행 합으로
+  if (navTotal == null && funds.some(x => x.nav != null)) navTotal = funds.reduce((a, x) => a + (x.nav || 0), 0);
+  return { name, price, commit, allotTotal, instTotal, navTotal, funds };
 }
 // 배정 엑셀 파일 이름 앞의 날짜(예: "2026.10.12_코벤.xlsx", "2026-10-12", "20261012") = 수요예측 신청일.
 function fileNameDate(name){
@@ -6183,11 +6198,21 @@ function applyAllotSheet(p){
   if (p.price != null) rec.price = p.price;
   rec.joined = true;
   applyCommitRules(rec);
+  // NAV 대비 배정 bp: (배정주수 합 × 참여가격) ÷ 주금납입능력 총계(엑셀 D11) × 10,000. 엑셀(코벤/신탁)별로 따로 둔다.
+  let bpNote = "";
+  const allotSum = rows.reduce((a, x) => a + x.final, 0);
+  const grp = (FUND_GROUPS.find(g => rows.some(x => g.funds.includes(x.fund))) || {}).group;
+  if (grp && p.navTotal && p.price != null && allotSum) {
+    const amount = allotSum * p.price;
+    rec.allotBp = Object.assign({}, rec.allotBp, { [grp]: { bp: amount / p.navTotal * 1e4, amount, nav: p.navTotal, shares: allotSum, price: p.price } });
+    bpNote = ` · ${grp} NAV 대비 ${rec.allotBp[grp].bp.toFixed(2)}bp`;
+  }
   if (p.appliedDate) rec.appliedDate = p.appliedDate;
   syncFundTotals(rec, idx); // 펀드 전체 합 → 표의 신청수량(총)·배정수량(총)
   demandOpen.add(idx);
   return `${dl.name}: ${rows.length}개 펀드 배정 ${fmtNum(rows.reduce((a, x) => a + x.final, 0))}주${p.allotTotal != null ? ` / 배정주수 ${fmtNum(p.allotTotal)}주` : ""}${note}`
     + (hasQty ? ` · 신청 ${fmtNum(rows.reduce((a, x) => a + (x.qty || 0), 0))}주${qtyNote}` : "")
+    + bpNote
     + (p.appliedDate ? ` · 신청일 ${p.appliedDate}` : "")
     + (unknown.length ? ` · 목록에 없는 펀드 건너뜀: ${unknown.join(", ")}` : "");
 }
@@ -6269,7 +6294,7 @@ function accountsFor(uw){
 }
 function accountsHtml(dl){
   const uws = (dl.uw || "").split(",").map(x => x.trim()).filter(Boolean);
-  if (!Object.keys(accountBook).length) return `<div class="acct-none">계좌 목록이 아직 없습니다 — 표 위 "계좌 목록 붙여넣기"에 넣어주세요.</div>`;
+  if (!Object.keys(accountBook).length) return `<div class="acct-none">계좌 목록이 아직 없습니다 — 검색줄 오른쪽 은행 아이콘에서 붙여넣어 주세요.</div>`;
   return uws.map(uw => {
     const hit = accountsFor(uw);
     if (!hit) return `<div class="acct-uw">${escHtml(uw)}</div><div class="acct-none">계좌 목록에 이 주관사가 없습니다.</div>`;
@@ -6842,6 +6867,10 @@ const STAGE_TABS = {
       { field: "price", label: "참여가격(원)", type: "number" },
       { field: "qty", label: "신청수량(총)", type: "number" },
       { field: "allotShares", label: "배정수량(총)", type: "number" },
+      { field: "_bp", label: "NAV 대비 배정", type: "computed", get: (dl, rec) => {
+          const b = rec.allotBp || {};
+          return FUND_GROUPS.filter(g => b[g.group]).map(g => `${g.group} ${b[g.group].bp.toFixed(2)}bp`).join("<br>") || "";
+        } },
       { field: "commit", label: "확약여부", type: "select", options: ["","미확약","15일","1개월","3개월","6개월"] },
     ],
   },
@@ -7205,7 +7234,7 @@ function refreshComputedCells(key, idx){
   cfg.columns.forEach((col, colIdx) => {
     if (col.type === "computed") {
       const cell = row.children[colIdx];
-      if (cell) cell.textContent = col.get(dl, rec);
+      if (cell) cell.innerHTML = col.get(dl, rec);
     }
   });
 }
