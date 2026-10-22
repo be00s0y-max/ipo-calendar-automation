@@ -1746,7 +1746,10 @@
     "conv_period_start": "2027-10-22",
     "conv_period_end": "2031-09-22",
     "refixing": "아니오",
-    "rcept_no": "20261014000146"
+    "rcept_no": "20261014000146",
+    "put_start": "2029-02-21",
+    "put_end": "2029-03-23",
+    "put_redemption": "2029-04-22"
   },
   "01275665_CB_4": {
     "name": "리메드",
