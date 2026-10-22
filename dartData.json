@@ -2346,5 +2346,42 @@
         "qty": 1037170000
       }
     }
+  },
+  "아이엠스팩1호": {
+    "offering": {
+      "subscription": {
+        "inst_start": "2026.10.26",
+        "inst_end": "2026.10.27"
+      },
+      "payment_date": "2026.10.29"
+    },
+    "demand_summary": {
+      "total_count": 1869,
+      "total_qty": 4749432000,
+      "competition_rate": 1266.52
+    },
+    "price_bands": null,
+    "lockup": {
+      "미확약": {
+        "count": 382,
+        "qty": 1203324000
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      }
+    }
   }
 }
