@@ -964,5 +964,23 @@
     "dealSizeM": 21600,
     "stockCode": "459650",
     "finalPrice": null
+  },
+  {
+    "name": "인터엑스",
+    "no": "2353",
+    "uw": "한국투자증권,BNK투자증권",
+    "demand": [
+      "2026-11-30",
+      "2026-12-04"
+    ],
+    "sub": [
+      "2026-12-09",
+      "2026-12-10"
+    ],
+    "pay": "2026-12-14",
+    "list": null,
+    "dealSizeM": 30000,
+    "stockCode": "480200",
+    "finalPrice": null
   }
 ]
