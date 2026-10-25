@@ -336,6 +336,8 @@
     padding: 12px 16px; margin-bottom: 10px;
   }
   .todo-day.is-today { border-color: var(--accent); }
+  .todo-week { display: inline-flex; align-items: center; gap: 8px; }
+  .todo-week-label { font-size: 13px; font-weight: 700; font-family: var(--font-mono); min-width: 170px; text-align: center; }
   .todo-day-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
   .todo-day-head .tdate { font-size: 14px; font-weight: 800; }
   .todo-day-head .trel { font-size: 11.5px; font-weight: 700; color: var(--ink-faint); }
@@ -765,13 +767,17 @@
 
   <div class="tab-panel" id="tab-todo">
     <div class="stage-head">
-      <h2>TO DO <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— 오늘부터 7일</span></h2>
-      <p>캘린더 위 "오늘 할 일"에 뜨는 일정을 오늘부터 7일치 미리 보여줍니다. "전체 일정"에서 챙길 항목에 체크하고 <b>저장</b>을 누르면 "나의 일정"에 그것만 모여 보이고,
-      "오늘 할 일"과 캘린더에서도 맨 위(점선 위쪽)에 따로 표시됩니다. 저장한 항목은 참여 정보와 같이 다른 기기에도 공유됩니다. (일정 날짜가 바뀌면 그 항목은 나의 일정에서 빠집니다)</p>
+      <h2>TO DO</h2>
       <div class="tab-search-row">
         <div class="seg" id="todoSeg">
           <button data-todo="checked" class="active">나의 일정</button>
           <button data-todo="all">전체 일정</button>
+        </div>
+        <div class="todo-week">
+          <button class="digest-step" id="todoWeekPrev" aria-label="이전 주">‹</button>
+          <span class="todo-week-label" id="todoWeekLabel"></span>
+          <button class="digest-step" id="todoWeekNext" aria-label="다음 주">›</button>
+          <button class="today-jump" id="todoWeekNow" hidden>이번 주</button>
         </div>
         <div class="todo-savebar" id="todoSaveBar" hidden>
           <span class="tpending" id="todoPendingText"></span>
@@ -845,9 +851,7 @@
 
   <div class="tab-panel" id="tab-info">
     <div class="stage-head">
-      <h2>종목정보 <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— DART 증권신고서 기준</span></h2>
-      <p>전체 딜의 일정·공모정보를 한 목록으로 보여줍니다(수요예측일 순). 종목 행을 클릭하면 그 종목의 상세 페이지로 이동하고, 상세 페이지 맨 위에 해당 증권신고서 DART 원문 링크가 있습니다.
-      확정 수치가 38커뮤니케이션과 다르면 <b>이 문서(DART, 법적 공시)를 우선</b>합니다 — 38은 아직 신고서가 없는 종목의 일정 확인용으로만 씁니다.</p>
+      <h2>종목정보</h2>
       <div class="tab-search-row">
         <input type="text" id="infoSearch" class="tab-search" placeholder="종목명 검색">
         <div class="seg" id="infoSortSeg">
@@ -861,8 +865,7 @@
 
   <div class="tab-panel" id="tab-mezz">
     <div class="stage-head">
-      <h2>메자닌 <span style="font-weight:400;color:var(--ink-dim);font-size:13px">— DART 발행결정 공시 기준</span></h2>
-      <p>전환사채(CB)·신주인수권부사채(BW)·교환사채(EB) 발행결정 공시를 시장 전역에서 찾아 모은 목록입니다. 공모주와 달리 참여 트래킹 대상이 아니라 참고용 정보입니다. 조기상환청구권(풋옵션) 일정은 DART에 없어 예탁결제원(KSD) SEIBRO에서 따로 가져오는데, 발행 직후엔 KSD 등록 전이라 "미확인"으로 보일 수 있고(며칠 뒤 자동으로 채워짐), 애초에 풋옵션이 없는 종목은 "만기까지 없음"으로 표시됩니다.</p>
+      <h2>메자닌</h2>
       <div class="tab-search-row">
         <input type="text" id="mezzSearch" class="tab-search" placeholder="종목명 검색">
         <div class="seg" id="mezzSortSeg">
@@ -5424,13 +5427,20 @@ function isTodoChecked(ev){
   const checks = records[deals[ev.dealIdx].name].todoChecks;
   return !!(checks && checks[todoKey(ev)]);
 }
+// 주 단위(일~토) 보기. todoWeek = 0이면 이번 주, -1 지난주, +1 다음 주.
+let todoWeek = 0;
+function todoWeekStart(){ return addDays(today, -today.getDay() + todoWeek * 7); }
 function renderTodoTab(){
   const el = document.getElementById("todo-list");
   if (!el) return;
   const byDay = eventsByDay(buildEvents());
+  const start = todoWeekStart();
+  document.getElementById("todoWeekLabel").textContent = `${fmt(start)} ~ ${fmt(addDays(start, 6))}`;
+  document.getElementById("todoWeekNow").hidden = todoWeek === 0;
   let html = "";
   for (let i = 0; i < TODO_DAYS; i++) {
-    const dt = addDays(today, i);
+    const dt = addDays(start, i);
+    const rel = Math.round((dt - today) / 86400000);
     const all = byDay.get(isoKey(dt)) || [];
     const evs = todoMode === "checked" ? all.filter(isTodoChecked) : all;
     const items = evs.map(ev => {
@@ -5448,10 +5458,10 @@ function renderTodoTab(){
     }).join("");
     const emptyMsg = todoMode === "checked" ? (all.length ? "나의 일정 없음" : "일정 없음") : "일정 없음";
     const countText = todoMode === "checked" ? `${evs.length} / ${all.length}` : `${all.length}`;
-    html += `<div class="todo-day ${i === 0 ? "is-today" : ""}">
+    html += `<div class="todo-day ${rel === 0 ? "is-today" : ""}">
       <div class="todo-day-head">
         <span class="tdate">${fmt(dt)}</span>
-        <span class="trel">${i <= 1 ? digestDayLabel(i) : i + "일 뒤"}</span>
+        <span class="trel">${Math.abs(rel) <= 1 ? digestDayLabel(rel) : rel > 0 ? rel + "일 뒤" : -rel + "일 전"}</span>
         <span class="tcount">${countText}</span>
       </div>
       ${items || `<div class="todo-none">${emptyMsg}</div>`}
@@ -5460,6 +5470,9 @@ function renderTodoTab(){
   el.innerHTML = html;
   renderTodoSaveBar();
 }
+document.getElementById("todoWeekPrev").addEventListener("click", () => { todoWeek--; renderTodoTab(); });
+document.getElementById("todoWeekNext").addEventListener("click", () => { todoWeek++; renderTodoTab(); });
+document.getElementById("todoWeekNow").addEventListener("click", () => { todoWeek = 0; renderTodoTab(); });
 function renderTodoSaveBar(){
   const n = Object.keys(todoPending).length;
   document.getElementById("todoSaveBar").hidden = todoMode !== "all";
