@@ -1812,7 +1812,10 @@
     "conv_period_start": "2027-10-26",
     "conv_period_end": "2031-09-26",
     "refixing": "아니오",
-    "rcept_no": "20261016000208"
+    "rcept_no": "20261016000208",
+    "put_start": "2029-08-27",
+    "put_end": "2029-09-26",
+    "put_redemption": "2029-10-26"
   },
   "00106313_CB_304": {
     "name": "금호건설",
