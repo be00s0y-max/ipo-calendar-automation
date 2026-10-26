@@ -31,6 +31,35 @@ def deal_names(html):
     return set(re.findall(r'\{\s*name:\s*"([^"]+)"', block(html, "DEALS")))
 
 
+def deal_schedules(html):
+    """종목명 → {수요예측, 청약, 납입, 상장} 시작일. 비어 있으면 None.
+
+    DEALS 블록은 update_calendar_data.deals_to_js()가 한 줄에 한 딜씩 쓴다.
+    """
+    out = {}
+    for line in block(html, "DEALS").splitlines():
+        n = re.search(r'\{\s*name:\s*"([^"]+)"', line)
+        if not n:
+            continue
+        sched = {}
+        for label, key in (("수요예측", "demand"), ("청약", "sub")):
+            m = re.search(rf'{key}:\s*\[\s*"([^"]+)"', line)
+            sched[label] = m.group(1) if m else None
+        for label, key in (("납입", "pay"), ("상장", "list")):
+            m = re.search(rf'{key}:\s*"([^"]+)"', line)
+            sched[label] = m.group(1) if m else None
+        out[n.group(1)] = sched
+    return out
+
+
+def short_date(s):
+    """'2026-11-16' -> '11/16', None -> '미정'"""
+    if not s:
+        return "미정"
+    _, mo, d = s.split("-")
+    return f"{int(mo)}/{int(d)}"
+
+
 def dart_names(html):
     return set(re.findall(r'^\s{2}"([^"]+)":\s*\{', block(html, "DART_DATA"), re.M))
 
@@ -67,6 +96,20 @@ def summarize(before, after):
     gone = deal_names(before) - deal_names(after)
     if gone:
         items.append(f"공모주 목록에서 빠짐 {len(gone)}건 — {listing(gone)}")
+
+    # 이름이 그대로인 딜의 일정 변경(연기·확정). 이름만 비교하면 수요예측이
+    # 밀려도 아무것도 안 남는다(예: 제논 10/26→11/16).
+    b_sched, a_sched = deal_schedules(before), deal_schedules(after)
+    moved = []
+    for name in sorted(set(b_sched) & set(a_sched)):
+        diffs = [f"{label} {short_date(b_sched[name][label])}→{short_date(v)}"
+                 for label, v in a_sched[name].items() if b_sched[name][label] != v]
+        if diffs:
+            moved.append(f"{name}({', '.join(diffs)})")
+    if moved:
+        head = ", ".join(moved[:6])
+        more = f" 외 {len(moved)-6}건" if len(moved) > 6 else ""
+        items.append(f"일정 변경 {len(moved)}건 — {head}{more}")
 
     new_dart = dart_names(after) - dart_names(before)
     if new_dart:
