@@ -397,6 +397,15 @@ def parse_demand_terms(path):
     return {"band": band, "qty_unit": qty_unit, "price_unit": price_unit, "inst_max": inst_max}
 
 
+def parse_subscription_start(path):
+    """신고서 공모개요의 청약 개시일(기관투자자 개시일)을 'YYYY-MM-DD'로.
+    38 일정과 대조해 연기·변경을 먼저 알아채려는 용도. 못 찾으면 None(추정하지 않음)."""
+    off = parse_offering_summary(load_tables(path)) or {}
+    s = (off.get("subscription") or {}).get("inst_start") or ""
+    m = re.search(r"(\d{4})\s*[년.\-]\s*(\d{1,2})\s*[월.\-]\s*(\d{1,2})", s)
+    return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}" if m else None
+
+
 def parse_overview(path):
     """공모개요 — 주관사 밸류에이션 요약, 상장예정주식수, 사업의 개요 첫 문장.
     2026-10 이에스티·씨아이에스케미칼·래블업·엘리스그룹 신고서 실측 기준:

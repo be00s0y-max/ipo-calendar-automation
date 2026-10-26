@@ -36,7 +36,7 @@ import io
 
 SCRATCH = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRATCH)
-from dart_parser import parse_filing, parse_demand_terms, parse_overview  # noqa: E402
+from dart_parser import parse_filing, parse_demand_terms, parse_overview, parse_subscription_start  # noqa: E402
 
 CORP_CODES_PATH = os.path.join(SCRATCH, "corp_codes.json")
 DEALS_PATH = os.path.join(SCRATCH, "deals.json")
@@ -221,8 +221,11 @@ def update_demand_info(key, corp_codes, demand_info, changed, errors):
         recent = dl["demand"][0] >= (time.strftime("%Y-%m-%d", time.localtime(time.time() - OVERVIEW_RECENT_DAYS * 86400)))
         want_ov = recent and not spac_key(name) and prev.get("ov_rcept") != filings[0]["rcept_no"]
         fields = TERM_FIELDS + OVERVIEW_FIELDS if want_ov else TERM_FIELDS
+        # 최신 신고서의 청약 개시일(sub_start) — 38 일정과 다르면 record_update_log.py가
+        # 내역에 "일정 불일치"로 남긴다. 38 반영이 늦는 연기(예: 제논)를 먼저 알아채려는 것.
+        need_sub = recent and "sub_start" not in prev
         complete = all(prev.get(f) is not None for f in TERM_FIELDS)
-        if complete and not want_ov and prev.get("rcept_no") == filings[0]["rcept_no"]:
+        if complete and not want_ov and not need_sub and prev.get("rcept_no") == filings[0]["rcept_no"]:
             continue
         terms = {f: None for f in fields}
         failed = []
@@ -234,6 +237,11 @@ def update_demand_info(key, corp_codes, demand_info, changed, errors):
                 got = parse_demand_terms(tmp_path)
                 if want_ov:
                     got.update(parse_overview(tmp_path))
+                if it is filings[0]:  # 이전 신고서의 일정은 옛 일정이라 최신 것만 쓴다
+                    try:
+                        terms["sub_start"] = parse_subscription_start(tmp_path)
+                    except Exception:  # noqa: BLE001 — 대조용이라 참여조건 갱신을 막지 않는다
+                        terms["sub_start"] = None
                 os.remove(tmp_path)
             except Exception as e:  # noqa: BLE001
                 failed.append(f"{it['rcept_no']}({e})")

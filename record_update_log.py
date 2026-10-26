@@ -52,6 +52,22 @@ def deal_schedules(html):
     return out
 
 
+def schedule_mismatches(html):
+    """DART 최신 신고서 청약 개시일(DEMAND_INFO.sub_start)과 38 청약 시작일이
+    다른 종목 → (DART, 38). 38 반영이 늦는 연기를 먼저 보여주려는 것."""
+    m = re.search(r"const DEMAND_INFO = (\{.*\});", block(html, "DEMAND_INFO"), re.S)
+    try:
+        info = json.loads(m.group(1)) if m else {}
+    except json.JSONDecodeError:
+        info = {}
+    out = {}
+    for name, sched in deal_schedules(html).items():
+        dart = (info.get(name) or {}).get("sub_start")
+        if dart and sched["청약"] and dart != sched["청약"]:
+            out[name] = (dart, sched["청약"])
+    return out
+
+
 def short_date(s):
     """'2026-11-16' -> '11/16', None -> '미정'"""
     if not s:
@@ -110,6 +126,13 @@ def summarize(before, after):
         head = ", ".join(moved[:6])
         more = f" 외 {len(moved)-6}건" if len(moved) > 6 else ""
         items.append(f"일정 변경 {len(moved)}건 — {head}{more}")
+
+    # 새로 생긴 불일치만 남긴다(풀릴 때까지 매번 쌓이면 다른 내역이 묻힌다).
+    b_mis, a_mis = schedule_mismatches(before), schedule_mismatches(after)
+    new_mis = [f"{n}(DART 청약 {short_date(d)}, 38 {short_date(c)})"
+               for n, (d, c) in sorted(a_mis.items()) if b_mis.get(n) != (d, c)]
+    if new_mis:
+        items.append(f"일정 불일치(38 미반영 가능) {len(new_mis)}건 — {', '.join(new_mis)}")
 
     new_dart = dart_names(after) - dart_names(before)
     if new_dart:
