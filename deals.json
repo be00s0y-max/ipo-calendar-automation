@@ -678,24 +678,6 @@
     "finalPrice": null
   },
   {
-    "name": "제논",
-    "no": "2341",
-    "uw": "삼성증권",
-    "demand": [
-      "2026-10-26",
-      "2026-10-30"
-    ],
-    "sub": [
-      "2026-11-04",
-      "2026-11-05"
-    ],
-    "pay": "2026-11-09",
-    "list": null,
-    "dealSizeM": 21340,
-    "stockCode": "0158J0",
-    "finalPrice": null
-  },
-  {
     "name": "영광와이케이엠씨",
     "no": "2342",
     "uw": "대신증권",
@@ -891,6 +873,24 @@
     "list": null,
     "dealSizeM": 39060,
     "stockCode": "0181E0",
+    "finalPrice": null
+  },
+  {
+    "name": "제논",
+    "no": "2341",
+    "uw": "삼성증권",
+    "demand": [
+      "2026-11-16",
+      "2026-11-20"
+    ],
+    "sub": [
+      "2026-11-24",
+      "2026-11-25"
+    ],
+    "pay": "2026-11-27",
+    "list": null,
+    "dealSizeM": 21340,
+    "stockCode": "0158J0",
     "finalPrice": null
   },
   {
