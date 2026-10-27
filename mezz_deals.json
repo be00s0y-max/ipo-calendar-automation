@@ -2026,5 +2026,26 @@
     "conv_period_end": "2031-10-02",
     "refixing": "아니오",
     "rcept_no": "20261023000414"
+  },
+  "00602279_CB_6": {
+    "name": "그린플러스",
+    "kind": "CB",
+    "round": "6",
+    "bondName": "무기명식 이권부 무보증 사모 전환사채",
+    "amount": 10000000000,
+    "board_date": "2026-10-26",
+    "sub_date": "2026-11-25",
+    "pay_date": "2026-11-25",
+    "maturity_date": "2029-11-25",
+    "coupon_rate": "2.0",
+    "ytm_rate": "8.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 3699,
+    "conv_period_start": "2027-11-25",
+    "conv_period_end": "2029-10-25",
+    "refixing": "아니오",
+    "rcept_no": "20261027000190"
   }
 }
