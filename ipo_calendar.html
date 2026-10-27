@@ -22,6 +22,7 @@
     --ev-pay: #234b8c;
     --ev-list: #8b93a1;
     --ev-lockup: #b0b6c0;
+    --ev-commit: #c8102e;
     --ev-custom: #3d8b6f;
     --ev-mezz: #8a5a2f;
     --cell-out: #f8f9fb;
@@ -502,6 +503,9 @@
     flex: 0 0 auto; font-size: 9px; font-weight: 800; color: var(--accent-ink);
     background: var(--chip-color); border-radius: 3px; padding: 0 4px; letter-spacing: 0.02em;
   }
+  /* 우리가 확약을 건 기간의 락업해제 칩 — 빨간색으로 칸 맨 위에 올린다. */
+  .chip.commit { color: var(--ev-commit); font-weight: 700; }
+  .chip.commit .clabel { color: var(--ev-commit); }
   .chip.done { opacity: 0.55; background: var(--surface-3); color: var(--ink-faint); }
   .chip.done::before { background: var(--ink-faint); }
   .cal-grid.week .chip { font-size: 12px; padding: 5px 8px; }
@@ -833,6 +837,7 @@
       <span><i style="background:var(--ev-pay)"></i>납입</span>
       <span><i style="background:var(--ev-list)"></i>상장</span>
       <span><i style="background:var(--ev-lockup)"></i>락업해제 (15일·1개월·3개월·6개월)</span>
+      <span><i style="background:var(--ev-commit)"></i>우리 확약 락업해제 (맨 위)</span>
       <span><i style="background:var(--ev-custom)"></i>내 일정</span>
       <span><i style="background:var(--ev-mezz)"></i>메자닌(CB·BW·EB, 칸 아래쪽 — 점선 테두리는 풋옵션 행사일)</span>
     </div>
@@ -4905,6 +4910,14 @@ const TYPE_META = {
   "lockup6m":     { label: "락업 6개월",    color: "var(--ev-lockup)" },
 };
 const LOCKUP_COMMIT_KEY = { "15일": "lockup15", "1개월": "lockup1m", "3개월": "lockup3m", "6개월": "lockup6m" };
+// 참여 정보의 확약(rec.commit)과 같은 기간의 락업해제 일정 = 우리가 확약을 건 해제일.
+// 캘린더·오늘 할 일·TO DO에서 빨간색으로, 그날 일정의 맨 위에 보여준다.
+function isCommittedLockup(ev){
+  const rec = records[deals[ev.dealIdx].name];
+  return !!rec && LOCKUP_COMMIT_KEY[rec.commit] === ev.type;
+}
+function chipColor(ev){ return isCommittedLockup(ev) ? "var(--ev-commit)" : TYPE_META[ev.type].color; }
+function chipCommitClass(ev){ return isCommittedLockup(ev) ? " commit" : ""; }
 
 /* ---------- date helpers ---------- */
 const DAY = 86400000;
@@ -5373,7 +5386,7 @@ function isEventDone(dealName, type){
 function digestChipHtml(ev){
   const meta = TYPE_META[ev.type];
   const dl = deals[ev.dealIdx];
-  return `<button class="chip" style="--chip-color:${meta.color}" data-deal="${ev.dealIdx}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
+  return `<button class="chip${chipCommitClass(ev)}" style="--chip-color:${chipColor(ev)}" data-deal="${ev.dealIdx}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
 }
 function digestDoneChipHtml(ev){
   // "오늘 완료" 줄 자체가 이미 완료라는 뜻이라 체크마크는 중복 — 회색 처리만 남긴다.
@@ -5399,8 +5412,9 @@ function renderDigest(){
   const joinedCount = deals.filter(dl => isJoined(records[dl.name])).length;
   const label = digestDayLabel(digestOffset);
 
-  // 나의 일정(TO DO에서 저장한 항목)을 위에, 나머지를 점선 아래에 — 캘린더 칸과 같은 구분.
-  const mine = todo.filter(isTodoChecked), rest = todo.filter(ev => !isTodoChecked(ev));
+  // 우리 확약 락업해제 + 나의 일정(TO DO에서 저장한 항목)을 위에, 나머지를 점선 아래에 — 캘린더 칸과 같은 구분.
+  const pinned = todo.filter(isCommittedLockup), others = todo.filter(ev => !isCommittedLockup(ev));
+  const mine = [...pinned, ...others.filter(isTodoChecked)], rest = others.filter(ev => !isTodoChecked(ev));
   const sep = mine.length && rest.length ? `<div class="digest-sep"></div>` : "";
   const todoHtml = todo.length ? mine.map(digestChipHtml).join("") + sep + rest.map(digestChipHtml).join("") : `<span class="none">${label} 일정 없음</span>`;
 
@@ -5452,7 +5466,9 @@ function renderTodoTab(){
     const dt = addDays(start, i);
     const rel = Math.round((dt - today) / 86400000);
     const all = byDay.get(isoKey(dt)) || [];
-    const evs = todoMode === "checked" ? all.filter(isTodoChecked) : all;
+    // 우리 확약 락업해제는 나의 일정 보기에도 항상 넣고, 그날 맨 위에 둔다.
+    const shown = todoMode === "checked" ? all.filter(ev => isTodoChecked(ev) || isCommittedLockup(ev)) : all;
+    const evs = [...shown.filter(isCommittedLockup), ...shown.filter(ev => !isCommittedLockup(ev))];
     const items = evs.map(ev => {
       const dl = deals[ev.dealIdx];
       const done = isEventDone(dl.name, ev.type);
@@ -5559,11 +5575,12 @@ function renderCell(dt, inCurrentPeriod, dayMap, compactMap, mezzDayMap){
   const chipHtml = ev => {
     const meta = TYPE_META[ev.type];
     const dl = deals[ev.dealIdx];
-    return `<button class="chip" style="--chip-color:${meta.color}" data-deal="${ev.dealIdx}" title="${dl.name} · ${meta.label}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
+    return `<button class="chip${chipCommitClass(ev)}" style="--chip-color:${chipColor(ev)}" data-deal="${ev.dealIdx}" title="${dl.name} · ${meta.label}">${dl.name}<span class="clabel">${meta.label}</span></button>`;
   };
-  // 나의 일정(TO DO에서 저장한 항목) --- 나머지 일정(+내 일정) --- 메자닌 순.
-  const mine = evs.filter(isTodoChecked).map(chipHtml).join("");
-  const rest = evs.filter(ev => !isTodoChecked(ev)).map(chipHtml).join("") + customChipsHtml(key);
+  // 우리 확약 락업해제 + 나의 일정(TO DO에서 저장한 항목) --- 나머지 일정(+내 일정) --- 메자닌 순.
+  const pinned = evs.filter(isCommittedLockup), others = evs.filter(ev => !isCommittedLockup(ev));
+  const mine = pinned.map(chipHtml).join("") + others.filter(isTodoChecked).map(chipHtml).join("");
+  const rest = others.filter(ev => !isTodoChecked(ev)).map(chipHtml).join("") + customChipsHtml(key);
   const chips = mine + (mine && rest ? `<div class="cell-sep"></div>` : "") + rest;
 
   return `
