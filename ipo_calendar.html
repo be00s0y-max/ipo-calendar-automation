@@ -7936,7 +7936,7 @@ function renderInfoList(){
         <td class="stc-ref">${dd && dd.demand_summary ? dd.demand_summary.competition_rate.toFixed(1) + " : 1" : "—"}</td>
         <td>${dd ? priceBandBar(dd.price_bands) : `<span class="info-none">—</span>`}</td>
         <td>${dd ? lockupBar(dd.lockup) : `<span class="info-none">—</span>`}</td>
-        <td>${isJoined(rec) ? `<span style="color:var(--ink);font-weight:700">참여</span>` : `<span class="info-none">—</span>`}</td>
+        <td>${isJoined(rec) ? `<span style="color:var(--ink);font-weight:700">참여</span>` : rec.appliedDate ? `<span class="info-none">미참여</span>` : `<span class="info-none">—</span>`}</td>
       </tr>`;
     }).join("");
   if (!rows) { container.innerHTML = `<div class="info-none" style="padding:16px">"${infoSearchQuery}" 검색 결과가 없습니다.</div>`; return; }
@@ -8687,10 +8687,10 @@ function xlsxRowFor(dl, rowNum){
   const listD = dl.list ? d(dl.list) : null;
   const afterMonths = (n) => listD ? excelSerial(addMonths(listD, n)) : null;
 
-  // 참여가격: 신청일만 적고 참여 데이터가 없는 건은 원본 파일 관례대로 "드랍"으로 적는다.
+  // 참여가격: 신청일만 적고 참여 데이터가 없는 건(수요예측 신청 후 드랍)은 "미참여"로 적는다.
   let priceCell = null;
   if (rec.price != null) priceCell = rec.price;
-  else if (rec.appliedDate && !isJoined(rec)) priceCell = "드랍";
+  else if (rec.appliedDate && !isJoined(rec)) priceCell = "미참여";
 
   const r = rowNum;
   return {
