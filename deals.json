@@ -768,24 +768,6 @@
     "finalPrice": null
   },
   {
-    "name": "엔키화이트햇",
-    "no": "2343",
-    "uw": "신영증권",
-    "demand": [
-      "2026-11-03",
-      "2026-11-09"
-    ],
-    "sub": [
-      "2026-11-12",
-      "2026-11-13"
-    ],
-    "pay": "2026-11-17",
-    "list": null,
-    "dealSizeM": 22100,
-    "stockCode": "0091L0",
-    "finalPrice": null
-  },
-  {
     "name": "씨앤엠",
     "no": "2346",
     "uw": "한국투자증권",
@@ -927,6 +909,24 @@
     "list": null,
     "dealSizeM": 23520,
     "stockCode": "0111R0",
+    "finalPrice": null
+  },
+  {
+    "name": "엔키화이트햇",
+    "no": "2343",
+    "uw": "신영증권",
+    "demand": [
+      "2026-11-20",
+      "2026-11-26"
+    ],
+    "sub": [
+      "2026-12-01",
+      "2026-12-02"
+    ],
+    "pay": "2026-12-04",
+    "list": null,
+    "dealSizeM": 22100,
+    "stockCode": "0091L0",
     "finalPrice": null
   },
   {

@@ -1506,7 +1506,10 @@
     "conv_period_start": "2027-10-28",
     "conv_period_end": "2031-09-28",
     "refixing": "아니오",
-    "rcept_no": "20261008000695"
+    "rcept_no": "20261008000695",
+    "put_start": "2028-08-29",
+    "put_end": "2028-09-28",
+    "put_redemption": "2028-10-28"
   },
   "00145598_CB_4": {
     "name": "이연제약",
@@ -1857,7 +1860,10 @@
     "conv_period_start": "2027-10-28",
     "conv_period_end": "2031-09-28",
     "refixing": "아니오",
-    "rcept_no": "20261023000071"
+    "rcept_no": "20261023000071",
+    "put_start": "2028-08-29",
+    "put_end": "2028-09-28",
+    "put_redemption": "2028-10-28"
   },
   "00406329_CB_7": {
     "name": "루멘스바이오스",
