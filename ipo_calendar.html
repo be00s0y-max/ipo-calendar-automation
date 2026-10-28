@@ -5092,8 +5092,11 @@ function buildCompactEvents(dealsList){
 }
 // 수요예측 "참여" = 참여가격·신청수량·배정수량 중 하나라도 적었거나, 펀드별 표에서
 // 어느 펀드든 참여 체크·가격·수량·배정주수를 적은 종목. (예전 "신청함/참여함" 체크 대신)
+// 수요예측 탭 "참여" 칸에서 직접 고른 값(rec.participation)이 있으면 그게 우선이다.
 function isJoined(rec){
   if (!rec) return false;
+  if (rec.participation === "미참여") return false;
+  if (rec.participation === "참여") return true;
   if (rec.price != null || rec.qty != null || rec.allotShares != null) return true;
   return Object.values(rec.funds || {}).some(v => v && (v.joined || v.price != null || v.qty != null || v.allot != null));
 }
@@ -5234,7 +5237,8 @@ deals.forEach(dl => {
   const seed = {
     // 수요예측 신청
     applied: false, appliedDate: "", appliedNote: "",
-    // 수요예측 참여
+    // 수요예측 참여 ("" = 입력값으로 자동 판정, "참여"/"미참여" = 직접 선택)
+    participation: "",
     joined: DEFAULT_JOINED.includes(dl.name), price: null, qty: null, commit: dl.name === "케이앤에스아이앤씨" ? "미확약" : "",
     // 배정
     allotDate: "", allotLink: "", allotShares: null, allotAmount: null,
@@ -6343,6 +6347,7 @@ function applyAllotSheet(p){
   });
   if (p.price != null) rec.price = p.price;
   rec.joined = true;
+  rec.participation = "참여";
   applyCommitRules(rec);
   // NAV 대비 배정 bp: (배정주수 합 × 참여가격) ÷ 주금납입능력 총계(엑셀 D11) × 10,000. 엑셀(코벤/신탁)별로 따로 둔다.
   let bpNote = "";
@@ -7009,6 +7014,7 @@ const STAGE_TABS = {
     columns: [
       { field: "_name", label: "종목 / 주간사", type: "ref-name-toggle" },
       { field: "_demand", label: "수요예측일", type: "ref", get: dl => fmtRange(dl.demand[0], dl.demand[1]) },
+      { field: "participation", label: "참여", type: "participation" },
       { field: "appliedDate", label: "신청일", type: "date" },
       { field: "price", label: "참여가격(원)", type: "number" },
       { field: "qty", label: "신청수량(총)", type: "number" },
@@ -7323,6 +7329,13 @@ function renderStageCell(dl, idx, rec, col){
       const opts = col.options.map(o => `<option value="${o}" ${rec[col.field]===o?"selected":""}>${o||"미지정"}</option>`).join("");
       return `<td><select data-idx="${idx}" data-field="${col.field}">${opts}</select></td>`;
     }
+    case "participation": {
+      // 배정 엑셀을 넣거나 참여 데이터가 있으면 "참여"로 자동 표시, 드랍한 건은 "미참여"로 직접 고른다.
+      const cur = isJoined(rec) ? "참여" : (rec.participation === "미참여" ? "미참여" : "");
+      const opts = [["", "—"], ["참여", "참여"], ["미참여", "미참여"]]
+        .map(([o, l]) => `<option value="${o}" ${cur === o ? "selected" : ""}>${l}</option>`).join("");
+      return `<td><select data-idx="${idx}" data-field="${col.field}">${opts}</select></td>`;
+    }
     case "date": {
       // date 입력칸은 placeholder가 안 먹어서, 추천 날짜는 입력칸 밑에 힌트로 깐다.
       const hint = col.hintFrom ? col.hintFrom(dl, rec) : "";
@@ -7417,6 +7430,9 @@ document.addEventListener("change", e => {
     const key = panel.id.replace("tab-", "");
     if (STAGE_TABS[key]) refreshComputedCells(key, Number(idx));
   }
+  // 참여가격·수량 등을 적으면 같은 줄 "참여" 칸도 자동 판정값으로 맞춘다
+  const ps = document.querySelector(`#stage-demand select[data-idx="${idx}"][data-field="participation"]`);
+  if (ps && field !== "participation") { const rec = records[dl.name]; ps.value = isJoined(rec) ? "참여" : (rec.participation === "미참여" ? "미참여" : ""); }
   rerender(); // 참여/확약 등은 캘린더 칩·필터에도 영향
 });
 
@@ -7936,7 +7952,7 @@ function renderInfoList(){
         <td class="stc-ref">${dd && dd.demand_summary ? dd.demand_summary.competition_rate.toFixed(1) + " : 1" : "—"}</td>
         <td>${dd ? priceBandBar(dd.price_bands) : `<span class="info-none">—</span>`}</td>
         <td>${dd ? lockupBar(dd.lockup) : `<span class="info-none">—</span>`}</td>
-        <td>${isJoined(rec) ? `<span style="color:var(--ink);font-weight:700">참여</span>` : rec.appliedDate ? `<span class="info-none">미참여</span>` : `<span class="info-none">—</span>`}</td>
+        <td>${isJoined(rec) ? `<span style="color:var(--ink);font-weight:700">참여</span>` : rec.participation === "미참여" ? `<span class="info-none">미참여</span>` : `<span class="info-none">—</span>`}</td>
       </tr>`;
     }).join("");
   if (!rows) { container.innerHTML = `<div class="info-none" style="padding:16px">"${infoSearchQuery}" 검색 결과가 없습니다.</div>`; return; }
@@ -8689,7 +8705,8 @@ function xlsxRowFor(dl, rowNum){
 
   // 참여가격: 신청일만 적고 참여 데이터가 없는 건(수요예측 신청 후 드랍)은 "미참여"로 적는다.
   let priceCell = null;
-  if (rec.price != null) priceCell = rec.price;
+  if (rec.participation === "미참여") priceCell = "미참여";
+  else if (rec.price != null) priceCell = rec.price;
   else if (rec.appliedDate && !isJoined(rec)) priceCell = "미참여";
 
   const r = rowNum;
