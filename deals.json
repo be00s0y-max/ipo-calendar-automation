@@ -1000,5 +1000,23 @@
     "dealSizeM": 30000,
     "stockCode": "480200",
     "finalPrice": null
+  },
+  {
+    "name": "KTE",
+    "no": "2355",
+    "uw": "NH투자증권",
+    "demand": [
+      "2026-12-02",
+      "2026-12-08"
+    ],
+    "sub": [
+      "2026-12-14",
+      "2026-12-15"
+    ],
+    "pay": "2026-12-17",
+    "list": null,
+    "dealSizeM": 53504,
+    "stockCode": "103060",
+    "finalPrice": null
   }
 ]

@@ -968,5 +968,23 @@
     "inst_max": 4875000,
     "rcept_no": "20261026000285",
     "report_nm": "증권신고서(지분증권)"
+  },
+  "KTE": {
+    "band": [
+      19000,
+      23000
+    ],
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 2112000,
+    "val_model": "PER",
+    "val_multiple": 16.4,
+    "val_fair": 28192,
+    "val_discount": null,
+    "listed_shares": 11268631,
+    "biz": null,
+    "ov_rcept": "20261028000336",
+    "rcept_no": "20261028000336",
+    "report_nm": "증권신고서(지분증권)"
   }
 }
