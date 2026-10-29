@@ -8715,11 +8715,12 @@ function xlsxRowFor(dl, rowNum){
   const listD = dl.list ? d(dl.list) : null;
   const afterMonths = (n) => listD ? excelSerial(addMonths(listD, n)) : null;
 
-  // 참여가격: 신청일만 적고 참여 데이터가 없는 건(수요예측 신청 후 드랍)은 "미참여"로 적는다.
+  // 참여가격: 신청일만 적고 참여 데이터가 없는 건은 원본 파일 관례대로 "드랍"으로 적는다.
+  // 수요예측 탭 "참여" 칸에서 직접 "미참여"를 고른 건은 "미참여"로 적는다.
   let priceCell = null;
   if (rec.participation === "미참여") priceCell = "미참여";
   else if (rec.price != null) priceCell = rec.price;
-  else if (rec.appliedDate && !isJoined(rec)) priceCell = "미참여";
+  else if (rec.appliedDate && !isJoined(rec)) priceCell = "드랍";
 
   const r = rowNum;
   return {
