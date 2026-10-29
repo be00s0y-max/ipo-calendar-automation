@@ -634,6 +634,7 @@
   .ad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-items: start; }
   .ad-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
   .ad-card h3 { margin: 0 0 4px; font-size: 15px; font-weight: 800; }
+  .ad-card h3 .hts { font-size: 11px; font-weight: 600; color: var(--accent); margin-left: 6px; }
   .ad-card h3 .tag { font-size: 11px; font-weight: 600; color: var(--ink-faint); margin-left: 6px; }
   .ad-sec { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
   .ad-sec:first-of-type { border-top: none; padding-top: 0; }
@@ -6101,15 +6102,20 @@ function renderStatusTab(){
   document.getElementById("stCount").textContent = `${stPicked.size}개 선택`;
   renderFundPick();
   const rows = statusRows();
+  document.getElementById("stPreview").innerHTML = rows.length
+    ? statusTableHtml(rows, false)
+    : `<span style="color:#666">${!stPicked.size ? "위에서 종목을 고르세요." : "고른 펀드에 값이 있는 종목이 없습니다."}</span>`;
+}
+// 미리보기와 복사용 표. 복사용(forCopy)은 엑셀이 숫자로 받게 쉼표 없이 넣는다.
+function statusTableHtml(rows, forCopy){
   const C = "border:1px solid #000;padding:2px 8px;white-space:nowrap;text-align:center;";
   const R = "border:1px solid #000;padding:2px 8px;white-space:nowrap;text-align:right;";
   const H = C + "background:#d9e1f2;font-weight:700;";
-  document.getElementById("stPreview").innerHTML = rows.length
-    ? `<table style="border-collapse:collapse;font-family:'맑은 고딕','Malgun Gothic',sans-serif;font-size:10pt;">
+  const nf = forCopy ? (n => n == null || n === "" ? "" : String(n)) : fmtNum;
+  return `<table style="border-collapse:collapse;font-family:'맑은 고딕','Malgun Gothic',sans-serif;font-size:10pt;">
         <tr>${statusHead().map(h => `<td style="${H}">${h}</td>`).join("")}</tr>
-        ${rows.map(r => r.np ? `<tr><td style="${C}">${escHtml(r.name)}</td><td colspan="${statusHead().length - 1}" style="${C}color:#666;">미참여</td></tr>` : `<tr><td style="${C}">${escHtml(r.name)}</td>${stFunds.size ? `<td style="${C}">${escHtml(fundLabel(r.fund))}</td>` : ""}<td style="${R}">${fmtNum(r.price)}</td><td style="${C}">${escHtml(r.date)}</td><td style="${R}">${fmtNum(r.qty)}</td><td style="${R}">${fmtNum(r.allot)}</td><td style="${C}">${escHtml(r.commit)}</td></tr>`).join("")}
-      </table>`
-    : `<span style="color:#666">${!stPicked.size ? "위에서 종목을 고르세요." : "고른 펀드에 값이 있는 종목이 없습니다."}</span>`;
+        ${rows.map(r => r.np ? `<tr><td style="${C}">${escHtml(r.name)}</td><td colspan="${statusHead().length - 1}" style="${C}color:#666;">미참여</td></tr>` : `<tr><td style="${C}">${escHtml(r.name)}</td>${stFunds.size ? `<td style="${C}">${escHtml(fundLabel(r.fund))}</td>` : ""}<td style="${R}">${nf(r.price)}</td><td style="${C}">${escHtml(r.date)}</td><td style="${R}">${nf(r.qty)}</td><td style="${R}">${nf(r.allot)}</td><td style="${C}">${escHtml(r.commit)}</td></tr>`).join("")}
+      </table>`;
 }
 // 하위 탭을 바꾸거나 표가 짧아질 때 페이지가 위로 튀지 않게: 탭 높이를 그대로 붙잡아 두고 스크롤 위치를 되돌린다.
 function keepScroll(fn){
@@ -6169,7 +6175,7 @@ document.getElementById("stCopy").addEventListener("click", () => {
   const v = x => x == null ? "" : String(x);
   // 미참여 줄은 엑셀에서 칸을 합칠 수 없어 종목명 다음 칸에 "미참여"만 적는다
   const tsv = [statusHead().join("\t")].concat(rows.map(r => r.np ? [r.name, "미참여"].join("\t") : [r.name].concat(stFunds.size ? [fundLabel(r.fund)] : [], [v(r.price), r.date, v(r.qty), v(r.allot), r.commit]).join("\t"))).join("\n");
-  copyText(tsv).then(ok => showToast(ok ? `${rows.length}줄을 복사했습니다 — 엑셀에 붙여넣으세요` : "복사가 막혔습니다"));
+  copyRich(statusTableHtml(rows, true), tsv).then(ok => showToast(ok ? `${rows.length}줄을 복사했습니다 — 엑셀에 붙여넣으세요` : "복사가 막혔습니다"));
 });
 function closePanel(){
   panel.classList.remove("show");
@@ -6594,6 +6600,21 @@ function accountsHtml(dl){
     return `<div class="acct-uw">${escHtml(uw)}${note ? `<span class="note">(${escHtml(note)})</span>` : ""}</div>${rows}`;
   }).join("");
 }
+// 표(HTML)와 텍스트를 같이 복사한다 — 엑셀은 HTML 표를 붙여넣을 때 합친 칸(colspan)을 병합해서 넣는다.
+// copy 이벤트로 넣는 방식이라 아티팩트(iframe)에서도 되는 편이고, 안 되면 텍스트만 복사한다.
+function copyRich(html, text){
+  let ok = false;
+  const onCopy = e => {
+    e.clipboardData.setData("text/html", `<html><body>${html}</body></html>`);
+    e.clipboardData.setData("text/plain", text);
+    e.preventDefault();
+    ok = true;
+  };
+  document.addEventListener("copy", onCopy);
+  try { document.execCommand("copy"); } catch(e) {}
+  document.removeEventListener("copy", onCopy);
+  return ok ? Promise.resolve(true) : copyText(text);
+}
 // 아티팩트(iframe)에선 navigator.clipboard가 막힐 수 있어 execCommand로도 시도한다.
 function copyText(text){
   const fallback = () => {
@@ -6651,6 +6672,15 @@ let accountDir = (() => {
   catch(e) { return { brokers: {}, order: [] }; }
 })();
 let adEditMode = false;
+// 증권사 HTS 이름 (2026-10 각 사 홈페이지·다운로드 안내 기준, 상상인·SK·LS·BNK·iM은 나무위키 HTS 문서 기준).
+// 키는 brokerKey. 우리투자증권은 HTS 미제공으로 적혀 있어 넣지 않았다.
+const BROKER_HTS = {
+  "한국": "eFriend Plus", "신한": "신한i", "미래에셋": "카이로스", "삼성": "POP HTS", "대신": "CYBOS · CREON",
+  "nh": "QV · 나무", "신영": "e-PlanUp", "ibk": "HOT Trading", "하나": "1Q HTS", "키움": "영웅문",
+  "db": "Happy+", "상상인": "FN plus", "유안타": "티레이더", "sk": "주파수W", "kb": "H-able", "ls": "투혼",
+  "현대차": "The H Solution", "한화": "SmartOne", "교보": "PROVEST K", "메리츠": "iMERITZ XII",
+  "유진": "챔피언 플러스", "bnk": "QFIT", "im": "싸이칸플러스",
+};
 function saveAccountDir(){
   try { localStorage.setItem(ACCOUNT_DIR_KEY, JSON.stringify(accountDir)); } catch(e) {}
   persistRecords();
@@ -6791,7 +6821,8 @@ function renderAcctTab(){
   if (!keys.length) { box.innerHTML = `<div class="ad-empty">"${escHtml(q)}" 검색 결과가 없습니다.</div>`; return; }
   box.innerHTML = `<div class="ad-grid">${keys.map(k => {
     const b = accountDir.brokers[k];
-    return `<div class="ad-card"><h3>${escHtml(b.name)}${b.tag ? `<span class="tag">${escHtml(b.tag)}</span>` : ""}</h3>
+    const hts = BROKER_HTS[k];
+    return `<div class="ad-card"><h3>${escHtml(b.name)}${hts ? `<span class="hts" title="HTS">${escHtml(hts)}</span>` : ""}${b.tag ? `<span class="tag">${escHtml(b.tag)}</span>` : ""}</h3>
       ${adCardBody(k, b)}</div>`;
   }).join("")}</div>`;
 }
