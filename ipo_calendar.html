@@ -6144,6 +6144,13 @@ function allotBpHtml(rec){
     return `<span class="bp-item" title="배정 ${fmtNum(x.shares)}주 × ${fmtNum(x.price)}원 = ${fmtNum(Math.round(x.amount))}원 ÷ 주금납입능력 ${fmtNum(Math.round(x.nav))}원">${g.group} <b>${x.bp.toFixed(2)}bp</b></span>`;
   }).join("")}</div>`;
 }
+// 일임 줄은 체크박스 대신 참여/미참여를 고른다. 배정 엑셀을 넣으면(joined) 자동 "참여".
+function fundParticipationSelect(v, attrs){
+  const cur = v.participation === "미참여" ? "미참여" : v.joined ? "참여" : "";
+  const opts = [["", "—"], ["참여", "참여"], ["미참여", "미참여"]]
+    .map(([o, l]) => `<option value="${o}" ${cur === o ? "selected" : ""}>${l}</option>`).join("");
+  return `<select ${attrs} data-ffield="participation">${opts}</select>`;
+}
 function fundsHtml(dl, idx){
   const funds = records[dl.name].funds || {};
   let totalQty = 0, totalAllot = 0;
@@ -6157,7 +6164,7 @@ function fundsHtml(dl, idx){
     return `<tr>
       ${i === 0 ? `<td rowspan="${g.funds.length}" class="fund-group">${g.group}</td>` : ""}
       <td>${escHtml(f)}</td>
-      <td><input type="checkbox" ${attrs} data-ffield="joined" ${v.joined ? "checked" : ""}></td>
+      <td>${f === "일임" ? fundParticipationSelect(v, attrs) : `<input type="checkbox" ${attrs} data-ffield="joined" ${v.joined ? "checked" : ""}>`}</td>
       <td><input type="number" ${attrs} data-ffield="price" value="${v.price != null ? v.price : ""}"></td>
       <td><input type="number" ${attrs} data-ffield="qty" value="${v.qty != null ? v.qty : ""}"></td>
       <td><input type="number" ${attrs} data-ffield="allot" value="${v.allot != null ? v.allot : ""}"></td>
@@ -6178,6 +6185,10 @@ document.addEventListener("change", e => {
   const f = rec.funds[el.dataset.fund] = rec.funds[el.dataset.fund] || {};
   const field = el.dataset.ffield;
   f[field] = el.type === "checkbox" ? el.checked : el.type === "number" ? (el.value === "" ? null : Number(el.value)) : el.value;
+  if (field === "participation") {
+    if (f.participation === "참여") f.joined = true;
+    else if (f.participation === "미참여") f.joined = false;
+  }
   if (field === "commit" && el.dataset.fund === "H일임") {
     if (f.commit) f.commitManual = true; else delete f.commitManual;
   }
@@ -6340,6 +6351,7 @@ function applyAllotSheet(p){
   rows.forEach(x => {
     const f = rec.funds[x.fund] = rec.funds[x.fund] || {};
     f.joined = true;
+    delete f.participation;
     f.allot = x.final;
     if (x.qty != null) f.qty = x.qty;
     if (p.price != null) f.price = p.price;
