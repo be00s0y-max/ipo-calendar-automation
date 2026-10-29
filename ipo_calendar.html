@@ -232,6 +232,7 @@
   .stage-table-wrap {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto;
   }
+  td.np-block { background: var(--surface-3); color: var(--ink-faint); font-size: 12px; font-weight: 700; text-align: center; letter-spacing: .1em; }
   /* 단계 탭 페이지 나누기 (30종목씩) */
   .stage-pager { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; padding: 10px; border-top: 1px solid var(--border); }
   .stage-pager button { font-family: var(--font-mono); font-size: 12px; min-width: 30px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--ink-dim); cursor: pointer; }
@@ -619,8 +620,7 @@
   .acct-copy:hover { border-color: var(--accent); color: var(--accent); }
   .acct-none { font-size: 12px; color: var(--ink-faint); }
   /* ---- 계좌 탭 ---- */
-  .ad-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
-  .ad-bar .spacer { flex: 1; }
+  #tab-acct .stage-search { flex-wrap: wrap; gap: 8px; }
   .ad-btn { font-family: var(--font-kr); font-size: 12.5px; font-weight: 700; padding: 7px 12px; border-radius: 8px;
             border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); cursor: pointer; }
   .ad-btn:hover { color: var(--accent); border-color: var(--accent); }
@@ -1023,12 +1023,10 @@
   <div class="tab-panel" id="tab-acct">
     <div class="stage-head">
       <h2>계좌</h2>
-      <p>계좌번호를 누르면 숫자만 복사됩니다. 계좌 정보는 이 페이지의 공유 저장에만 들어가고 GitHub 저장소에는 들어가지 않습니다.</p>
     </div>
-    <div class="ad-bar">
+    <div class="stage-search">
       <input type="text" class="tab-search" id="adSearch" placeholder="증권사 검색">
-      <span class="nt-hint" id="adStatus" style="margin:0"></span>
-      <span class="spacer"></span>
+      <span class="nt-hint" id="adStatus"></span>
       <label class="ad-btn" title="계좌 엑셀(계좌·일임계좌(전북)·일임계좌(인성) 시트)을 읽어 목록을 채웁니다. 직접 추가한 계좌는 그대로 둡니다.">계좌 엑셀 불러오기
         <input type="file" id="adXlsx" accept=".xlsx,.xlsm,.xls" hidden></label>
       <button type="button" class="ad-btn" id="adAddToggle">+ 계좌 추가</button>
@@ -6541,10 +6539,15 @@ function termsHtml(dl){
   if (!t) return `<div class="acct-none">아직 DART 증권신고서에서 가져온 값이 없습니다.</div>`;
   const n = v => v != null ? fmtNum(v) : "—";
   const row = (k, v) => `<div class="sched-row"><span class="k">${k}</span><span class="v">${v}</span></div>`;
-  return row("공모가 밴드", t.band ? `${n(t.band[0])} ~ ${n(t.band[1])}원` : "—") +
+  // 누르면 숫자만 복사(계좌 복사와 같은 버튼)
+  const cp = (v, unit) => v != null ? `<button class="acct-copy" data-copy="${v}" title="누르면 ${v} 복사">${fmtNum(v)}${unit}</button>` : "—";
+  // 작성가능 최고한도 = 기관 최고한도를 수량단위로 내림 (예: 1,000주 단위, 1,694,656주 → 1,694,000주)
+  const writable = t.inst_max != null && t.qty_unit ? Math.floor(t.inst_max / t.qty_unit) * t.qty_unit : null;
+  return row("공모가 밴드", t.band ? `${cp(t.band[0], "원")} ~ ${cp(t.band[1], "원")}` : "—") +
     row("수량단위", t.qty_unit != null ? `${n(t.qty_unit)}주` : "—") +
     row("가격단위", t.price_unit != null ? `${n(t.price_unit)}원` : "—") +
-    row("기관 최고한도", t.inst_max != null ? `${n(t.inst_max)}주` : "—") +
+    row("기관 최고한도", cp(t.inst_max, "주")) +
+    row("작성가능 최고한도", cp(writable, "주")) +
     `<div class="nt-hint" style="margin:6px 0 0">출처: <a class="stc-link" href="https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${t.rcept_no}" target="_blank" rel="noopener">${escHtml(t.report_nm)} (${t.rcept_no.slice(0,8)})</a></div>`;
 }
 
@@ -7716,6 +7719,18 @@ function renderStageCell(dl, idx, rec, col){
   }
 }
 
+// 수요예측 탭에서 "미참여"인 종목은 신청일~확약여부 칸을 입력 없이 회색 블록 하나로 막는다.
+const NP_BLOCK_FIELDS = ["appliedDate", "price", "qty", "allotShares", "_bp", "commit"];
+function stageCellsHtml(key, cfg, dl, idx, rec){
+  const cols = cfg.columns;
+  if (key !== "demand" || rec.participation !== "미참여")
+    return cols.map(col => renderStageCell(dl, idx, rec, col)).join("");
+  const first = cols.findIndex(c => NP_BLOCK_FIELDS.includes(c.field));
+  const last = cols.length - 1 - [...cols].reverse().findIndex(c => NP_BLOCK_FIELDS.includes(c.field));
+  return cols.slice(0, first).map(col => renderStageCell(dl, idx, rec, col)).join("")
+    + `<td class="np-block" colspan="${last - first + 1}">미참여</td>`
+    + cols.slice(last + 1).map(col => renderStageCell(dl, idx, rec, col)).join("");
+}
 function renderStageTable(key){
   const cfg = STAGE_TABS[key];
   const container = document.getElementById("stage-" + key);
@@ -7733,7 +7748,7 @@ function renderStageTable(key){
     const rec = records[dl.name];
     const detail = cfg.detail && demandOpen.has(idx)
       ? `<tr class="detail-row"><td colspan="${cfg.columns.length}">${cfg.detail(dl, idx)}</td></tr>` : "";
-    return `<tr data-row="${idx}" class="${liveStage(dl) ? "live-row" : ""}">${cfg.columns.map(col => renderStageCell(dl, idx, rec, col)).join("")}</tr>${detail}`;
+    return `<tr data-row="${idx}" class="${liveStage(dl) ? "live-row" : ""}">${stageCellsHtml(key, cfg, dl, idx, rec)}</tr>${detail}`;
   };
   // 진행 중 딜이 맨 앞에 오도록 이어 붙인 뒤 30종목씩 자른다(진행 중 딜은 항상 1페이지).
   const all = live.concat(rest);
