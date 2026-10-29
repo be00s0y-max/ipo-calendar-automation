@@ -6418,7 +6418,7 @@ function demandDetailHtml(dl, idx){
   return `<div class="demand-detail">
     <div class="dd-col"><div class="dd-title">수요예측 조건 (DART 증권신고서)</div>${termsHtml(dl)}</div>
     <div class="dd-col"><div class="dd-title">주관사 계좌 (누르면 기호 없이 복사)</div>${accountsHtml(dl)}</div>
-    <div class="dd-col dd-wide"><div class="dd-title">펀드별 참여</div>${fundsHtml(dl, idx)}</div>
+    <div class="dd-col dd-wide"><div class="dd-title">펀드별 참여</div>${records[dl.name].participation === "미참여" ? `<div class="info-none" style="padding:8px 0;font-weight:700">미참여</div>` : fundsHtml(dl, idx)}</div>
   </div>`;
 }
 function termsHtml(dl){
@@ -7424,7 +7424,26 @@ document.addEventListener("change", e => {
   if (el.type === "checkbox") value = el.checked;
   else if (el.type === "number") value = el.value === "" ? null : Number(el.value);
   else value = el.value;
+  // "미참여"를 고르면 이 종목에 적었던 참여 값(신청일·가격·수량·배정·확약·펀드별)을 모두 지운다
+  // — 다른 종목의 참여 데이터와 헷갈리지 않게.
+  if (field === "participation" && value === "미참여") {
+    if (!confirm(`${dl.name}을(를) 미참여로 바꾸면 적어 둔 신청일·참여가격·수량·배정·확약·펀드별 값이 모두 지워집니다. 계속할까요?`)) {
+      const rec = records[dl.name];
+      el.value = isJoined(rec) ? "참여" : (rec.participation === "미참여" ? "미참여" : "");
+      return;
+    }
+    Object.assign(records[dl.name], {
+      participation: "미참여", joined: false, appliedDate: "", price: null, qty: null, commit: "",
+      allotDate: "", allotLink: "", allotShares: null, allotAmount: null, funds: {}, allotBp: {},
+    });
+    persistRecords();
+    showToast(`${dl.name}: 미참여로 저장, 적었던 값을 지웠습니다`);
+    renderStageTable("demand");
+    rerender();
+    return;
+  }
   records[dl.name][field] = value;
+  if (field === "participation") renderStageTable("demand"); // 미참여 → 참여로 돌리면 펀드별 표를 다시 보여준다
   // 종목 줄 확약여부를 바꾸면 코벤 펀드(값이 있는 것)에 넣고 신탁·H일임 규칙을 다시 적용한다
   if (field === "commit" && el.closest("#stage-demand")) {
     const rec = records[dl.name];
