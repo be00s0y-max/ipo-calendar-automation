@@ -232,6 +232,12 @@
   .stage-table-wrap {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto;
   }
+  /* 단계 탭 페이지 나누기 (30종목씩) */
+  .stage-pager { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; padding: 10px; border-top: 1px solid var(--border); }
+  .stage-pager button { font-family: var(--font-mono); font-size: 12px; min-width: 30px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--ink-dim); cursor: pointer; }
+  .stage-pager button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  .stage-pager button:disabled { opacity: .35; cursor: default; }
+  .stage-pager .pg-info { font-size: 12px; color: var(--ink-dim); margin-left: 8px; }
 
   /* ---- 배정 탭: 등록 폼 ---- */
   .allot-form {
@@ -6114,11 +6120,32 @@ document.addEventListener("click", e => {
 
 /* ---------- 단계 탭 검색 ---------- */
 const stageSearch = {}; // 탭 키 → 종목명 검색어
+// 수요예측·청약·납입 탭은 종목이 계속 늘어서 30종목씩 페이지로 나눈다.
+const STAGE_PAGE_SIZE = 30;
+const stagePage = {};   // 탭 키 → 현재 페이지(1부터)
+document.addEventListener("click", e => {
+  const b = e.target.closest("button[data-pg-key]");
+  if (!b || b.disabled) return;
+  stagePage[b.dataset.pgKey] = Number(b.dataset.pg);
+  renderStageTable(b.dataset.pgKey);
+  const wrap = document.getElementById("stage-" + b.dataset.pgKey);
+  if (wrap) wrap.scrollIntoView({ block: "start", behavior: "smooth" });
+});
+function stagePagerHtml(key, page, pages, total){
+  if (pages <= 1) return "";
+  const btn = (pg, label, extra = "") => `<button data-pg-key="${key}" data-pg="${pg}" ${extra}>${label}</button>`;
+  let h = btn(page - 1, "‹", page === 1 ? "disabled" : "");
+  for (let pg = 1; pg <= pages; pg++) h += btn(pg, pg, pg === page ? 'class="active"' : "");
+  h += btn(page + 1, "›", page === pages ? "disabled" : "");
+  const from = (page - 1) * STAGE_PAGE_SIZE + 1, to = Math.min(page * STAGE_PAGE_SIZE, total);
+  return `<div class="stage-pager">${h}<span class="pg-info">${from}–${to} / 전체 ${total}종목</span></div>`;
+}
 document.addEventListener("input", e => {
   const el = e.target.closest("input[data-stage-search]");
   if (!el) return;
   const key = el.dataset.stageSearch;
   stageSearch[key] = el.value.trim();
+  stagePage[key] = 1; // 검색어가 바뀌면 1페이지부터
   if (key === "allot") renderAllotRegistry(); else renderStageTable(key);
 });
 
@@ -7405,10 +7432,19 @@ function renderStageTable(key){
       ? `<tr class="detail-row"><td colspan="${cfg.columns.length}">${cfg.detail(dl, idx)}</td></tr>` : "";
     return `<tr data-row="${idx}" class="${liveStage(dl) ? "live-row" : ""}">${cfg.columns.map(col => renderStageCell(dl, idx, rec, col)).join("")}</tr>${detail}`;
   };
-  const rows = live.map(rowHtml).join("")
-    + (live.length && rest.length ? `<tr class="live-sep"><td colspan="${cfg.columns.length}"></td></tr>` : "")
-    + rest.map(rowHtml).join("");
-  container.innerHTML = `<table class="stage-table"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+  // 진행 중 딜이 맨 앞에 오도록 이어 붙인 뒤 30종목씩 자른다(진행 중 딜은 항상 1페이지).
+  const all = live.concat(rest);
+  const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
+  const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
+  stagePage[key] = page;
+  const slice = all.slice((page - 1) * STAGE_PAGE_SIZE, page * STAGE_PAGE_SIZE);
+  const rows = slice.map((idx, i) => {
+    const sep = i > 0 && liveStage(deals[slice[i - 1]]) && !liveStage(deals[idx])
+      ? `<tr class="live-sep"><td colspan="${cfg.columns.length}"></td></tr>` : "";
+    return sep + rowHtml(idx);
+  }).join("");
+  container.innerHTML = `<table class="stage-table"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`
+    + stagePagerHtml(key, page, pages, all.length);
 }
 
 function renderAllStageTables(){
