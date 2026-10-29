@@ -6107,13 +6107,22 @@ function renderStatusTab(){
     : `<span style="color:#666">${!stPicked.size ? "위에서 종목을 고르세요." : "고른 펀드에 값이 있는 종목이 없습니다."}</span>`;
 }
 // 미리보기와 복사용 표. 복사용(forCopy)은 엑셀이 숫자로 받게 쉼표 없이 넣는다.
+// 글자 폭 어림(맑은 고딕 10pt): 한글 13px, 그 밖 7px
+function textPx(t){ return [...String(t == null ? "" : t)].reduce((a, ch) => a + (/[가-힣ㄱ-ㅎ]/.test(ch) ? 13 : 7), 0); }
 function statusTableHtml(rows, forCopy){
-  const C = "border:1px solid #000;padding:2px 8px;white-space:nowrap;text-align:center;";
-  const R = "border:1px solid #000;padding:2px 8px;white-space:nowrap;text-align:right;";
+  // 복사용은 엑셀 기본 얇은 선(.5pt windowtext)으로 — 1px로 넣으면 엑셀에서 굵게 보인다.
+  const line = forCopy ? "border:.5pt solid windowtext;" : "border:1px solid #000;";
+  const C = line + "padding:2px 8px;white-space:nowrap;text-align:center;";
+  const R = line + "padding:2px 8px;white-space:nowrap;text-align:right;";
   const H = C + "background:#d9e1f2;font-weight:700;";
   const nf = forCopy ? (n => n == null || n === "" ? "" : String(n)) : fmtNum;
-  return `<table style="border-collapse:collapse;font-family:'맑은 고딕','Malgun Gothic',sans-serif;font-size:10pt;">
-        <tr>${statusHead().map(h => `<td style="${H}">${h}</td>`).join("")}</tr>
+  // 엑셀에 붙였을 때 글자가 잘리지 않게 칸마다 가장 긴 글자에 맞춘 너비를 <col>로 넣는다(미참여 합친 칸은 빼고 계산).
+  const head = statusHead();
+  const cellsOf = r => [r.name].concat(stFunds.size ? [fundLabel(r.fund)] : [], [fmtNum(r.price), r.date, fmtNum(r.qty), fmtNum(r.allot), r.commit]);
+  const widths = head.map((h, i) => Math.max(textPx(h), ...rows.map(r => r.np ? (i === 0 ? textPx(r.name) : 0) : textPx(cellsOf(r)[i]))) + 24);
+  const cols = forCopy ? `<colgroup>${widths.map(w => `<col width="${w}" style="width:${Math.round(w * 0.75)}pt">`).join("")}</colgroup>` : "";
+  return `<table style="border-collapse:collapse;font-family:'맑은 고딕','Malgun Gothic',sans-serif;font-size:10pt;">${cols}
+        <tr>${head.map((h, i) => `<td style="${H}${forCopy ? `width:${Math.round(widths[i] * 0.75)}pt;` : ""}">${h}</td>`).join("")}</tr>
         ${rows.map(r => r.np ? `<tr><td style="${C}">${escHtml(r.name)}</td><td colspan="${statusHead().length - 1}" style="${C}color:#666;">미참여</td></tr>` : `<tr><td style="${C}">${escHtml(r.name)}</td>${stFunds.size ? `<td style="${C}">${escHtml(fundLabel(r.fund))}</td>` : ""}<td style="${R}">${nf(r.price)}</td><td style="${C}">${escHtml(r.date)}</td><td style="${R}">${nf(r.qty)}</td><td style="${R}">${nf(r.allot)}</td><td style="${C}">${escHtml(r.commit)}</td></tr>`).join("")}
       </table>`;
 }
