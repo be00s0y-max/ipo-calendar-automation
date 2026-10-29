@@ -618,6 +618,38 @@
                background: var(--surface-2); color: var(--ink); border-radius: 6px; padding: 4px 9px; cursor: pointer; }
   .acct-copy:hover { border-color: var(--accent); color: var(--accent); }
   .acct-none { font-size: 12px; color: var(--ink-faint); }
+  /* ---- 계좌 탭 ---- */
+  .ad-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .ad-bar .spacer { flex: 1; }
+  .ad-btn { font-family: var(--font-kr); font-size: 12.5px; font-weight: 700; padding: 7px 12px; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); cursor: pointer; }
+  .ad-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .ad-btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .ad-form { display: none; flex-wrap: wrap; gap: 8px; align-items: flex-end; background: var(--surface); border: 1px solid var(--border);
+             border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+  .ad-form.show { display: flex; }
+  .ad-form label { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: var(--ink-dim); font-weight: 600; }
+  .ad-form input, .ad-form select { font-family: var(--font-kr); font-size: 13px; padding: 6px 8px; border: 1px solid var(--border);
+             border-radius: 6px; background: var(--surface); color: var(--ink); min-width: 0; }
+  .ad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+  .ad-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .ad-card h3 { margin: 0 0 4px; font-size: 15px; font-weight: 800; }
+  .ad-card h3 .tag { font-size: 11px; font-weight: 600; color: var(--ink-faint); margin-left: 6px; }
+  .ad-sec { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .ad-sec:first-of-type { border-top: none; padding-top: 0; }
+  .ad-sec-t { font-size: 11px; font-weight: 800; color: var(--ink-faint); letter-spacing: .04em; margin-bottom: 4px; }
+  .ad-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 0; font-size: 12.5px; }
+  .ad-row .k { color: var(--ink-dim); white-space: nowrap; }
+  .ad-row .k small { color: var(--ink-faint); margin-left: 4px; font-size: 11px; }
+  .ad-row .r { display: flex; align-items: center; gap: 4px; min-width: 0; }
+  .ad-row .acct-copy { white-space: normal; word-break: break-all; text-align: right; }
+  .ad-del { border: 1px solid var(--border); background: none; color: var(--ink-faint); border-radius: 6px; font-size: 11px;
+            padding: 3px 7px; cursor: pointer; white-space: nowrap; }
+  .ad-del:hover, .ad-del.arm { color: var(--today-ring); border-color: var(--today-ring); }
+  .ad-memo { margin-top: 6px; font-size: 12px; line-height: 1.55; color: var(--ink-dim); background: var(--surface-2);
+             border-radius: 8px; padding: 8px 10px; white-space: pre-line; }
+  textarea.ad-memo { width: 100%; box-sizing: border-box; border: 1px solid var(--border); font-family: var(--font-kr); resize: vertical; min-height: 60px; white-space: pre-wrap; }
+  .ad-empty { background: var(--surface); border: 1px dashed var(--border); border-radius: 12px; padding: 28px; text-align: center; color: var(--ink-faint); font-size: 13px; }
   .stc-toggle { border: none; background: none; padding: 0; cursor: pointer; color: var(--ink); text-align: left; font: inherit; }
   .stc-toggle:hover .stc-name { color: var(--accent); }
   tr.detail-row > td { background: var(--surface-2); white-space: normal !important; }
@@ -770,7 +802,9 @@
     <button class="tabbtn" data-tab="demand">수요예측</button>
     <button class="tabbtn" data-tab="sub">청약</button>
     <button class="tabbtn" data-tab="pay">납입</button>
+    <span class="tab-divider"></span>
     <button class="tabbtn" data-tab="reply">배정 현황</button>
+    <button class="tabbtn" data-tab="acct">계좌</button>
   </div>
 
   <div class="tab-panel" id="tab-todo">
@@ -984,6 +1018,32 @@
     </div>
     <div class="stage-search"><input type="text" class="tab-search" data-stage-search="pay" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-pay"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-acct">
+    <div class="stage-head">
+      <h2>계좌</h2>
+      <p>계좌번호를 누르면 숫자만 복사됩니다. 계좌 정보는 이 페이지의 공유 저장에만 들어가고 GitHub 저장소에는 들어가지 않습니다.</p>
+    </div>
+    <div class="ad-bar">
+      <input type="text" class="tab-search" id="adSearch" placeholder="증권사 검색">
+      <span class="nt-hint" id="adStatus" style="margin:0"></span>
+      <span class="spacer"></span>
+      <label class="ad-btn" title="계좌 엑셀(계좌·일임계좌(전북)·일임계좌(인성) 시트)을 읽어 목록을 채웁니다. 직접 추가한 계좌는 그대로 둡니다.">계좌 엑셀 불러오기
+        <input type="file" id="adXlsx" accept=".xlsx,.xlsm,.xls" hidden></label>
+      <button type="button" class="ad-btn" id="adAddToggle">+ 계좌 추가</button>
+      <button type="button" class="ad-btn" id="adEditToggle">편집</button>
+    </div>
+    <div class="ad-form" id="adForm">
+      <label>증권사<input type="text" id="adfBroker" list="adBrokerList" placeholder="예: 한국투자증권" style="width:150px"></label>
+      <datalist id="adBrokerList"></datalist>
+      <label>구분<select id="adfSec"><option>고유</option><option>신탁</option><option>코스닥벤처</option><option>일임</option><option>H일임</option></select></label>
+      <label>종류<select id="adfKind"><option>계좌</option><option>연계</option><option>당좌</option></select></label>
+      <label>은행<input type="text" id="adfBank" placeholder="연계·당좌만" style="width:90px"></label>
+      <label>계좌번호<input type="text" id="adfNum" placeholder="000-00-000000" style="width:170px"></label>
+      <button type="button" class="ad-btn on" id="adfSave">추가</button>
+    </div>
+    <div id="adList"></div>
   </div>
 
   <div class="tab-panel" id="tab-reply">
@@ -5193,7 +5253,7 @@ async function syncRecordsNow(){
   try {
     const artifact = await getArtifactNs();
     if (!artifact) { failRecordsSync("no-namespace"); return; }
-    const payload = JSON.stringify({ updatedAt: recordsUpdatedAt, nav: navValue, records, uwLinks, noticeSettings, accountBook });
+    const payload = JSON.stringify({ updatedAt: recordsUpdatedAt, nav: navValue, records, uwLinks, noticeSettings, accountBook, accountDir });
     await artifact.publish({ [SHARED_RECORDS_FILE]: payload });
     // 성공 — 다음에 실패하면 다시 알려줄 수 있게 경고 플래그를 푼다.
     recordsSyncWarned = false;
@@ -5239,6 +5299,11 @@ async function loadSharedRecords(){
     if (data.accountBook) {
       accountBook = data.accountBook;
       try { localStorage.setItem(ACCOUNT_KEY, JSON.stringify(accountBook)); } catch(e) {}
+    }
+    if (data.accountDir) {
+      accountDir = data.accountDir;
+      try { localStorage.setItem(ACCOUNT_DIR_KEY, JSON.stringify(accountDir)); } catch(e) {}
+      renderAcctTab();
     }
     if (data.noticeSettings) {
       noticeSettings = Object.assign(noticeSettings, data.noticeSettings);
@@ -6494,7 +6559,7 @@ let accountBook = (() => {
   try { return JSON.parse(localStorage.getItem(ACCOUNT_KEY) || "{}"); } catch(e) { return {}; }
 })();
 // 사명 변경·약칭 차이 — 같은 회사를 같은 키로 모은다.
-const BROKER_ALIAS = { "하이": "im", "아이엠": "im", "미래에셋대우": "미래에셋", "이베스트": "ls" };
+const BROKER_ALIAS = { "한투": "한국", "하이": "im", "아이엠": "im", "미래에셋대우": "미래에셋", "이베스트": "ls" };
 function brokerKey(name){
   let k = String(name || "").replace(/\([^)]*\)/g, "").replace(/주식회사|㈜|\s/g, "").toLowerCase();
   k = k.replace(/gib$/, "").replace(/(금융투자|투자증권|증권)$/, "");
@@ -6563,6 +6628,244 @@ document.getElementById("acctApply").addEventListener("click", () => {
     renderStageTable("demand");
   } catch (err) { showToast("형식이 올바르지 않습니다"); }
 });
+
+/* ---------- 계좌 탭 ----------
+   증권사별 계좌 목록. 계좌번호라 코드(공개 저장소)에 넣지 않고, 계좌 엑셀을 이
+   페이지에서 읽어 accountDir로 참여 정보와 같은 경로(localStorage + records.json)에 저장한다.
+   엑셀에서 가져오는 것:
+     - 계좌 시트: E열 = "고유", G열이 "신탁계정"/"코스닥벤처"인 줄의 H열 = "신탁"/"코스닥벤처"
+       (증권사명은 F열, 없으면 B열. I~L열의 연락처·ID/PW는 가져오지 않는다.)
+     - 일임계좌(전북) → 일임, 일임계좌(인성) → H일임: B열 계좌, C열 납입계좌(연계/당좌), D열 이후 비고
+   accountDir = { brokers: { 키: { name, tag, accts: [{ sec, kind, bank, text, manual }], memo: { 일임, H일임 }, memoEdited } }, order: [키] } */
+const ACCOUNT_DIR_KEY = "ipoCalendarAccountDir_v1";
+let accountDir = (() => {
+  try { return JSON.parse(localStorage.getItem(ACCOUNT_DIR_KEY) || "null") || { brokers: {}, order: [] }; }
+  catch(e) { return { brokers: {}, order: [] }; }
+})();
+let adEditMode = false;
+function saveAccountDir(){
+  try { localStorage.setItem(ACCOUNT_DIR_KEY, JSON.stringify(accountDir)); } catch(e) {}
+  persistRecords();
+}
+function adCell(v){ return v == null ? "" : String(v).replace(/ /g, " ").trim(); }
+// "LS증권(구,이베스트증권)" → 이름 "LS증권", 태그 "구,이베스트증권".
+// 같은 증권사가 여러 이름으로 나오면(한투/한국투자증권, 하이투자증권/IM증권) 약칭·옛 이름(BROKER_ALIAS로
+// 맞춘 이름)보다 그대로 맞는 이름을, 계좌 시트에선 B열보다 F열 이름을 표시 이름으로 쓴다.
+function adBroker(dir, rawName, fromF){
+  const key = brokerKey(rawName);
+  const plain = String(rawName).replace(/\([^)]*\)/g, "").trim();
+  const score = (brokerKey(plain.replace(/\s/g, "")) === key && !BROKER_ALIAS[String(plain).replace(/주식회사|㈜|\s/g, "").toLowerCase().replace(/gib$/, "").replace(/(금융투자|투자증권|증권)$/, "")] ? 2 : 0) + (fromF ? 1 : 0);
+  const tag = (rawName.match(/\(([^)]*)\)/) || [])[1] || "";
+  let b = dir.brokers[key];
+  if (!b) {
+    b = dir.brokers[key] = { name: plain, tag, accts: [], memo: {}, memoEdited: {}, nameScore: score };
+    dir.order.push(key);
+  } else if (score > (b.nameScore || 0)) {
+    b.name = plain; b.nameScore = score; if (tag) b.tag = tag;
+  }
+  return b;
+}
+// 복사값: 계좌번호의 숫자만. "(펀드가입분)"처럼 글자 괄호는 빼고, "(11)"처럼 짧은 숫자 괄호는 붙이고,
+// "20576570-99(060-20576570-11)"처럼 괄호 안이 다른 번호면 앞 번호만 쓴다.
+function adCopyDigits(text){
+  let t = String(text).replace(/\([^)]*[가-힣][^)]*\)/g, "");
+  t = t.replace(/\((\d{1,3})\)/g, "$1");
+  t = t.split("(")[0];
+  return t.replace(/\D/g, "");
+}
+function parseAccountWorkbook(XLSX, wb){
+  const dir = { brokers: {}, order: [] };
+  const rowsOf = name => wb.Sheets[name] ? XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: "" }) : null;
+  // 계좌 시트
+  const main = rowsOf("계좌");
+  if (main) {
+    const merges = (wb.Sheets["계좌"]["!merges"] || []);
+    const memoAt = (r, c) => merges.some(m => m.s.r === r && m.s.c === c && m.e.c > m.s.c); // 여러 칸 병합 = 메모 줄
+    let cur = null;
+    for (let r = 0; r < main.length; r++) {
+      const row = main[r];
+      const B = adCell(row[1]), C = adCell(row[2]), D = adCell(row[3]), E = adCell(row[4]), F = adCell(row[5]), G = adCell(row[6]), H = adCell(row[7]);
+      if (/예탁원|펀드코드/.test(B)) break; // 아래쪽 펀드코드·예탁원 계좌 부분은 증권사 계좌 목록이 아니다
+      const bMemo = memoAt(r, 1);
+      const name = F || (bMemo ? "" : B);
+      if (name) cur = /폐쇄/.test(name) ? null : adBroker(dir, name, !!F);
+      if (!cur) continue;
+      if (E && !bMemo) {
+        const label = [C, D].find(x => /^고유-/.test(x)) || "";
+        cur.accts.push({ sec: "고유", kind: label.replace(/^고유-/, ""), bank: "", text: E });
+      }
+      if ((G === "신탁계정" || G === "코스닥벤처") && H && !memoAt(r, 7)) {
+        cur.accts.push({ sec: G === "신탁계정" ? "신탁" : "코스닥벤처", kind: "", bank: "", text: H });
+      }
+    }
+  }
+  // 일임계좌(전북) → 일임, 일임계좌(인성) → H일임
+  [["일임계좌(전북)", "일임"], ["일임계좌(인성)", "H일임"]].forEach(([sheet, sec]) => {
+    const rows = rowsOf(sheet);
+    if (!rows) return;
+    let cur = null;
+    for (let r = 2; r < rows.length; r++) {
+      const row = rows[r].map(adCell);
+      if (row[0]) cur = adBroker(dir, row[0]);
+      if (!cur) continue;
+      const memo = [];
+      if (row[1]) cur.accts.push({ sec, kind: "계좌", bank: "", text: row[1] });
+      if (row[2]) {
+        const m = row[2].match(/^(연계|당좌)\)\s*(.*)$/);
+        const kind = m ? m[1] : "납입", rest = m ? m[2] : row[2];
+        const at = rest.search(/\d/);
+        if (at >= 0 && (rest.match(/\d/g) || []).length >= 6) {
+          cur.accts.push({ sec, kind, bank: rest.slice(0, at).trim(), text: rest.slice(at).trim() });
+        } else memo.push(row[2]);
+      }
+      row.slice(3).forEach(v => { if (v) memo.push(v); });
+      memo.forEach(v => {
+        const prev = cur.memo[sec] || "";
+        if (!prev.includes(v)) cur.memo[sec] = prev ? prev + "\n" + v : v;
+      });
+    }
+  });
+  // 계좌도 비고도 없는 증권사(이름만 있는 줄)는 뺀다
+  dir.order = dir.order.filter(k => dir.brokers[k].accts.length || Object.values(dir.brokers[k].memo).some(Boolean));
+  Object.keys(dir.brokers).forEach(k => { if (!dir.order.includes(k)) delete dir.brokers[k]; });
+  return dir;
+}
+// 엑셀로 다시 채울 때: 엑셀 계좌는 새로 바꾸고, 직접 추가한 계좌와 직접 고친 비고는 남긴다.
+function mergeAccountDir(fresh){
+  const old = accountDir;
+  (old.order || []).forEach(k => {
+    const o = old.brokers[k];
+    const manual = (o.accts || []).filter(a => a.manual);
+    const keepMemo = Object.keys(o.memoEdited || {}).filter(sec => o.memoEdited[sec]);
+    if (!manual.length && !keepMemo.length) return;
+    if (!fresh.brokers[k]) { fresh.brokers[k] = { name: o.name, tag: o.tag || "", accts: [], memo: {}, memoEdited: {} }; fresh.order.push(k); }
+    const f = fresh.brokers[k];
+    f.accts = f.accts.concat(manual);
+    keepMemo.forEach(sec => { f.memo[sec] = o.memo[sec]; f.memoEdited[sec] = true; });
+  });
+  return fresh;
+}
+function adRowHtml(key, a, i, label){
+  const copy = adCopyDigits(a.text);
+  return `<div class="ad-row"><span class="k">${label}${a.manual ? `<small>직접 추가</small>` : ""}</span><span class="r">
+    <button class="acct-copy" data-copy="${escHtml(copy)}" title="누르면 ${escHtml(copy)} 복사">${escHtml(a.text)}</button>
+    ${adEditMode ? `<button class="ad-del" data-ad-del="${escHtml(key)}|${i}">삭제</button>` : ""}</span></div>`;
+}
+// 고유·신탁·코스닥벤처는 제목 없이 한 묶음, 일임·H일임은 제목 + 계좌/연계/당좌 + 비고
+function adCardBody(key, b){
+  const all = b.accts.map((a, i) => ({ a, i }));
+  const base = ["고유", "신탁", "코스닥벤처"].flatMap(sec => all.filter(x => x.a.sec === sec))
+    .map(({ a, i }) => adRowHtml(key, a, i, `${a.sec}${a.kind ? `<small>${escHtml(a.kind)}</small>` : ""}`)).join("");
+  const ilim = ["일임", "H일임"].map(sec => {
+    const list = all.filter(x => x.a.sec === sec);
+    const memo = (b.memo || {})[sec] || "";
+    if (!list.length && !memo) return "";
+    const rows = list.map(({ a, i }) => adRowHtml(key, a, i,
+      `${escHtml(a.kind || "계좌")}${a.bank ? `<small>${escHtml(a.bank)}</small>` : ""}`)).join("");
+    const memoHtml = adEditMode
+      ? `<textarea class="ad-memo" data-ad-memo="${escHtml(key)}|${sec}" placeholder="비고">${escHtml(memo)}</textarea>`
+      : (memo ? `<div class="ad-memo">${escHtml(memo)}</div>` : "");
+    return `<div class="ad-sec"><div class="ad-sec-t">${sec}</div>${rows}${memoHtml}</div>`;
+  }).join("");
+  return (base ? `<div class="ad-sec">${base}</div>` : "") + ilim;
+}
+function renderAcctTab(){
+  const box = document.getElementById("adList");
+  if (!box) return;
+  const dl = document.getElementById("adBrokerList");
+  if (dl) dl.innerHTML = (accountDir.order || []).map(k => `<option value="${escHtml(accountDir.brokers[k].name)}">`).join("");
+  const q = (document.getElementById("adSearch").value || "").trim();
+  const keys = (accountDir.order || []).filter(k => accountDir.brokers[k] && (!q || matchesQuery(accountDir.brokers[k].name + " " + (accountDir.brokers[k].tag || ""), q)));
+  if (!(accountDir.order || []).length) {
+    box.innerHTML = `<div class="ad-empty">아직 계좌가 없습니다 — 위 <b>계좌 엑셀 불러오기</b>로 계좌 엑셀을 올리거나 <b>+ 계좌 추가</b>로 직접 넣어 주세요.</div>`;
+    return;
+  }
+  if (!keys.length) { box.innerHTML = `<div class="ad-empty">"${escHtml(q)}" 검색 결과가 없습니다.</div>`; return; }
+  box.innerHTML = `<div class="ad-grid">${keys.map(k => {
+    const b = accountDir.brokers[k];
+    return `<div class="ad-card"><h3>${escHtml(b.name)}${b.tag ? `<span class="tag">${escHtml(b.tag)}</span>` : ""}</h3>
+      ${adCardBody(k, b)}</div>`;
+  }).join("")}</div>`;
+}
+document.getElementById("adSearch").addEventListener("input", renderAcctTab);
+document.getElementById("adAddToggle").addEventListener("click", e => {
+  const f = document.getElementById("adForm");
+  f.classList.toggle("show");
+  e.currentTarget.classList.toggle("on", f.classList.contains("show"));
+  if (f.classList.contains("show")) document.getElementById("adfBroker").focus();
+});
+document.getElementById("adEditToggle").addEventListener("click", e => {
+  adEditMode = !adEditMode;
+  e.currentTarget.classList.toggle("on", adEditMode);
+  e.currentTarget.textContent = adEditMode ? "편집 끝내기" : "편집";
+  renderAcctTab();
+});
+document.getElementById("adfSec").addEventListener("change", e => {
+  const kind = document.getElementById("adfKind");
+  const ilim = e.target.value === "일임" || e.target.value === "H일임";
+  kind.disabled = !ilim; if (!ilim) kind.value = "계좌";
+});
+document.getElementById("adfSec").dispatchEvent(new Event("change"));
+document.getElementById("adfSave").addEventListener("click", () => {
+  const name = document.getElementById("adfBroker").value.trim();
+  const sec = document.getElementById("adfSec").value;
+  const kind = document.getElementById("adfKind").value;
+  const bank = document.getElementById("adfBank").value.trim();
+  const text = document.getElementById("adfNum").value.trim();
+  if (!name || !text) { showToast("증권사와 계좌번호를 넣어 주세요"); return; }
+  const b = adBroker(accountDir, name);
+  b.accts.push({ sec, kind: sec === "일임" || sec === "H일임" ? kind : "", bank: kind === "계좌" ? "" : bank, text, manual: true });
+  saveAccountDir();
+  document.getElementById("adfNum").value = ""; document.getElementById("adfBank").value = "";
+  showToast(`${b.name} ${sec} 계좌를 추가했습니다`);
+  renderAcctTab();
+});
+document.addEventListener("click", e => {
+  const del = e.target.closest("[data-ad-del]");
+  if (!del) return;
+  // 확인창(confirm)은 아티팩트에서 막힐 수 있어, 한 번 누르면 "정말 삭제" 로 바뀌고 다시 눌러야 지운다.
+  if (!del.classList.contains("arm")) { del.classList.add("arm"); del.textContent = "정말 삭제"; return; }
+  const [key, i] = del.dataset.adDel.split("|");
+  const b = accountDir.brokers[key];
+  if (!b) return;
+  b.accts.splice(Number(i), 1);
+  saveAccountDir();
+  showToast("계좌를 지웠습니다");
+  renderAcctTab();
+});
+document.addEventListener("change", e => {
+  const ta = e.target.closest("[data-ad-memo]");
+  if (!ta) return;
+  const [key, sec] = ta.dataset.adMemo.split("|");
+  const b = accountDir.brokers[key];
+  if (!b) return;
+  b.memo = b.memo || {}; b.memoEdited = b.memoEdited || {};
+  b.memo[sec] = ta.value.trim(); b.memoEdited[sec] = true;
+  saveAccountDir();
+  showToast("비고를 저장했습니다");
+});
+document.getElementById("adXlsx").addEventListener("change", async e => {
+  const file = (e.target.files || [])[0];
+  e.target.value = "";
+  if (!file) return;
+  const status = document.getElementById("adStatus");
+  status.textContent = "읽는 중…";
+  try {
+    const XLSX = await loadXlsxLib();
+    const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+    if (!wb.Sheets["계좌"] && !wb.Sheets["일임계좌(전북)"] && !wb.Sheets["일임계좌(인성)"]) {
+      status.textContent = "계좌·일임계좌(전북)·일임계좌(인성) 시트를 찾지 못했습니다"; return;
+    }
+    accountDir = mergeAccountDir(parseAccountWorkbook(XLSX, wb));
+    saveAccountDir();
+    const n = accountDir.order.reduce((a, k) => a + accountDir.brokers[k].accts.length, 0);
+    status.textContent = `${accountDir.order.length}개 증권사 · 계좌 ${n}개를 불러왔습니다`;
+    renderAcctTab();
+  } catch (err) {
+    status.textContent = "읽지 못했습니다: " + (err && err.message || err);
+  }
+});
+renderAcctTab();
 
 /* ---------- 청약 공문 출력 ----------
    청약일에 수신처 두 곳(투자일임 고객)으로 보내는 "IPO 수요예측 청약 대금 납입"
@@ -8252,6 +8555,7 @@ function applyAppState(state){
   if (key === "mezz") renderMezzTab();
   if (key === "todo") renderTodoTab();
   if (key === "reply") renderReplyView();
+  if (key === "acct") renderAcctTab();
 }
 function navigateTo(state){
   applyAppState(state);
