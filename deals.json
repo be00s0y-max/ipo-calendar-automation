@@ -912,6 +912,24 @@
     "finalPrice": null
   },
   {
+    "name": "신영스팩12호",
+    "no": "2357",
+    "uw": "신영증권",
+    "demand": [
+      "2026-11-19",
+      "2026-11-20"
+    ],
+    "sub": [
+      "2026-11-24",
+      "2026-11-25"
+    ],
+    "pay": "2026-11-27",
+    "list": null,
+    "dealSizeM": 12500,
+    "stockCode": "0231Y0",
+    "finalPrice": null
+  },
+  {
     "name": "엔키화이트햇",
     "no": "2343",
     "uw": "신영증권",
@@ -1017,6 +1035,24 @@
     "list": null,
     "dealSizeM": 53504,
     "stockCode": "103060",
+    "finalPrice": null
+  },
+  {
+    "name": "데스틴파워",
+    "no": "2356",
+    "uw": "한국투자증권",
+    "demand": [
+      "2026-12-02",
+      "2026-12-08"
+    ],
+    "sub": [
+      "2026-12-14",
+      "2026-12-15"
+    ],
+    "pay": "2026-12-17",
+    "list": null,
+    "dealSizeM": 17600,
+    "stockCode": "273940",
     "finalPrice": null
   }
 ]

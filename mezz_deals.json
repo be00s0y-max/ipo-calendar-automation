@@ -1926,7 +1926,10 @@
     "conv_period_start": "2027-10-29",
     "conv_period_end": "2031-09-29",
     "refixing": "아니오",
-    "rcept_no": "20261021000401"
+    "rcept_no": "20261021000401",
+    "put_start": "2029-04-04",
+    "put_end": "2029-04-14",
+    "put_redemption": "2029-04-29"
   },
   "00309831_CB_5": {
     "name": "알에프텍",
