@@ -1279,7 +1279,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "10.29(목) 15:48";
+const LAST_UPDATED_KST = "10.29(목) 20:51";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -1287,6 +1287,14 @@ const LAST_UPDATED_KST = "10.29(목) 15:48";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "10.29(목) 20:51",
+    "items": [
+      "수요예측 결과 반영 1건 — 옵토닉스",
+      "확정 증권신고서 공시 1건 — 옵토닉스",
+      "신규 메자닌 3건 (BW 1건, CB 2건) — 다스코, 쏘닉스, 와이랩"
+    ]
+  },
   {
     "at": "10.29(목) 15:48",
     "items": [
@@ -1410,13 +1418,6 @@ const UPDATE_LOG = [
       "수요예측 결과 반영 1건 — 한국스팩17호",
       "확정 증권신고서 공시 1건 — 한국스팩17호"
     ]
-  },
-  {
-    "at": "10.19(월) 15:20",
-    "items": [
-      "수요예측 결과 반영 1건 — 한화플러스스팩6호",
-      "확정 증권신고서 공시 1건 — 한화플러스스팩6호"
-    ]
   }
 ];
 // AUTO-GENERATED:UPDATE_LOG:END
@@ -1461,7 +1462,7 @@ const deals = [
   { name: "한화플러스스팩6호", uw: "한화투자증권", demand: ["2026-10-14","2026-10-15"], sub: ["2026-10-20", "2026-10-21"], pay: "2026-10-23", list: "2026-10-30", dealSizeM: 12000, stockCode: "0127E0", finalPrice: 2000 },
   { name: "이에스티", uw: "대신증권", demand: ["2026-10-14","2026-10-20"], sub: ["2026-10-22", "2026-10-23"], pay: "2026-10-27", list: "2026-11-04", dealSizeM: 23320, stockCode: "495910", finalPrice: 12400 },
   { name: "아이엠스팩1호", uw: "아이엠증권", demand: ["2026-10-19","2026-10-20"], sub: ["2026-10-26", "2026-10-27"], pay: "2026-10-29", list: "2026-11-04", dealSizeM: 10000, stockCode: "0222E0", finalPrice: 2000 },
-  { name: "옵토닉스", uw: "한국투자증권", demand: ["2026-10-21","2026-10-27"], sub: ["2026-11-05", "2026-11-06"], pay: "2026-11-10", list: null, dealSizeM: 22000, stockCode: "493260", finalPrice: null },
+  { name: "옵토닉스", uw: "한국투자증권", demand: ["2026-10-21","2026-10-27"], sub: ["2026-11-05", "2026-11-06"], pay: "2026-11-10", list: "2026-11-17", dealSizeM: 22000, stockCode: "493260", finalPrice: 12000 },
   { name: "바로팜", uw: "미래에셋증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-02", "2026-11-03"], pay: "2026-11-05", list: null, dealSizeM: 29192, stockCode: "952366", finalPrice: null },
   { name: "넥스아이", uw: "한국투자증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-03", "2026-11-04"], pay: "2026-11-06", list: null, dealSizeM: 52500, stockCode: "493410", finalPrice: null },
   { name: "동원파츠", uw: "삼성증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-02", "2026-11-03"], pay: "2026-11-05", list: null, dealSizeM: 46690, stockCode: "0162D0", finalPrice: null },
@@ -1574,11 +1575,14 @@ const mezzDeals = [
   {"name": "휴맥스", "kind": "CB", "round": "27", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 5000000000, "board_date": "2026-10-22", "sub_date": "2026-10-30", "pay_date": "2026-10-30", "maturity_date": "2029-10-30", "coupon_rate": "0.0", "ytm_rate": "3.5", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 5320, "conv_period_start": "2027-10-30", "conv_period_end": "2029-09-30", "refixing": "아니오", "rcept_no": "20261028000399"},
   {"name": "대동", "kind": "CB", "round": "60", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 6000000000, "board_date": "2026-10-22", "sub_date": "2026-10-30", "pay_date": "2026-10-30", "maturity_date": "2031-10-30", "coupon_rate": "1.5", "ytm_rate": "4.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 7105, "conv_period_start": "2027-10-30", "conv_period_end": "2031-09-30", "refixing": "아니오", "rcept_no": "20261027000375"},
   {"name": "국전", "kind": "CB", "round": "4", "bondName": "무기명식 무보증 사모 전환사채", "amount": 17000000000, "board_date": "2026-10-23", "sub_date": "2026-11-02", "pay_date": "2026-11-02", "maturity_date": "2031-11-02", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 2696, "conv_period_start": "2027-11-02", "conv_period_end": "2031-10-02", "refixing": "아니오", "rcept_no": "20261023000414"},
+  {"name": "다스코", "kind": "BW", "round": "8", "bondName": "무기명식 무보증 사모 신주인수권부사채", "amount": 6000000000, "board_date": "2026-10-29", "sub_date": "2026-11-03", "pay_date": "2026-11-06", "maturity_date": "2031-11-06", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 3006, "conv_period_start": "2027-11-06", "conv_period_end": "2031-10-06", "refixing": "아니오", "rcept_no": "20261029000401"},
   {"name": "핑거", "kind": "CB", "round": "10", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-10-27", "sub_date": "2026-11-04", "pay_date": "2026-11-12", "maturity_date": "2029-11-12", "coupon_rate": "0.0", "ytm_rate": "7.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 12193, "conv_period_start": "2027-11-12", "conv_period_end": "2029-11-11", "refixing": "아니오", "rcept_no": "20261027000338"},
   {"name": "블루엠텍", "kind": "CB", "round": "2", "bondName": "기명식 무보증 사모 전환사채", "amount": 36000000000, "board_date": "2026-10-08", "sub_date": "2026-11-06", "pay_date": "2026-11-06", "maturity_date": "2033-11-06", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 3235, "conv_period_start": "2027-11-07", "conv_period_end": "2033-10-06", "refixing": "아니오", "rcept_no": "20261008000732"},
   {"name": "에이엘티", "kind": "CB", "round": "8", "bondName": "무기명식 무보증 사모 전환사채", "amount": 12200000000, "board_date": "2026-10-29", "sub_date": "2026-11-06", "pay_date": "2026-11-06", "maturity_date": "2031-11-06", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 15410, "conv_period_start": "2027-11-06", "conv_period_end": "2031-10-06", "refixing": "아니오", "rcept_no": "20261029000290"},
+  {"name": "와이랩", "kind": "CB", "round": "1", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 2000000000, "board_date": "2026-10-29", "sub_date": "2026-11-06", "pay_date": "2026-11-06", "maturity_date": "2030-11-06", "coupon_rate": "-", "ytm_rate": "1.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1908, "conv_period_start": "2027-11-06", "conv_period_end": "2030-10-06", "refixing": "아니오", "rcept_no": "20261029000503"},
   {"name": "LS전선", "kind": "EB", "round": "34", "bondName": "무기명식 무이권부 무보증 사모 교환사채", "amount": 500000000000, "board_date": "2026-09-10", "sub_date": "2026-11-09", "pay_date": "2026-11-09", "maturity_date": "2031-11-09", "coupon_rate": "0.00", "ytm_rate": "0.00", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 270000, "conv_period_start": "2026-11-10", "conv_period_end": "2031-10-09", "refixing": "아니오", "rcept_no": "20260911000411"},
   {"name": "KG에코솔루션", "kind": "EB", "round": "4", "bondName": "무기명식 무이권부 무보증 사모 교환사채", "amount": 16254726432, "board_date": "2026-10-07", "sub_date": "2026-11-09", "pay_date": "2026-11-09", "maturity_date": "2031-11-09", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 6872, "conv_period_start": "2026-12-09", "conv_period_end": "2031-10-09", "refixing": "아니오", "rcept_no": "20261008000635"},
+  {"name": "쏘닉스", "kind": "CB", "round": "1", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-10-29", "sub_date": "2026-11-09", "pay_date": "2026-11-09", "maturity_date": "2031-11-09", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 4813, "conv_period_start": "2027-11-09", "conv_period_end": "2031-10-09", "refixing": "아니오", "rcept_no": "20261029000654"},
   {"name": "두산퓨얼셀", "kind": "BW", "round": "1", "bondName": "무기명식 이권부 무보증 비분리형 사모 영구 신주인수권부사채", "amount": 100000000000, "board_date": "2026-10-13", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2056-11-12", "coupon_rate": "0.0", "ytm_rate": "2.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 43704, "conv_period_start": "2027-11-12", "conv_period_end": "2056-10-12", "refixing": "아니오", "rcept_no": "20261013000372"},
   {"name": "두산퓨얼셀", "kind": "CB", "round": "1", "bondName": "무기명식 이권부 무보증 사모 영구 전환사채", "amount": 300000000000, "board_date": "2026-10-13", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2056-11-12", "coupon_rate": "0.0", "ytm_rate": "2.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 43704, "conv_period_start": "2027-11-12", "conv_period_end": "2056-10-12", "refixing": "아니오", "rcept_no": "20261013000355"},
   {"name": "알에프텍", "kind": "CB", "round": "5", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 5000000000, "board_date": "2026-10-21", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2029-11-12", "coupon_rate": "2", "ytm_rate": "4", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 6485, "conv_period_start": "2027-11-12", "conv_period_end": "2029-10-12", "refixing": "아니오", "rcept_no": "20261021000315"},
@@ -3986,6 +3990,96 @@ const dartData = {
         "qty": 0
       }
     }
+  },
+  "옵토닉스": {
+    "offering": {
+      "offer_shares": 2200000,
+      "offer_amount_expected": 22000000000,
+      "offer_amount_final": 26400000000,
+      "subscription": {
+        "inst_start": "2026년 11월 05일(목)",
+        "inst_end": "2026년 11월 06일(금)"
+      },
+      "payment_date": "2026년 11월 10일"
+    },
+    "demand_summary": {
+      "total_count": 2317,
+      "total_qty": 1889842000,
+      "competition_rate": 1201.81
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 14,
+        "count_pct": "0.60%",
+        "qty": 16283000,
+        "qty_pct": "0.86%"
+      },
+      {
+        "band": "12,000원(상단) 초과",
+        "count": 34,
+        "count_pct": "1.47%",
+        "qty": 17552000,
+        "qty_pct": "0.93%"
+      },
+      {
+        "band": "12,000원(상단)",
+        "count": 2267,
+        "count_pct": "97.84%",
+        "qty": 1855986000,
+        "qty_pct": "98.21%"
+      },
+      {
+        "band": "10,000원(하단) 초과 ~ 12,000원(상단) 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "10,000원(하단)",
+        "count": 1,
+        "count_pct": "0.04%",
+        "qty": 1000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "10,000원(하단) 미만",
+        "count": 1,
+        "count_pct": "0.04%",
+        "qty": 20000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "합계",
+        "count": 2317,
+        "count_pct": "100.00%",
+        "qty": 1889842000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 14,
+        "qty": 10691000
+      },
+      "3개월 확약": {
+        "count": 5,
+        "qty": 2570000
+      },
+      "1개월 확약": {
+        "count": 6,
+        "qty": 5176000
+      },
+      "15일 확약": {
+        "count": 97,
+        "qty": 87759000
+      },
+      "미확약": {
+        "count": 2195,
+        "qty": 1783646000
+      }
+    }
   }
 };
 // AUTO-GENERATED:DART_DATA:END
@@ -4115,9 +4209,9 @@ const DEMAND_INFO = {
     ],
     "listed_shares": 9785000,
     "biz": "당사는 “광학식 자이로스코프”인 RLG (Ring Laser Gyroscope)와 FOG (Fiber Optic Gyroscope)의 핵심 광학 구성품을 제조해서 한화에어로스페이스에 공급하는 일을 주업으로 하고 있습니다.",
-    "rcept_no": "20261021000210",
-    "report_nm": "[기재정정]증권신고서(지분증권)",
-    "ov_rcept": "20261021000210"
+    "rcept_no": "20261029000504",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)",
+    "ov_rcept": "20261029000504"
   },
   "바로팜": {
     "band": [
@@ -7949,7 +8043,8 @@ const DART_FILING_URL = {
   "래블업": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000334",
   "영광(구.영광공작소)": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000239",
   "이에스티": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000363",
-  "아이엠스팩1호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261022000373"
+  "아이엠스팩1호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261022000373",
+  "옵토닉스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261029000504"
 };
 // AUTO-GENERATED:FILING_URL:END
 
@@ -8348,6 +8443,15 @@ const COMPANY_PROFILE = {
     "hm_url": "07327",
     "phn_no": "0221229485",
     "est_dt": "20260624"
+  },
+  "옵토닉스": {
+    "stock_code": "",
+    "ceo_nm": "이용범,이영우",
+    "corp_cls": "E",
+    "adres": "광주광역시 북구 첨단벤처소로15번길 63 (월출동, (주)옵토닉스)",
+    "hm_url": "www.optonics.net",
+    "phn_no": "0629731260",
+    "est_dt": "20041231"
   }
 };
 // AUTO-GENERATED:COMPANY_PROFILE:END

@@ -618,10 +618,10 @@
       "2026-11-06"
     ],
     "pay": "2026-11-10",
-    "list": null,
+    "list": "2026-11-17",
     "dealSizeM": 22000,
     "stockCode": "493260",
-    "finalPrice": null
+    "finalPrice": 12000
   },
   {
     "name": "바로팜",
