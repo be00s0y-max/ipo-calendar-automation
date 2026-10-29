@@ -2140,5 +2140,26 @@
     "conv_period_end": "2031-10-26",
     "refixing": "아니오",
     "rcept_no": "20261027000277"
+  },
+  "00493325_CB_8": {
+    "name": "에이엘티",
+    "kind": "CB",
+    "round": "8",
+    "bondName": "무기명식 무보증 사모 전환사채",
+    "amount": 12200000000,
+    "board_date": "2026-10-29",
+    "sub_date": "2026-11-06",
+    "pay_date": "2026-11-06",
+    "maturity_date": "2031-11-06",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 15410,
+    "conv_period_start": "2027-11-06",
+    "conv_period_end": "2031-10-06",
+    "refixing": "아니오",
+    "rcept_no": "20261029000290"
   }
 }
