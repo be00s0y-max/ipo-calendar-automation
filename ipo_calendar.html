@@ -6034,14 +6034,17 @@ function fundCommit(rec, fund){
   if (fund === "H일임") return hilimCommit(rec);
   return ((rec.funds || {})[fund] || {}).commit || "";
 }
+// 참여 종목 + "미참여"로 고른 종목(미참여는 종목명 옆 칸을 모두 합쳐 "미참여" 한 칸으로 보여준다)
+function isNonJoined(rec){ return !!rec && rec.participation === "미참여"; }
 function statusCandidates(){
-  return deals.filter(dl => isJoined(records[dl.name]))
+  return deals.filter(dl => isJoined(records[dl.name]) || isNonJoined(records[dl.name]))
     .sort((a, b) => String(b.demand[0]).localeCompare(String(a.demand[0])));
 }
 function statusRows(){
   const list = statusCandidates().filter(dl => stPicked.has(dl.name));
   list.sort((a, b) => String(a.demand[0]).localeCompare(String(b.demand[0])));
   if (!stFunds.size) return list.map(dl => {
+    if (isNonJoined(records[dl.name])) return { name: dl.name, np: true };
     const rec = records[dl.name];
     return { name: dl.name, fund: "", price: rec.price, date: rec.appliedDate || "", qty: rec.qty, allot: rec.allotShares,
              commit: kovenCommit(rec) || rec.commit || "" };
@@ -6050,6 +6053,7 @@ function statusRows(){
   const order = FUND_GROUPS.flatMap(g => g.funds).filter(f => stFunds.has(f));
   return list.flatMap(dl => {
     const rec = records[dl.name], funds = rec.funds || {};
+    if (isNonJoined(rec)) return [{ name: dl.name, np: true }];
     return order.filter(f => funds[f] && (funds[f].joined || funds[f].qty != null || funds[f].allot != null))
       .map(f => ({ name: dl.name, fund: f, price: funds[f].price != null ? funds[f].price : rec.price, date: rec.appliedDate || "",
                    qty: funds[f].qty, allot: funds[f].allot, commit: fundCommit(rec, f) }));
@@ -6103,7 +6107,7 @@ function renderStatusTab(){
   document.getElementById("stPreview").innerHTML = rows.length
     ? `<table style="border-collapse:collapse;font-family:'맑은 고딕','Malgun Gothic',sans-serif;font-size:10pt;">
         <tr>${statusHead().map(h => `<td style="${H}">${h}</td>`).join("")}</tr>
-        ${rows.map(r => `<tr><td style="${C}">${escHtml(r.name)}</td>${stFunds.size ? `<td style="${C}">${escHtml(fundLabel(r.fund))}</td>` : ""}<td style="${R}">${fmtNum(r.price)}</td><td style="${C}">${escHtml(r.date)}</td><td style="${R}">${fmtNum(r.qty)}</td><td style="${R}">${fmtNum(r.allot)}</td><td style="${C}">${escHtml(r.commit)}</td></tr>`).join("")}
+        ${rows.map(r => r.np ? `<tr><td style="${C}">${escHtml(r.name)}</td><td colspan="${statusHead().length - 1}" style="${C}color:#666;">미참여</td></tr>` : `<tr><td style="${C}">${escHtml(r.name)}</td>${stFunds.size ? `<td style="${C}">${escHtml(fundLabel(r.fund))}</td>` : ""}<td style="${R}">${fmtNum(r.price)}</td><td style="${C}">${escHtml(r.date)}</td><td style="${R}">${fmtNum(r.qty)}</td><td style="${R}">${fmtNum(r.allot)}</td><td style="${C}">${escHtml(r.commit)}</td></tr>`).join("")}
       </table>`
     : `<span style="color:#666">${!stPicked.size ? "위에서 종목을 고르세요." : "고른 펀드에 값이 있는 종목이 없습니다."}</span>`;
 }
@@ -6163,7 +6167,8 @@ document.getElementById("stCopy").addEventListener("click", () => {
   const rows = statusRows();
   if (!rows.length) { showToast("복사할 종목이 없습니다"); return; }
   const v = x => x == null ? "" : String(x);
-  const tsv = [statusHead().join("\t")].concat(rows.map(r => [r.name].concat(stFunds.size ? [fundLabel(r.fund)] : [], [v(r.price), r.date, v(r.qty), v(r.allot), r.commit]).join("\t"))).join("\n");
+  // 미참여 줄은 엑셀에서 칸을 합칠 수 없어 종목명 다음 칸에 "미참여"만 적는다
+  const tsv = [statusHead().join("\t")].concat(rows.map(r => r.np ? [r.name, "미참여"].join("\t") : [r.name].concat(stFunds.size ? [fundLabel(r.fund)] : [], [v(r.price), r.date, v(r.qty), v(r.allot), r.commit]).join("\t"))).join("\n");
   copyText(tsv).then(ok => showToast(ok ? `${rows.length}줄을 복사했습니다 — 엑셀에 붙여넣으세요` : "복사가 막혔습니다"));
 });
 function closePanel(){
