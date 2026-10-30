@@ -232,6 +232,12 @@
   .stage-table-wrap {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto;
   }
+  .lt-cell { white-space: nowrap; font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12.5px; text-align: right; }
+  .lt-cell b { font-weight: 700; color: var(--ink); }
+  .lt-cell .sub { display: block; font-size: 11.5px; color: var(--ink-dim); }
+  .lt-cell .bp { display: block; font-size: 11.5px; color: var(--accent); font-weight: 700; }
+  .lt-none { color: var(--ink-faint); }
+  table.stage-table th.lt-r { text-align: right; }
   td.np-block { background: var(--surface-3); color: var(--ink-faint); font-size: 12px; font-weight: 700; text-align: center; letter-spacing: .1em; }
   /* 단계 탭 페이지 나누기 (30종목씩) */
   .stage-pager { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; padding: 10px; border-top: 1px solid var(--border); }
@@ -803,6 +809,7 @@
     <button class="tabbtn" data-tab="demand">수요예측</button>
     <button class="tabbtn" data-tab="sub">청약</button>
     <button class="tabbtn" data-tab="pay">납입</button>
+    <button class="tabbtn" data-tab="list">상장</button>
     <span class="tab-divider"></span>
     <button class="tabbtn" data-tab="reply">배정 현황</button>
     <button class="tabbtn" data-tab="acct">계좌</button>
@@ -1019,6 +1026,14 @@
     </div>
     <div class="stage-search"><input type="text" class="tab-search" data-stage-search="pay" placeholder="종목명 검색"></div>
     <div class="stage-table-wrap" id="stage-pay"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-list">
+    <div class="stage-head">
+      <h2>상장</h2>
+    </div>
+    <div class="stage-search"><input type="text" class="tab-search" data-stage-search="list" placeholder="종목명 검색"></div>
+    <div class="stage-table-wrap" id="stage-list"></div>
   </div>
 
   <div class="tab-panel" id="tab-acct">
@@ -6304,7 +6319,7 @@ document.addEventListener("click", e => {
   const b = e.target.closest("button[data-pg-key]");
   if (!b || b.disabled) return;
   stagePage[b.dataset.pgKey] = Number(b.dataset.pg);
-  renderStageTable(b.dataset.pgKey);
+  if (b.dataset.pgKey === "list") renderListTab(); else renderStageTable(b.dataset.pgKey);
   const wrap = document.getElementById("stage-" + b.dataset.pgKey);
   if (wrap) wrap.scrollIntoView({ block: "start", behavior: "smooth" });
 });
@@ -6323,7 +6338,7 @@ document.addEventListener("input", e => {
   const key = el.dataset.stageSearch;
   stageSearch[key] = el.value.trim();
   stagePage[key] = 1; // 검색어가 바뀌면 1페이지부터
-  if (key === "allot") renderAllotRegistry(); else renderStageTable(key);
+  if (key === "allot") renderAllotRegistry(); else if (key === "list") renderListTab(); else renderStageTable(key);
 });
 
 /* ---------- 수요예측 펀드별 참여 ----------
@@ -7904,6 +7919,67 @@ function renderStageTable(key){
     + stagePagerHtml(key, page, pages, all.length);
 }
 
+/* ================= 상장 탭 =================
+   종목별 공모가 밴드·확정공모가·시가총액(확정공모가 × 상장예정주식수)과 우리 펀드(일임·H일임·코벤·신탁)
+   배정주수, 배정주수 × 확정공모가, NAV 대비 bp. 오늘 상장하는 종목은 분홍(수요예측 탭의 진행 중과 같은 색)으로 맨 위.
+   값 출처: 밴드·상장예정주식수 = DART 증권신고서(DEMAND_INFO), 확정공모가 = 확정 신고서(dartData) 또는 deals,
+   배정주수 = 수요예측 탭 펀드별 배정주수(records.funds), bp = 배정 엑셀에서 계산해 둔 값(records.allotBp, 코벤·신탁만). */
+const LIST_GROUPS = ["일임", "H일임", "코벤", "신탁"];
+function fixedPriceOf(dl){
+  return dl.finalPrice || (dartData[dl.name] ? dartPricePerShare(dartData[dl.name].offering) : null);
+}
+function listToday(dl){ return !!dl.list && dl.list === isoKey(today); }
+function renderListTab(){
+  const key = "list";
+  const container = document.getElementById("stage-list");
+  if (!container) return;
+  const eok = v => fmtNum(Math.round(v / 1e8)) + "억원";
+  // 순서: 오늘 상장 → 상장일이 정해진 다가오는 종목(가까운 순) → 상장일 미정 → 이미 상장한 종목(최근 순)
+  const t0 = isoKey(today);
+  const idxs = deals.map((dl, idx) => idx).filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
+  const by = (f, asc) => idxs.filter(idx => f(deals[idx]))
+    .sort((a, b) => (asc ? 1 : -1) * String(deals[a].list || deals[a].demand[0]).localeCompare(String(deals[b].list || deals[b].demand[0])) || b - a);
+  const all = by(listToday, true)
+    .concat(by(dl => dl.list && dl.list > t0, true), by(dl => !dl.list, false), by(dl => dl.list && dl.list < t0, false));
+  const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
+  const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
+  stagePage[key] = page;
+  const slice = all.slice((page - 1) * STAGE_PAGE_SIZE, page * STAGE_PAGE_SIZE);
+  const NCOL = 10;
+  const rows = slice.map((idx, i) => {
+    const dl = deals[idx], rec = records[dl.name] || {};
+    const t = DEMAND_INFO[dl.name] || {};
+    const band = t.band || (dartData[dl.name] ? bandRange(dartData[dl.name].price_bands) : null);
+    const fixed = fixedPriceOf(dl);
+    const cap = fixed && t.listed_shares ? t.listed_shares * fixed : null;
+    const sep = i > 0 && listToday(deals[slice[i - 1]]) && !listToday(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
+    const head = `<td><div class="stc-name">${dl.name}${listToday(dl) ? `<span class="live-badge">오늘 상장</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
+      <td class="stc-ref">${dl.list ? fmt(dl.list) : "미정"}</td>
+      <td class="lt-cell">${band && band[0] != null ? (band[0] === band[1] ? `${fmtNum(band[0])}원` : `${fmtNum(band[0])} ~ ${fmtNum(band[1])}원`) : `<span class="lt-none">—</span>`}</td>
+      <td class="lt-cell">${fixed ? `<b>${fmtNum(fixed)}원</b>` : `<span class="lt-none">—</span>`}</td>
+      <td class="lt-cell">${cap ? eok(cap) : `<span class="lt-none">—</span>`}${t.listed_shares ? `<span class="sub">${fmtNum(t.listed_shares)}주</span>` : ""}</td>`;
+    if (rec.participation === "미참여")
+      return sep + `<tr data-row="${idx}" class="${listToday(dl) ? "live-row" : ""}">${head}<td class="np-block" colspan="5">미참여</td></tr>`;
+    let totShares = 0;
+    const grpCells = LIST_GROUPS.map(gname => {
+      const g = FUND_GROUPS.find(x => x.group === gname);
+      const shares = g.funds.reduce((a, f) => a + (((rec.funds || {})[f] || {}).allot || 0), 0);
+      totShares += shares;
+      const bp = (rec.allotBp || {})[gname];
+      if (!shares && !bp) return `<td class="lt-cell"><span class="lt-none">—</span></td>`;
+      return `<td class="lt-cell"><b>${fmtNum(shares)}주</b>`
+        + (fixed ? `<span class="sub">${fmtNum(shares * fixed)}원</span>` : "")
+        + (bp ? `<span class="bp" title="배정 엑셀 기준: ${fmtNum(bp.shares)}주 × ${fmtNum(bp.price)}원 ÷ NAV ${fmtNum(Math.round(bp.nav))}원">${bp.bp.toFixed(2)}bp</span>` : "") + `</td>`;
+    }).join("");
+    const tot = totShares ? `<td class="lt-cell"><b>${fmtNum(totShares)}주</b>${fixed ? `<span class="sub">${fmtNum(totShares * fixed)}원</span>` : ""}</td>` : `<td class="lt-cell"><span class="lt-none">—</span></td>`;
+    return sep + `<tr data-row="${idx}" class="${listToday(dl) ? "live-row" : ""}">${head}${grpCells}${tot}</tr>`;
+  }).join("");
+  container.innerHTML = `<table class="stage-table"><thead><tr>
+      <th>종목 / 주간사</th><th>상장일</th><th class="lt-r">공모가 밴드</th><th class="lt-r">확정공모가</th><th class="lt-r">시가총액(확정가)</th>
+      ${LIST_GROUPS.map(g => `<th class="lt-r">${g}</th>`).join("")}<th class="lt-r">합계</th>
+    </tr></thead><tbody>${rows}</tbody></table>` + stagePagerHtml(key, page, pages, all.length);
+}
+
 function renderAllStageTables(){
   Object.keys(STAGE_TABS).forEach(renderStageTable);
 }
@@ -8714,6 +8790,7 @@ function applyAppState(state){
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === "tab-" + key));
   infoDetailIdx = state && state.infoDetailIdx != null ? state.infoDetailIdx : null;
   if (STAGE_TABS[key]) renderStageTable(key);
+  if (key === "list") renderListTab();
   if (key === "allot") renderAllotRegistry();
   if (key === "info") renderInfoTab();
   if (key === "mezz") renderMezzTab();
