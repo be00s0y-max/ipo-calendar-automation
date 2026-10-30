@@ -312,6 +312,7 @@
   table.stage-table tbody tr:hover { background: var(--row-hover, var(--surface-2)); }
   /* 지금 수요예측·청약이 진행 중인 딜 — 각 단계 탭 맨 위에 분홍으로 따로 모은다 */
   table.stage-table tbody tr.live-row, table.stage-table tbody tr.live-row:hover { background: #fde8ef; }
+  table.stage-table tbody tr.soon-row, table.stage-table tbody tr.soon-row:hover { background: #fdf8e1; }
   table.stage-table tbody tr.live-sep td { padding: 0; height: 6px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
   .live-badge { display: inline-block; font-size: 10.5px; font-weight: 700; color: #b0285a; background: #fff;
                 border: 1px solid #f3b6cb; border-radius: 4px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; }
@@ -8025,6 +8026,27 @@ function payDateOf(dl){
   return m ? `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}` : (dl.pay || "");
 }
 function payToday(dl){ return payDateOf(dl) === isoKey(today); }
+// 줄 색: 오늘 = 분홍(live-row), 날짜가 정해진 다가오는 일정 = 옅은 노랑(soon-row)
+function payRowCls(dl){ return payToday(dl) ? "live-row" : nearToday(payDateOf(dl)) ? "soon-row" : ""; }
+// 오늘 기준 앞뒤 7일 안(오늘 제외)이면 true — 상장·납입 탭 노란 줄
+function nearToday(iso){
+  if (!iso) return false;
+  const t0 = isoKey(today);
+  return iso !== t0 && iso >= isoKey(addDays(today, -7)) && iso <= isoKey(addDays(today, 7));
+}
+// 순서: 오늘 → 앞뒤 7일(다가오는 것 가까운 순, 그다음 지난 것 최근 순) → 7일 넘게 남은 것 → 날짜 미정 → 7일 넘게 지난 것
+function nearOrder(idxs, dateOf, isToday){
+  const t0 = isoKey(today);
+  const key = idx => String(dateOf(deals[idx]) || deals[idx].demand[0]);
+  const by = (f, asc) => idxs.filter(idx => f(deals[idx])).sort((a, b) => (asc ? 1 : -1) * key(a).localeCompare(key(b)) || b - a);
+  const dt = dl => dateOf(dl);
+  return by(isToday, true).concat(
+    by(dl => nearToday(dt(dl)) && dt(dl) > t0, true),
+    by(dl => nearToday(dt(dl)) && dt(dl) < t0, false),
+    by(dl => dt(dl) && dt(dl) > t0 && !nearToday(dt(dl)), true),
+    by(dl => !dt(dl), false),
+    by(dl => dt(dl) && dt(dl) < t0 && !nearToday(dt(dl)), false));
+}
 function payNumbers(dl){
   const rec = records[dl.name] || {};
   const price = rec.noticePrice != null ? rec.noticePrice : fixedPriceOf(dl);
@@ -8052,7 +8074,7 @@ function renderPayTab(){
   const idxs = deals.map((dl, idx) => idx).filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
   const by = (f, asc) => idxs.filter(idx => f(deals[idx]))
     .sort((a, b) => (asc ? 1 : -1) * String(payDateOf(deals[a]) || deals[a].demand[0]).localeCompare(String(payDateOf(deals[b]) || deals[b].demand[0])) || b - a);
-  const all = by(payToday, true).concat(by(dl => payDateOf(dl) > t0, true), by(dl => !payDateOf(dl), false), by(dl => payDateOf(dl) && payDateOf(dl) < t0, false));
+  const all = nearOrder(idxs, payDateOf, payToday);
   const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
@@ -8062,12 +8084,12 @@ function renderPayTab(){
   const rows = slice.map((idx, i) => {
     const dl = deals[idx], rec = records[dl.name] || {};
     const pd = payDateOf(dl);
-    const sep = i > 0 && payToday(deals[slice[i - 1]]) && !payToday(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
+    const sep = i > 0 && payRowCls(deals[slice[i - 1]]) && payRowCls(deals[slice[i - 1]]) !== payRowCls(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
     const head = `<td><div class="stc-name">${dl.name}${payToday(dl) ? `<span class="live-badge">오늘 납입</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
       <td class="stc-ref">${pd ? fmt(pd) : "미정"}</td>`;
     const confirm = `<td><input type="checkbox" data-idx="${idx}" data-field="payConfirmed" ${rec.payConfirmed ? "checked" : ""}></td>`;
     if (rec.participation === "미참여")
-      return sep + `<tr data-row="${idx}" class="${payToday(dl) ? "live-row" : ""}">${head}<td class="np-block" colspan="4">미참여</td>${confirm}</tr>`;
+      return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}<td class="np-block" colspan="4">미참여</td>${confirm}</tr>`;
     const pn = payNumbers(dl);
     const fundCell = v => !v ? `<td class="pt-cell">${none}</td>` : `<td class="pt-cell">
         <div class="l"><span class="k">배정</span><b>${fmtNum(v.shares)}주</b></div>
@@ -8077,7 +8099,7 @@ function renderPayTab(){
     const acctLines = ["일임", "H일임"].flatMap(sec => uws.flatMap(uw => linkAcctsFor(uw, sec).map(a =>
       `<div class="r"><span class="k">${sec}${uws.length > 1 ? `<small>${escHtml(uw)}</small>` : ""}<small>${escHtml(a.kind)}</small></span>
         <span class="v">${a.bank ? `<span class="bank">${escHtml(a.bank)}</span>` : ""}<button class="acct-copy" data-copy="${escHtml(adCopyDigits(a.text))}" title="누르면 ${escHtml(adCopyDigits(a.text))} 복사">${escHtml(a.text)}</button></span></div>`)));
-    return sep + `<tr data-row="${idx}" class="${payToday(dl) ? "live-row" : ""}">${head}
+    return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}
       <td class="lt-cell">${pn.price ? `<b>${fmtNum(pn.price)}원</b>` : none}</td>
       ${fundCell(pn.rows[0])}${fundCell(pn.rows[1])}
       <td class="pt-acct">${acctLines.length ? acctLines.join("") : `<span class="lt-none">${(accountDir.order || []).length ? "계좌 탭에 없음" : "계좌 탭에서 엑셀을 불러오세요"}</span>`}</td>
@@ -8098,6 +8120,7 @@ function fixedPriceOf(dl){
   return dl.finalPrice || (dartData[dl.name] ? dartPricePerShare(dartData[dl.name].offering) : null);
 }
 function listToday(dl){ return !!dl.list && dl.list === isoKey(today); }
+function listRowCls(dl){ return listToday(dl) ? "live-row" : nearToday(dl.list) ? "soon-row" : ""; }
 function renderListTab(){
   const key = "list";
   const container = document.getElementById("stage-list");
@@ -8108,8 +8131,7 @@ function renderListTab(){
   const idxs = deals.map((dl, idx) => idx).filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
   const by = (f, asc) => idxs.filter(idx => f(deals[idx]))
     .sort((a, b) => (asc ? 1 : -1) * String(deals[a].list || deals[a].demand[0]).localeCompare(String(deals[b].list || deals[b].demand[0])) || b - a);
-  const all = by(listToday, true)
-    .concat(by(dl => dl.list && dl.list > t0, true), by(dl => !dl.list, false), by(dl => dl.list && dl.list < t0, false));
+  const all = nearOrder(idxs, dl => dl.list || "", listToday);
   const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
@@ -8121,14 +8143,14 @@ function renderListTab(){
     const band = t.band || (dartData[dl.name] ? bandRange(dartData[dl.name].price_bands) : null);
     const fixed = fixedPriceOf(dl);
     const cap = fixed && t.listed_shares ? t.listed_shares * fixed : null;
-    const sep = i > 0 && listToday(deals[slice[i - 1]]) && !listToday(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
+    const sep = i > 0 && listRowCls(deals[slice[i - 1]]) && listRowCls(deals[slice[i - 1]]) !== listRowCls(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
     const head = `<td><div class="stc-name">${dl.name}${listToday(dl) ? `<span class="live-badge">오늘 상장</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
       <td class="stc-ref">${dl.list ? fmt(dl.list) : "미정"}</td>
       <td class="lt-cell">${band && band[0] != null ? (band[0] === band[1] ? `${fmtNum(band[0])}원` : `${fmtNum(band[0])} ~ ${fmtNum(band[1])}원`) : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${fixed ? `<b>${fmtNum(fixed)}원</b>` : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${cap ? eok(cap) : `<span class="lt-none">—</span>`}${t.listed_shares ? `<span class="sub">${fmtNum(t.listed_shares)}주</span>` : ""}</td>`;
     if (rec.participation === "미참여")
-      return sep + `<tr data-row="${idx}" class="${listToday(dl) ? "live-row" : ""}">${head}<td class="np-block" colspan="5">미참여</td></tr>`;
+      return sep + `<tr data-row="${idx}" class="${listRowCls(dl)}">${head}<td class="np-block" colspan="5">미참여</td></tr>`;
     let totShares = 0;
     const grpCells = LIST_GROUPS.map(gname => {
       const g = FUND_GROUPS.find(x => x.group === gname);
@@ -8141,7 +8163,7 @@ function renderListTab(){
         + (bp ? `<span class="bp" title="배정 엑셀 기준: ${fmtNum(bp.shares)}주 × ${fmtNum(bp.price)}원 ÷ NAV ${fmtNum(Math.round(bp.nav))}원">${bp.bp.toFixed(2)}bp</span>` : "") + `</td>`;
     }).join("");
     const tot = totShares ? `<td class="lt-cell"><b>${fmtNum(totShares)}주</b>${fixed ? `<span class="sub">${fmtNum(totShares * fixed)}원</span>` : ""}</td>` : `<td class="lt-cell"><span class="lt-none">—</span></td>`;
-    return sep + `<tr data-row="${idx}" class="${listToday(dl) ? "live-row" : ""}">${head}${grpCells}${tot}</tr>`;
+    return sep + `<tr data-row="${idx}" class="${listRowCls(dl)}">${head}${grpCells}${tot}</tr>`;
   }).join("");
   container.innerHTML = `<table class="stage-table"><thead><tr>
       <th>종목 / 주간사</th><th>상장일</th><th class="lt-r">공모가 밴드</th><th class="lt-r">확정공모가</th><th class="lt-r">시가총액(확정가)</th>
