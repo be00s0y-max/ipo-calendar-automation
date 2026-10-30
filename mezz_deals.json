@@ -2254,5 +2254,26 @@
     "conv_period_end": "2029-10-06",
     "refixing": "아니오",
     "rcept_no": "20261029000674"
+  },
+  "00876908_EB_11": {
+    "name": "모트렉스",
+    "kind": "EB",
+    "round": "11",
+    "bondName": "무기명식 무보증 사모 교환사채",
+    "amount": 59000000000,
+    "board_date": "2026-10-30",
+    "sub_date": "2026-12-02",
+    "pay_date": "2026-12-02",
+    "maturity_date": "2029-12-02",
+    "coupon_rate": "0.00",
+    "ytm_rate": "0.00",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100.00",
+    "conv_price": 45193,
+    "conv_period_start": "2026-12-03",
+    "conv_period_end": "2029-11-02",
+    "refixing": "아니오",
+    "rcept_no": "20261030000477"
   }
 }

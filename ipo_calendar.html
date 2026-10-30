@@ -1304,7 +1304,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "10.30(금) 15:45";
+const LAST_UPDATED_KST = "10.30(금) 20:51";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -1312,6 +1312,14 @@ const LAST_UPDATED_KST = "10.30(금) 15:45";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "10.30(금) 20:51",
+    "items": [
+      "수요예측 결과 반영 2건 — 넥스아이, 바로팜",
+      "확정 증권신고서 공시 2건 — 넥스아이, 바로팜",
+      "신규 메자닌 1건 (EB 1건) — 모트렉스"
+    ]
+  },
   {
     "at": "10.30(금) 15:45",
     "items": [
@@ -1436,14 +1444,6 @@ const UPDATE_LOG = [
     "items": [
       "신규 공모주 1건 — 에이엔에이치스트럭쳐"
     ]
-  },
-  {
-    "at": "10.20(화) 20:12",
-    "items": [
-      "수요예측 결과 반영 1건 — 인텔리빅스",
-      "확정 증권신고서 공시 1건 — 인텔리빅스",
-      "신규 메자닌 2건 (CB 2건) — 금호건설, 비나텍"
-    ]
   }
 ];
 // AUTO-GENERATED:UPDATE_LOG:END
@@ -1489,8 +1489,8 @@ const deals = [
   { name: "이에스티", uw: "대신증권", demand: ["2026-10-14","2026-10-20"], sub: ["2026-10-22", "2026-10-23"], pay: "2026-10-27", list: "2026-11-04", dealSizeM: 23320, stockCode: "495910", finalPrice: 12400 },
   { name: "아이엠스팩1호", uw: "아이엠증권", demand: ["2026-10-19","2026-10-20"], sub: ["2026-10-26", "2026-10-27"], pay: "2026-10-29", list: "2026-11-04", dealSizeM: 10000, stockCode: "0222E0", finalPrice: 2000 },
   { name: "옵토닉스", uw: "한국투자증권", demand: ["2026-10-21","2026-10-27"], sub: ["2026-11-05", "2026-11-06"], pay: "2026-11-10", list: "2026-11-17", dealSizeM: 22000, stockCode: "493260", finalPrice: 12000 },
-  { name: "바로팜", uw: "미래에셋증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-02", "2026-11-03"], pay: "2026-11-05", list: "2026-11-11", dealSizeM: 29192, stockCode: "952366", finalPrice: null },
-  { name: "넥스아이", uw: "한국투자증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-03", "2026-11-04"], pay: "2026-11-06", list: "2026-11-12", dealSizeM: 52500, stockCode: "493410", finalPrice: null },
+  { name: "바로팜", uw: "미래에셋증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-02", "2026-11-03"], pay: "2026-11-05", list: "2026-11-11", dealSizeM: 29192, stockCode: "952366", finalPrice: 16400 },
+  { name: "넥스아이", uw: "한국투자증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-03", "2026-11-04"], pay: "2026-11-06", list: "2026-11-12", dealSizeM: 52500, stockCode: "493410", finalPrice: 8000 },
   { name: "동원파츠", uw: "삼성증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-02", "2026-11-03"], pay: "2026-11-05", list: "2026-11-10", dealSizeM: 46690, stockCode: "0162D0", finalPrice: 26500 },
   { name: "영광와이케이엠씨", uw: "대신증권", demand: ["2026-10-27","2026-11-02"], sub: ["2026-11-04", "2026-11-05"], pay: "2026-11-09", list: null, dealSizeM: 21620, stockCode: "345290", finalPrice: null },
   { name: "에이엘로봇", uw: "대신증권", demand: ["2026-10-28","2026-11-03"], sub: ["2026-11-06", "2026-11-09"], pay: "2026-11-11", list: null, dealSizeM: 37680, stockCode: "471800", finalPrice: null },
@@ -1622,6 +1622,7 @@ const mezzDeals = [
   {"name": "다원메닥스", "kind": "CB", "round": "1-5", "bondName": "무기명식 이권부 무보증 사모 영구전환사채", "amount": 3900000000, "board_date": "2026-10-08", "sub_date": "2026-11-24", "pay_date": "2027-08-23", "maturity_date": "2057-08-23", "coupon_rate": "2.5", "ytm_rate": "-", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 2709, "conv_period_start": "2028-08-23", "conv_period_end": "2057-07-22", "refixing": "아니오", "rcept_no": "20261012000410"},
   {"name": "그린플러스", "kind": "CB", "round": "6", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-10-26", "sub_date": "2026-11-25", "pay_date": "2026-11-25", "maturity_date": "2029-11-25", "coupon_rate": "2.0", "ytm_rate": "8.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 3699, "conv_period_start": "2027-11-25", "conv_period_end": "2029-10-25", "refixing": "아니오", "rcept_no": "20261027000190"},
   {"name": "HD현대", "kind": "EB", "round": "19", "bondName": "무기명식 무보증 사모 교환사채", "amount": 588667443000, "board_date": "2026-10-27", "sub_date": "2026-11-26", "pay_date": "2026-11-26", "maturity_date": "2031-11-26", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 247000, "conv_period_start": "2026-11-27", "conv_period_end": "2031-10-26", "refixing": "아니오", "rcept_no": "20261027000277"},
+  {"name": "모트렉스", "kind": "EB", "round": "11", "bondName": "무기명식 무보증 사모 교환사채", "amount": 59000000000, "board_date": "2026-10-30", "sub_date": "2026-12-02", "pay_date": "2026-12-02", "maturity_date": "2029-12-02", "coupon_rate": "0.00", "ytm_rate": "0.00", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 45193, "conv_period_start": "2026-12-03", "conv_period_end": "2029-11-02", "refixing": "아니오", "rcept_no": "20261030000477"},
 ];
 // AUTO-GENERATED:MEZZ_DEALS:END
 
@@ -4197,6 +4198,136 @@ const dartData = {
         "qty": 1067624493
       }
     }
+  },
+  "바로팜": {
+    "offering": {
+      "offer_shares": 1780000,
+      "offer_amount_final": 29192000000,
+      "offer_amount_expected": 29192000000,
+      "subscription": {
+        "inst_start": "2026.11.02",
+        "inst_end": "2026.11.03"
+      },
+      "payment_date": "2026.11.05"
+    },
+    "demand_summary": {
+      "total_count": 814,
+      "total_qty": 203394000,
+      "competition_rate": 152.36
+    },
+    "price_bands": null,
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "미확약": {
+        "count": 43,
+        "qty": 11222000
+      }
+    }
+  },
+  "넥스아이": {
+    "offering": {
+      "offer_shares": 5000000,
+      "offer_amount_expected": 52500000000,
+      "offer_amount_final": 40000000000,
+      "subscription": {
+        "inst_start": "2026년 11월 03일(화)",
+        "inst_end": "2026년 11월 04일(수)"
+      },
+      "payment_date": "2026년 11월 06일"
+    },
+    "demand_summary": {
+      "total_count": 506,
+      "total_qty": 249689000,
+      "competition_rate": 66.58
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "13,000원(상단) 초과",
+        "count": 6,
+        "count_pct": "1.19%",
+        "qty": 1371000,
+        "qty_pct": "0.55%"
+      },
+      {
+        "band": "13,000원(상단)",
+        "count": 90,
+        "count_pct": "17.79%",
+        "qty": 108659000,
+        "qty_pct": "43.52%"
+      },
+      {
+        "band": "10,500원(하단) 초과 ~ 13,000원(상단) 미만",
+        "count": 3,
+        "count_pct": "0.59%",
+        "qty": 4000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "10,500원(하단)",
+        "count": 119,
+        "count_pct": "23.52%",
+        "qty": 19419000,
+        "qty_pct": "7.78%"
+      },
+      {
+        "band": "10,500원(하단) 미만",
+        "count": 288,
+        "count_pct": "56.91%",
+        "qty": 120236000,
+        "qty_pct": "48.15%"
+      },
+      {
+        "band": "합계",
+        "count": 506,
+        "count_pct": "100.00%",
+        "qty": 249689000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 2,
+        "qty": 7000
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 2,
+        "qty": 155000
+      },
+      "미확약": {
+        "count": 502,
+        "qty": 249527000
+      }
+    }
   }
 };
 // AUTO-GENERATED:DART_DATA:END
@@ -4345,11 +4476,11 @@ const DEMAND_INFO = {
       38.22,
       23.91
     ],
-    "listed_shares": 11947817,
+    "listed_shares": 11965617,
     "biz": "당사는 IT 기술을 기반으로 의약품 유통시장에서 약국이 경험하는 주문 및 경영업무의 비효율을 개선하는 약국 통합 플랫폼 '바로팜'을 운영하고 있습니다.",
     "rcept_no": "20261030000396",
     "report_nm": "[발행조건확정]증권신고서(지분증권)",
-    "ov_rcept": "20261015000345"
+    "ov_rcept": "20261030000396"
   },
   "넥스아이": {
     "band": [
@@ -4361,16 +4492,16 @@ const DEMAND_INFO = {
     "inst_max": 3750000,
     "val_model": "PER",
     "val_multiple": 19.15,
-    "val_fair": 17760,
+    "val_fair": 17729,
     "val_discount": [
-      40.88,
-      26.8
+      40.78,
+      26.67
     ],
-    "listed_shares": 45765477,
+    "listed_shares": 45845239,
     "biz": "당사는 항암ㆍ면역치료 불응인자 발굴 및 first-in-class 항암 신약을 연구하는 신약개발 기업입니다.",
-    "rcept_no": "20261016000268",
-    "report_nm": "[기재정정]증권신고서(지분증권)",
-    "ov_rcept": "20261016000268"
+    "rcept_no": "20261030000467",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)",
+    "ov_rcept": "20261030000467"
   },
   "동원파츠": {
     "band": [
@@ -4431,9 +4562,9 @@ const DEMAND_INFO = {
     ],
     "listed_shares": 14459531,
     "biz": "당사는 표면처리 기술을 기반으로 사업을 영위해 왔으며, 반도체 및 디스플레이 산업의 발전과 함께 관련 제조장비용 핵심부품 분야로 사업영역을 지속적으로 확장해 왔습니다.",
-    "rcept_no": "20261008000649",
-    "report_nm": "증권신고서(지분증권)",
-    "ov_rcept": "20261008000649"
+    "rcept_no": "20261030000616",
+    "report_nm": "[기재정정]증권신고서(지분증권)",
+    "ov_rcept": "20261030000616"
   },
   "에이엘로봇": {
     "band": [
@@ -4515,9 +4646,9 @@ const DEMAND_INFO = {
     ],
     "listed_shares": 8547071,
     "biz": "당사는 위성·항공·드론 등 다출처에서 획득한 영상(이미지) 데이터를 수집·정제하고, 이를 딥러닝 기반으로 분석하여 실제 의사결정에 활용 가능한 정보 형태로 제공하는 AI 기반 공간데이터 인텔리전스(Data Intelligence) 기업입니다.",
-    "rcept_no": "20261008000705",
+    "rcept_no": "20261030000682",
     "report_nm": "[기재정정]증권신고서(지분증권)",
-    "ov_rcept": "20261008000705"
+    "ov_rcept": "20261030000682"
   },
   "엔키화이트햇": {
     "band": [
@@ -8291,7 +8422,9 @@ const DART_FILING_URL = {
   "이에스티": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261021000363",
   "아이엠스팩1호": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261022000373",
   "옵토닉스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261029000504",
-  "동원파츠": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261030000113"
+  "동원파츠": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261030000113",
+  "바로팜": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261030000396",
+  "넥스아이": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261030000467"
 };
 // AUTO-GENERATED:FILING_URL:END
 
@@ -8708,6 +8841,24 @@ const COMPANY_PROFILE = {
     "hm_url": "dmids.com",
     "phn_no": "0313193376",
     "est_dt": "19970615"
+  },
+  "바로팜": {
+    "stock_code": "",
+    "ceo_nm": "김슬기",
+    "corp_cls": "E",
+    "adres": "서울특별시 강남구 역삼로 169 3층(역삼동, 명우빌딩)",
+    "hm_url": "baropharm.com",
+    "phn_no": "02-2039-8535",
+    "est_dt": "20191122"
+  },
+  "넥스아이": {
+    "stock_code": "",
+    "ceo_nm": "윤경완",
+    "corp_cls": "E",
+    "adres": "서울특별시 송파구 송파대로 201 (문정동, 송파테라타워2) 922,923,924호",
+    "hm_url": "www.nex-i.co.kr",
+    "phn_no": "02-6951-0412",
+    "est_dt": "20210412"
   }
 };
 // AUTO-GENERATED:COMPANY_PROFILE:END
