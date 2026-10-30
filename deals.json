@@ -636,7 +636,7 @@
       "2026-11-03"
     ],
     "pay": "2026-11-05",
-    "list": null,
+    "list": "2026-11-11",
     "dealSizeM": 29192,
     "stockCode": "952366",
     "finalPrice": null
@@ -654,7 +654,7 @@
       "2026-11-04"
     ],
     "pay": "2026-11-06",
-    "list": null,
+    "list": "2026-11-12",
     "dealSizeM": 52500,
     "stockCode": "493410",
     "finalPrice": null
@@ -672,10 +672,10 @@
       "2026-11-03"
     ],
     "pay": "2026-11-05",
-    "list": null,
+    "list": "2026-11-10",
     "dealSizeM": 46690,
     "stockCode": "0162D0",
-    "finalPrice": null
+    "finalPrice": 26500
   },
   {
     "name": "영광와이케이엠씨",

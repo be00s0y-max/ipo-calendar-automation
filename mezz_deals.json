@@ -2016,7 +2016,10 @@
     "conv_period_start": "2027-10-30",
     "conv_period_end": "2029-09-30",
     "refixing": "아니오",
-    "rcept_no": "20261028000399"
+    "rcept_no": "20261028000399",
+    "put_start": "2027-08-31",
+    "put_end": "2027-09-30",
+    "put_redemption": "2027-10-30"
   },
   "01329957_CB_4": {
     "name": "국전",
@@ -2100,7 +2103,10 @@
     "conv_period_start": "2027-10-30",
     "conv_period_end": "2031-09-30",
     "refixing": "아니오",
-    "rcept_no": "20261027000375"
+    "rcept_no": "20261027000375",
+    "put_start": "2028-08-31",
+    "put_end": "2028-10-06",
+    "put_redemption": "2028-10-30"
   },
   "01142075_CB_10": {
     "name": "핑거",
