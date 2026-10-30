@@ -8027,7 +8027,26 @@ function payDateOf(dl){
 }
 function payToday(dl){ return payDateOf(dl) === isoKey(today); }
 // 줄 색: 오늘 = 분홍(live-row), 날짜가 정해진 다가오는 일정 = 옅은 노랑(soon-row)
-function payRowCls(dl){ return payToday(dl) ? "live-row" : payDateOf(dl) > isoKey(today) ? "soon-row" : ""; }
+function payRowCls(dl){ return payToday(dl) ? "live-row" : nearToday(payDateOf(dl)) ? "soon-row" : ""; }
+// 오늘 기준 앞뒤 7일 안(오늘 제외)이면 true — 상장·납입 탭 노란 줄
+function nearToday(iso){
+  if (!iso) return false;
+  const t0 = isoKey(today);
+  return iso !== t0 && iso >= isoKey(addDays(today, -7)) && iso <= isoKey(addDays(today, 7));
+}
+// 순서: 오늘 → 앞뒤 7일(다가오는 것 가까운 순, 그다음 지난 것 최근 순) → 7일 넘게 남은 것 → 날짜 미정 → 7일 넘게 지난 것
+function nearOrder(idxs, dateOf, isToday){
+  const t0 = isoKey(today);
+  const key = idx => String(dateOf(deals[idx]) || deals[idx].demand[0]);
+  const by = (f, asc) => idxs.filter(idx => f(deals[idx])).sort((a, b) => (asc ? 1 : -1) * key(a).localeCompare(key(b)) || b - a);
+  const dt = dl => dateOf(dl);
+  return by(isToday, true).concat(
+    by(dl => nearToday(dt(dl)) && dt(dl) > t0, true),
+    by(dl => nearToday(dt(dl)) && dt(dl) < t0, false),
+    by(dl => dt(dl) && dt(dl) > t0 && !nearToday(dt(dl)), true),
+    by(dl => !dt(dl), false),
+    by(dl => dt(dl) && dt(dl) < t0 && !nearToday(dt(dl)), false));
+}
 function payNumbers(dl){
   const rec = records[dl.name] || {};
   const price = rec.noticePrice != null ? rec.noticePrice : fixedPriceOf(dl);
@@ -8055,7 +8074,7 @@ function renderPayTab(){
   const idxs = deals.map((dl, idx) => idx).filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
   const by = (f, asc) => idxs.filter(idx => f(deals[idx]))
     .sort((a, b) => (asc ? 1 : -1) * String(payDateOf(deals[a]) || deals[a].demand[0]).localeCompare(String(payDateOf(deals[b]) || deals[b].demand[0])) || b - a);
-  const all = by(payToday, true).concat(by(dl => payDateOf(dl) > t0, true), by(dl => !payDateOf(dl), false), by(dl => payDateOf(dl) && payDateOf(dl) < t0, false));
+  const all = nearOrder(idxs, payDateOf, payToday);
   const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
@@ -8101,7 +8120,7 @@ function fixedPriceOf(dl){
   return dl.finalPrice || (dartData[dl.name] ? dartPricePerShare(dartData[dl.name].offering) : null);
 }
 function listToday(dl){ return !!dl.list && dl.list === isoKey(today); }
-function listRowCls(dl){ return listToday(dl) ? "live-row" : dl.list && dl.list > isoKey(today) ? "soon-row" : ""; }
+function listRowCls(dl){ return listToday(dl) ? "live-row" : nearToday(dl.list) ? "soon-row" : ""; }
 function renderListTab(){
   const key = "list";
   const container = document.getElementById("stage-list");
@@ -8112,8 +8131,7 @@ function renderListTab(){
   const idxs = deals.map((dl, idx) => idx).filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
   const by = (f, asc) => idxs.filter(idx => f(deals[idx]))
     .sort((a, b) => (asc ? 1 : -1) * String(deals[a].list || deals[a].demand[0]).localeCompare(String(deals[b].list || deals[b].demand[0])) || b - a);
-  const all = by(listToday, true)
-    .concat(by(dl => dl.list && dl.list > t0, true), by(dl => !dl.list, false), by(dl => dl.list && dl.list < t0, false));
+  const all = nearOrder(idxs, dl => dl.list || "", listToday);
   const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
