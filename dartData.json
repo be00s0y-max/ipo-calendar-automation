@@ -2473,5 +2473,95 @@
         "qty": 1783646000
       }
     }
+  },
+  "동원파츠": {
+    "offering": {
+      "offer_shares": 2030000,
+      "offer_amount_final": 53795000000,
+      "offer_amount_expected": 46690000000,
+      "subscription": {
+        "inst_start": "2026년 11월 02일",
+        "inst_end": "2026년 11월 03일"
+      },
+      "payment_date": "2026년 11월 05일"
+    },
+    "demand_summary": {
+      "total_count": 2236,
+      "total_qty": 1280209493,
+      "competition_rate": 840.86
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 40,
+        "count_pct": "1.79%",
+        "qty": 32205100,
+        "qty_pct": "2.52%"
+      },
+      {
+        "band": "26,500원 초과",
+        "count": 28,
+        "count_pct": "1.25%",
+        "qty": 14884873,
+        "qty_pct": "1.16%"
+      },
+      {
+        "band": "26,500원",
+        "count": 2165,
+        "count_pct": "96.82%",
+        "qty": 1231006520,
+        "qty_pct": "96.16%"
+      },
+      {
+        "band": "23,000원 초과 26,500원 미만",
+        "count": 2,
+        "count_pct": "0.09%",
+        "qty": 2099000,
+        "qty_pct": "0.16%"
+      },
+      {
+        "band": "23,000원",
+        "count": null,
+        "count_pct": "0.00%",
+        "qty": null,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "23,000원 미만",
+        "count": 1,
+        "count_pct": "0.04%",
+        "qty": 14000,
+        "qty_pct": "0.00%"
+      },
+      {
+        "band": "합계",
+        "count": 2236,
+        "count_pct": "100.00%",
+        "qty": 1280209493,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 16,
+        "qty": 14459500
+      },
+      "3개월 확약": {
+        "count": 54,
+        "qty": 30407300
+      },
+      "1개월 확약": {
+        "count": 41,
+        "qty": 28818000
+      },
+      "15일 확약": {
+        "count": 218,
+        "qty": 138900200
+      },
+      "미확약": {
+        "count": 1907,
+        "qty": 1067624493
+      }
+    }
   }
 }
