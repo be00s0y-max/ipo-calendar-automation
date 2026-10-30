@@ -245,6 +245,8 @@
   .pt-acct .r { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 2px 0; }
   .pt-acct .k { color: var(--ink-dim); }
   .pt-acct .k small { color: var(--ink-faint); margin-left: 3px; }
+  .pt-acct .v { display: flex; align-items: center; gap: 6px; }
+  .pt-acct .bank { color: var(--ink-dim); }
   table.stage-table th.lt-r { text-align: right; }
   td.np-block { background: var(--surface-3); color: var(--ink-faint); font-size: 12px; font-weight: 700; text-align: center; letter-spacing: .1em; }
   /* 단계 탭 페이지 나누기 (30종목씩) */
@@ -8073,8 +8075,8 @@ function renderPayTab(){
         ${pn.price ? `<button class="acct-copy" data-copy="${Math.round(v.total)}" title="납입금액 — 누르면 ${Math.round(v.total)} 복사">${fmtNum(Math.round(v.total))}원</button>` : ""}</td>`;
     const uws = (dl.uw || "").split(",").map(x => x.trim()).filter(Boolean);
     const acctLines = ["일임", "H일임"].flatMap(sec => uws.flatMap(uw => linkAcctsFor(uw, sec).map(a =>
-      `<div class="r"><span class="k">${sec}${uws.length > 1 ? `<small>${escHtml(uw)}</small>` : ""}<small>${escHtml(a.kind)}${a.bank ? " " + escHtml(a.bank) : ""}</small></span>
-        <button class="acct-copy" data-copy="${escHtml(adCopyDigits(a.text))}" title="누르면 ${escHtml(adCopyDigits(a.text))} 복사">${escHtml(a.text)}</button></div>`)));
+      `<div class="r"><span class="k">${sec}${uws.length > 1 ? `<small>${escHtml(uw)}</small>` : ""}<small>${escHtml(a.kind)}</small></span>
+        <span class="v">${a.bank ? `<span class="bank">${escHtml(a.bank)}</span>` : ""}<button class="acct-copy" data-copy="${escHtml(adCopyDigits(a.text))}" title="누르면 ${escHtml(adCopyDigits(a.text))} 복사">${escHtml(a.text)}</button></span></div>`)));
     return sep + `<tr data-row="${idx}" class="${payToday(dl) ? "live-row" : ""}">${head}
       <td class="lt-cell">${pn.price ? `<b>${fmtNum(pn.price)}원</b>` : none}</td>
       ${fundCell(pn.rows[0])}${fundCell(pn.rows[1])}
