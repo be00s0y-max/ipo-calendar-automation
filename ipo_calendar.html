@@ -5933,7 +5933,9 @@ function renderTodoTab(){
     const evs = [...shown.filter(isCommittedLockup), ...shown.filter(ev => !isCommittedLockup(ev))];
     const items = evs.map(ev => {
       const dl = deals[ev.dealIdx];
-      const done = isEventDone(dl.name, ev.type);
+      // 수요예측 탭에서 "미참여"로 고른 종목은 그 종목 일정 전부를 완료처럼 회색으로, 꼬리표는 "미참여"
+      const np = records[dl.name].participation === "미참여";
+      const done = np || isEventDone(dl.name, ev.type);
       const chip = done ? digestDoneChipHtml(ev) : digestChipHtml(ev);
       const pk = pendingKey(ev);
       const checked = pk in todoPending ? todoPending[pk] : isTodoChecked(ev);
@@ -5941,7 +5943,7 @@ function renderTodoTab(){
       const box = todoMode === "all"
         ? `<input type="checkbox" data-todo-deal="${ev.dealIdx}" data-todo-key="${todoKey(ev)}" ${checked ? "checked" : ""}>` : "";
       return `<div class="todo-item">
-        ${box}${chip}${done ? `<span class="tdone">완료</span>` : ""}
+        ${box}${chip}${done ? `<span class="tdone">${np ? "미참여" : "완료"}</span>` : ""}
       </div>`;
     }).join("");
     const emptyMsg = todoMode === "checked" ? (all.length ? "나의 일정 없음" : "일정 없음") : "일정 없음";
