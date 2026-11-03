@@ -6220,7 +6220,8 @@ const REPLY_FUNDS = [
 let replyPicked = null; // 종목명 Set (처음 열 때 기본 선택)
 function replyCandidates(){
   return deals.map((dl, idx) => ({ dl, idx, rec: records[dl.name] }))
-    .filter(x => x.rec && x.rec.funds && REPLY_FUNDS.some(f => x.rec.funds[f.key] && (x.rec.funds[f.key].qty != null || x.rec.funds[f.key].allot != null)))
+    // 4·5호 값이 있는 종목 + 수요예측 탭에서 "미참여"로 고른 종목(미참여는 funds를 비우므로 따로 넣는다)
+    .filter(x => isNonJoined(x.rec) || (x.rec && x.rec.funds && REPLY_FUNDS.some(f => x.rec.funds[f.key] && (x.rec.funds[f.key].qty != null || x.rec.funds[f.key].allot != null))))
     .sort((a, b) => String(b.dl.demand[0]).localeCompare(String(a.dl.demand[0])));
 }
 function replyTableHtml(dl, rec){
@@ -6228,7 +6229,8 @@ function replyTableHtml(dl, rec){
   const C = B + "text-align:center;", R = B + "text-align:right;";
   const num = v => v != null && v !== "" ? fmtNum(v) : "";
   const H = B + "background:#d9e1f2;font-weight:700;text-align:center;";
-  const funds = REPLY_FUNDS.map(f => rec.funds[f.key] || {});
+  const np = isNonJoined(rec);
+  const funds = REPLY_FUNDS.map(f => (rec.funds || {})[f.key] || {});
   const price = funds.map(v => v.price).find(v => v != null) ?? rec.price;
   const commit = kovenCommit(rec) || funds.map(v => v.commit).find(Boolean) || "";
   const date = rec.appliedDate || "";
@@ -6236,6 +6238,11 @@ function replyTableHtml(dl, rec){
   const rows = REPLY_FUNDS.map((f, i) => {
     const v = funds[i];
     const n = REPLY_FUNDS.length;
+    // 미참여: 펀드명 옆 칸(참여가격~지분율)을 모두 합쳐 가운데 "미참여" 한 칸 — 공통 탭과 같은 모양
+    if (np) return `<tr>
+      <td style="${C}">${escHtml(f.label)}</td>
+      ${i === 0 ? `<td rowspan="${n}" colspan="6" style="${C}color:#666;">미참여</td>` : ""}
+    </tr>`;
     return `<tr>
       <td style="${C}">${escHtml(f.label)}</td>
       ${i === 0 ? `<td rowspan="${n}" style="${R}">${num(price)}</td>` : ""}
@@ -6265,7 +6272,8 @@ function replyTableHtml(dl, rec){
 let rpMode = "rec";
 function rpRecommended(cands){
   const t = isoKey(addDays(today, -7));
-  return cands.filter(x => REPLY_FUNDS.some(f => (x.rec.funds[f.key] || {}).allot > 0) && x.dl.pay && x.dl.pay >= t);
+  // 미참여 종목은 배정이 없으므로 납입일 조건만 본다
+  return cands.filter(x => (isNonJoined(x.rec) || REPLY_FUNDS.some(f => ((x.rec.funds || {})[f.key] || {}).allot > 0)) && x.dl.pay && x.dl.pay >= t);
 }
 function rpShown(cands){
   if (rpMode === "rec") return rpRecommended(cands);
@@ -6303,7 +6311,7 @@ document.getElementById("rpTo").value = isoKey(today);
 function renderReplyTab(){
   const cands = replyCandidates();
   if (!replyPicked) {
-    // 기본 선택(추천): 4·5호 배정주수가 0보다 크고(엑셀의 0은 배정 전) 납입일이 7일 전 이후인 종목
+    // 기본 선택(추천): 4·5호 배정주수가 0보다 크거나(엑셀의 0은 배정 전) 미참여이고, 납입일이 7일 전 이후인 종목
     replyPicked = new Set(rpRecommended(cands).map(x => x.dl.name));
   }
   renderReplyPicks(cands);
