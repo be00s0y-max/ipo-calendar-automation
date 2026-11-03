@@ -186,7 +186,12 @@ def list_equity_filings(key, corp_code):
     data = json.loads(api_get(url).decode("utf-8"))
     if data.get("status") != "000":
         return []
-    items = [it for it in data.get("list", []) if EQUITY_FILING_RE.search(it.get("report_nm", ""))]
+    # [첨부정정]은 본문 없이 첨부서류(예: 인수계약서)만 고친 신고서라 원문이 없다(DART 014 "파일이
+    # 존재하지 않습니다"). 목록에 두면 MAX_TERM_DOCS 칸만 차지해 본문 있는 이전 신고서를 못 읽게 된다.
+    items = [
+        it for it in data.get("list", [])
+        if EQUITY_FILING_RE.search(it.get("report_nm", "")) and "첨부정정" not in it.get("report_nm", "")
+    ]
     return sorted(items, key=lambda it: it["rcept_no"], reverse=True)  # 접수번호는 날짜+일련번호라 클수록 최신
 
 
