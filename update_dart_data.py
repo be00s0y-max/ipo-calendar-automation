@@ -264,6 +264,10 @@ def update_demand_info(key, corp_codes, demand_info, changed, errors):
 def fetch_filing_xml(key, rcept_no, tmp_path):
     url = f"https://opendart.fss.or.kr/api/document.xml?crtfc_key={key}&rcept_no={rcept_no}"
     raw = api_get(url)
+    if not raw.startswith(b"PK"):
+        # DART가 ZIP 대신 오류 응답(XML/JSON)을 줬다 — 그 내용을 그대로 남겨 원인을 알 수 있게 한다
+        msg = raw[:300].decode("utf-8", "replace").replace("\n", " ").strip()
+        raise ValueError(f"ZIP 아님, DART 응답: {msg}")
     with zipfile.ZipFile(io.BytesIO(raw)) as zf:
         names = zf.namelist()
         xml_name = next((n for n in names if n.lower().endswith((".xml", ".htm", ".html"))), names[0])
