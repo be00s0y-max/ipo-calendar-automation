@@ -2245,18 +2245,18 @@
     "amount": 1000000000,
     "board_date": "2026-10-29",
     "sub_date": "2026-10-29",
-    "pay_date": "2026-11-06",
-    "maturity_date": "2029-11-06",
+    "pay_date": "2026-11-11",
+    "maturity_date": "2029-11-11",
     "coupon_rate": "6.0",
     "ytm_rate": "6.0",
     "method": "사모",
     "underwriter": null,
     "conv_rate": "100",
     "conv_price": 1999,
-    "conv_period_start": "2027-11-06",
-    "conv_period_end": "2029-10-06",
+    "conv_period_start": "2027-11-11",
+    "conv_period_end": "2029-10-11",
     "refixing": "아니오",
-    "rcept_no": "20261029000674"
+    "rcept_no": "20261103000389"
   },
   "00876908_EB_11": {
     "name": "모트렉스",

@@ -690,10 +690,10 @@
       "2026-11-05"
     ],
     "pay": "2026-11-09",
-    "list": null,
+    "list": "2026-11-16",
     "dealSizeM": 21620,
     "stockCode": "345290",
-    "finalPrice": null
+    "finalPrice": 11000
   },
   {
     "name": "에이엘로봇",

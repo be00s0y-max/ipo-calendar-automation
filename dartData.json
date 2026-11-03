@@ -2693,5 +2693,95 @@
         "qty": 249527000
       }
     }
+  },
+  "영광와이케이엠씨": {
+    "offering": {
+      "offer_shares": 2300000,
+      "offer_amount_expected": 21620000000,
+      "offer_amount_final": 25300000000,
+      "subscription": {
+        "inst_start": "2026년 11월 04일(수)",
+        "inst_end": "2026년 11월 05일(목)"
+      },
+      "payment_date": "2026년 11월 09일"
+    },
+    "demand_summary": {
+      "total_count": 2376,
+      "total_qty": 1971691000,
+      "competition_rate": 1163.35
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 4,
+        "count_pct": "0.17%",
+        "qty": 3691000,
+        "qty_pct": "0.19%"
+      },
+      {
+        "band": "11,000원(상단) 초과",
+        "count": 25,
+        "count_pct": "1.05%",
+        "qty": 20383000,
+        "qty_pct": "1.03%"
+      },
+      {
+        "band": "11,000원(상단)",
+        "count": 2346,
+        "count_pct": "98.74%",
+        "qty": 1947244000,
+        "qty_pct": "98.76%"
+      },
+      {
+        "band": "9,400원(하단) 초과 ~ 11,000원(상단) 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "9,400원(하단)",
+        "count": 1,
+        "count_pct": "0.04%",
+        "qty": 373000,
+        "qty_pct": "0.02%"
+      },
+      {
+        "band": "9,400원(하단) 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "합계",
+        "count": 2376,
+        "count_pct": "100.00%",
+        "qty": 1971691000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 21,
+        "qty": 16851000
+      },
+      "3개월 확약": {
+        "count": 10,
+        "qty": 11131000
+      },
+      "1개월 확약": {
+        "count": 11,
+        "qty": 7513000
+      },
+      "15일 확약": {
+        "count": 122,
+        "qty": 106630000
+      },
+      "미확약": {
+        "count": 2212,
+        "qty": 1829566000
+      }
+    }
   }
 }

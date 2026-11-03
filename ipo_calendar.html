@@ -1305,7 +1305,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "11.3(화) 15:48";
+const LAST_UPDATED_KST = "11.3(화) 22:14";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -1313,6 +1313,13 @@ const LAST_UPDATED_KST = "11.3(화) 15:48";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "11.3(화) 22:14",
+    "items": [
+      "수요예측 결과 반영 1건 — 영광와이케이엠씨",
+      "확정 증권신고서 공시 1건 — 영광와이케이엠씨"
+    ]
+  },
   {
     "at": "11.2(월) 22:59",
     "items": [
@@ -1436,14 +1443,6 @@ const UPDATE_LOG = [
     "items": [
       "조기상환(풋옵션) 일정 1건 추가 확인"
     ]
-  },
-  {
-    "at": "10.21(수) 20:35",
-    "items": [
-      "수요예측 결과 반영 3건 — 래블업, 영광(구.영광공작소), 이에스티",
-      "확정 증권신고서 공시 3건 — 래블업, 영광(구.영광공작소), 이에스티",
-      "신규 메자닌 5건 (CB 5건) — SKAI, 루멘스바이오스, 알에프텍, 애드포러스"
-    ]
   }
 ];
 // AUTO-GENERATED:UPDATE_LOG:END
@@ -1492,7 +1491,7 @@ const deals = [
   { name: "바로팜", uw: "미래에셋증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-02", "2026-11-03"], pay: "2026-11-05", list: "2026-11-11", dealSizeM: 29192, stockCode: "952366", finalPrice: 16400 },
   { name: "넥스아이", uw: "한국투자증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-03", "2026-11-04"], pay: "2026-11-06", list: "2026-11-12", dealSizeM: 52500, stockCode: "493410", finalPrice: 8000 },
   { name: "동원파츠", uw: "삼성증권", demand: ["2026-10-22","2026-10-28"], sub: ["2026-11-02", "2026-11-03"], pay: "2026-11-05", list: "2026-11-10", dealSizeM: 46690, stockCode: "0162D0", finalPrice: 26500 },
-  { name: "영광와이케이엠씨", uw: "대신증권", demand: ["2026-10-27","2026-11-02"], sub: ["2026-11-04", "2026-11-05"], pay: "2026-11-09", list: null, dealSizeM: 21620, stockCode: "345290", finalPrice: null },
+  { name: "영광와이케이엠씨", uw: "대신증권", demand: ["2026-10-27","2026-11-02"], sub: ["2026-11-04", "2026-11-05"], pay: "2026-11-09", list: "2026-11-16", dealSizeM: 21620, stockCode: "345290", finalPrice: 11000 },
   { name: "에이엘로봇", uw: "대신증권", demand: ["2026-10-28","2026-11-03"], sub: ["2026-11-06", "2026-11-09"], pay: "2026-11-11", list: null, dealSizeM: 37680, stockCode: "471800", finalPrice: null },
   { name: "엠비디", uw: "하나증권", demand: ["2026-11-02","2026-11-06"], sub: ["2026-11-12", "2026-11-13"], pay: "2026-11-17", list: null, dealSizeM: 19200, stockCode: "498150", finalPrice: null },
   { name: "하나에어로다이내믹스", uw: "IBK투자증권", demand: ["2026-11-02","2026-11-06"], sub: ["2026-11-10", "2026-11-11"], pay: "2026-11-13", list: null, dealSizeM: 20680, stockCode: "271160", finalPrice: null },
@@ -1597,7 +1596,7 @@ const mezzDeals = [
   {"name": "비나텍", "kind": "CB", "round": "5", "bondName": "무기명식 무보증 사모 전환사채", "amount": 29000000000, "board_date": "2026-10-20", "sub_date": "2026-10-28", "pay_date": "2026-10-28", "maturity_date": "2031-10-28", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 83102, "conv_period_start": "2027-10-28", "conv_period_end": "2031-09-28", "refixing": "아니오", "rcept_no": "20261023000071", "put_start": "2028-08-29", "put_end": "2028-09-28", "put_redemption": "2028-10-28"},
   {"name": "SKAI", "kind": "CB", "round": "7", "bondName": "무기명식 이권부 무보증 사모 영구전환사채", "amount": 22815000000, "board_date": "2026-10-21", "sub_date": "2026-10-29", "pay_date": "2026-10-29", "maturity_date": "2056-10-29", "coupon_rate": "2.0", "ytm_rate": "2.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1602, "conv_period_start": "2027-10-29", "conv_period_end": "2056-09-29", "refixing": "아니오", "rcept_no": "20261021000407"},
   {"name": "애드포러스", "kind": "CB", "round": "2", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 6000000000, "board_date": "2026-10-21", "sub_date": "2026-10-29", "pay_date": "2026-10-29", "maturity_date": "2031-10-29", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 6894, "conv_period_start": "2027-10-29", "conv_period_end": "2031-09-29", "refixing": "아니오", "rcept_no": "20261021000401", "put_start": "2029-04-04", "put_end": "2029-04-14", "put_redemption": "2029-04-29"},
-  {"name": "애드바이오텍", "kind": "CB", "round": "12", "bondName": "무기명식 무보증 사모 전환사채", "amount": 1000000000, "board_date": "2026-10-29", "sub_date": "2026-10-29", "pay_date": "2026-11-06", "maturity_date": "2029-11-06", "coupon_rate": "6.0", "ytm_rate": "6.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1999, "conv_period_start": "2027-11-06", "conv_period_end": "2029-10-06", "refixing": "아니오", "rcept_no": "20261029000674"},
+  {"name": "애드바이오텍", "kind": "CB", "round": "12", "bondName": "무기명식 무보증 사모 전환사채", "amount": 1000000000, "board_date": "2026-10-29", "sub_date": "2026-10-29", "pay_date": "2026-11-11", "maturity_date": "2029-11-11", "coupon_rate": "6.0", "ytm_rate": "6.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1999, "conv_period_start": "2027-11-11", "conv_period_end": "2029-10-11", "refixing": "아니오", "rcept_no": "20261103000389"},
   {"name": "대동", "kind": "CB", "round": "43", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 6000000000, "board_date": "2026-10-22", "sub_date": "2026-10-30", "pay_date": "2026-10-30", "maturity_date": "2031-10-30", "coupon_rate": "1.5", "ytm_rate": "4.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 7105, "conv_period_start": "2027-10-30", "conv_period_end": "2031-09-30", "refixing": "아니오", "rcept_no": "20261022000505"},
   {"name": "휴맥스", "kind": "CB", "round": "27", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 5000000000, "board_date": "2026-10-22", "sub_date": "2026-10-30", "pay_date": "2026-10-30", "maturity_date": "2029-10-30", "coupon_rate": "0.0", "ytm_rate": "3.5", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 5320, "conv_period_start": "2027-10-30", "conv_period_end": "2029-09-30", "refixing": "아니오", "rcept_no": "20261028000399", "put_start": "2027-08-31", "put_end": "2027-09-30", "put_redemption": "2027-10-30"},
   {"name": "대동", "kind": "CB", "round": "60", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 6000000000, "board_date": "2026-10-22", "sub_date": "2026-10-30", "pay_date": "2026-10-30", "maturity_date": "2031-10-30", "coupon_rate": "1.5", "ytm_rate": "4.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 7105, "conv_period_start": "2027-10-30", "conv_period_end": "2031-09-30", "refixing": "아니오", "rcept_no": "20261027000375", "put_start": "2028-08-31", "put_end": "2028-10-06", "put_redemption": "2028-10-30"},
@@ -4329,6 +4328,96 @@ const dartData = {
         "qty": 249527000
       }
     }
+  },
+  "영광와이케이엠씨": {
+    "offering": {
+      "offer_shares": 2300000,
+      "offer_amount_expected": 21620000000,
+      "offer_amount_final": 25300000000,
+      "subscription": {
+        "inst_start": "2026년 11월 04일(수)",
+        "inst_end": "2026년 11월 05일(목)"
+      },
+      "payment_date": "2026년 11월 09일"
+    },
+    "demand_summary": {
+      "total_count": 2376,
+      "total_qty": 1971691000,
+      "competition_rate": 1163.35
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 4,
+        "count_pct": "0.17%",
+        "qty": 3691000,
+        "qty_pct": "0.19%"
+      },
+      {
+        "band": "11,000원(상단) 초과",
+        "count": 25,
+        "count_pct": "1.05%",
+        "qty": 20383000,
+        "qty_pct": "1.03%"
+      },
+      {
+        "band": "11,000원(상단)",
+        "count": 2346,
+        "count_pct": "98.74%",
+        "qty": 1947244000,
+        "qty_pct": "98.76%"
+      },
+      {
+        "band": "9,400원(하단) 초과 ~ 11,000원(상단) 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "9,400원(하단)",
+        "count": 1,
+        "count_pct": "0.04%",
+        "qty": 373000,
+        "qty_pct": "0.02%"
+      },
+      {
+        "band": "9,400원(하단) 미만",
+        "count": null,
+        "count_pct": "-",
+        "qty": null,
+        "qty_pct": "-"
+      },
+      {
+        "band": "합계",
+        "count": 2376,
+        "count_pct": "100.00%",
+        "qty": 1971691000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 21,
+        "qty": 16851000
+      },
+      "3개월 확약": {
+        "count": 10,
+        "qty": 11131000
+      },
+      "1개월 확약": {
+        "count": 11,
+        "qty": 7513000
+      },
+      "15일 확약": {
+        "count": 122,
+        "qty": 106630000
+      },
+      "미확약": {
+        "count": 2212,
+        "qty": 1829566000
+      }
+    }
   }
 };
 // AUTO-GENERATED:DART_DATA:END
@@ -4542,8 +4631,8 @@ const DEMAND_INFO = {
     ],
     "listed_shares": 14332500,
     "biz": "당사는 2017년 11월 설립되어 기업 및 기관(B2B) 고객을 대상으로 생성형 인공지능(AI)의 도입ㆍ운영ㆍ확장에 필요한 통합 플랫폼인 \"GenOS\"를 자체 개발ㆍ공급하는 기업용 생성형 AI 플랫폼 전문 기업입니다.",
-    "rcept_no": "20261026000367",
-    "report_nm": "[첨부정정]증권신고서(지분증권)",
+    "rcept_no": "20261026000001",
+    "report_nm": "[기재정정]증권신고서(지분증권)",
     "ov_rcept": "20261026000001"
   },
   "영광와이케이엠씨": {
@@ -4561,11 +4650,11 @@ const DEMAND_INFO = {
       27.89,
       38.38
     ],
-    "listed_shares": 14459531,
+    "listed_shares": 14482531,
     "biz": "당사는 표면처리 기술을 기반으로 사업을 영위해 왔으며, 반도체 및 디스플레이 산업의 발전과 함께 관련 제조장비용 핵심부품 분야로 사업영역을 지속적으로 확장해 왔습니다.",
-    "rcept_no": "20261030000616",
-    "report_nm": "[기재정정]증권신고서(지분증권)",
-    "ov_rcept": "20261030000616"
+    "rcept_no": "20261103000312",
+    "report_nm": "[발행조건확정]증권신고서(지분증권)",
+    "ov_rcept": "20261103000312"
   },
   "에이엘로봇": {
     "band": [
@@ -4661,16 +4750,16 @@ const DEMAND_INFO = {
     "inst_max": 1258000,
     "val_model": "PER",
     "val_multiple": 24.86,
-    "val_fair": 21955,
+    "val_fair": 21661,
     "val_discount": [
-      40.79,
-      24.85
+      39.98,
+      23.83
     ],
     "listed_shares": 10598414,
     "biz": "당사는 공격형(오펜시브) 보안 기술을 기반으로 사이버 위협 대응 솔루션을 개발, 공급하는 정보보안 전문기업입니다.",
-    "rcept_no": "20261027000363",
+    "rcept_no": "20261103000358",
     "report_nm": "[기재정정]증권신고서(지분증권)",
-    "ov_rcept": "20261027000363"
+    "ov_rcept": "20261103000358"
   },
   "씨앤엠": {
     "band": [
@@ -4689,9 +4778,9 @@ const DEMAND_INFO = {
     ],
     "listed_shares": 15976499,
     "biz": "당사는 2006년 8월 LG전자 모터사업부 소속 임직원들이 EBO(Employee Buy-Out) 방식으로 분사하여 설립한 전동 구동부품 전문기업으로, 모터의 핵심부품인 코어(Core), 회전자(Rotor), 고정자(Stator), 권선(Winding), 사출부품에서 완성 모터의 조립과 성능검사까지 일괄 수행하는 제조역량을 기반으로 자동차와 가전 분야에 모터 및 모터 핵심부품을 공급하고 있습니다.",
-    "rcept_no": "20261016000412",
-    "report_nm": "증권신고서(지분증권)",
-    "ov_rcept": "20261016000412"
+    "rcept_no": "20261103000363",
+    "report_nm": "[기재정정]증권신고서(지분증권)",
+    "ov_rcept": "20261103000363"
   },
   "제이앤티지": {
     "band": [
@@ -5171,24 +5260,29 @@ const DEMAND_INFO = {
     "listed_shares": 11363649,
     "biz": "당사는 로봇 자동화 솔루션의 설계, 제작, 제어, 설치, 시운전 및 유지보수에 이르는 전 공정을 일괄 수행하는 로봇 모듈화 플랫폼 기반 솔루션 기업입니다.",
     "rcept_no": "20260916000234",
-    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+    "report_nm": "[발행조건확정]증권신고서(지분증권)",
+    "ov_rcept": "20260916000234"
   },
   "진코스텍": {
     "band": [
       19500,
       23500
     ],
-    "qty_unit": null,
-    "price_unit": null,
-    "inst_max": null,
+    "qty_unit": 1000,
+    "price_unit": 100,
+    "inst_max": 639000,
     "val_model": "PER",
     "val_multiple": 17.61,
     "val_fair": 24780,
-    "val_discount": null,
-    "listed_shares": null,
-    "biz": null,
+    "val_discount": [
+      21.31,
+      5.16
+    ],
+    "listed_shares": 3786533,
+    "biz": "당사는 화장품 ODM·OEM 사업을 영위하는 기업으로, 그 중에서도 타사와는 구별되는 다양한 제형의 하이드로겔 마스크팩 및 패치류 제품의 연구개발, 제조 및 공급을 주요 사업으로 하고 있습니다.",
     "rcept_no": "20261001000586",
-    "report_nm": "[발행조건확정]증권신고서(지분증권)"
+    "report_nm": "[발행조건확정]증권신고서(지분증권)",
+    "ov_rcept": "20261001000586"
   },
   "씨아이에스케미칼": {
     "band": [
@@ -8457,7 +8551,8 @@ const DART_FILING_URL = {
   "옵토닉스": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261029000504",
   "동원파츠": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261030000113",
   "바로팜": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261030000396",
-  "넥스아이": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261030000467"
+  "넥스아이": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261030000467",
+  "영광와이케이엠씨": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20261103000312"
 };
 // AUTO-GENERATED:FILING_URL:END
 
@@ -8892,6 +8987,15 @@ const COMPANY_PROFILE = {
     "hm_url": "www.nex-i.co.kr",
     "phn_no": "02-6951-0412",
     "est_dt": "20210412"
+  },
+  "영광와이케이엠씨": {
+    "stock_code": "",
+    "ceo_nm": "장관섭",
+    "corp_cls": "E",
+    "adres": "충청남도 아산시 둔포면 아산밸리중앙로 161",
+    "hm_url": "www.ykmc.kr",
+    "phn_no": "041-629-3911",
+    "est_dt": "20120401"
   }
 };
 // AUTO-GENERATED:COMPANY_PROFILE:END
