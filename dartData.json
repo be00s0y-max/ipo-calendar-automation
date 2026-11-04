@@ -2783,5 +2783,95 @@
         "qty": 1829566000
       }
     }
+  },
+  "에이엘로봇": {
+    "offering": {
+      "offer_shares": 2400000,
+      "offer_amount_expected": 37680000000,
+      "offer_amount_final": 42240000000,
+      "subscription": {
+        "inst_start": "2026년 11월 06일(금)",
+        "inst_end": "2026년 11월 09일(월)"
+      },
+      "payment_date": "2026년 11월 11일"
+    },
+    "demand_summary": {
+      "total_count": 2227,
+      "total_qty": 1569139000,
+      "competition_rate": 871.74
+    },
+    "price_bands": [
+      {
+        "band": "가격 미제시",
+        "count": 4,
+        "count_pct": "0.18%",
+        "qty": 3641000,
+        "qty_pct": "0.23%"
+      },
+      {
+        "band": "17,600원(상단) 초과",
+        "count": 25,
+        "count_pct": "1.12%",
+        "qty": 15160000,
+        "qty_pct": "0.97%"
+      },
+      {
+        "band": "17,600원(상단)",
+        "count": 2164,
+        "count_pct": "97.17%",
+        "qty": 1541592000,
+        "qty_pct": "98.24%"
+      },
+      {
+        "band": "15,700원(하단) 초과 ~ 17,600원(상단) 미만",
+        "count": 3,
+        "count_pct": "0.13%",
+        "qty": 2494000,
+        "qty_pct": "0.16%"
+      },
+      {
+        "band": "15,700원(하단)",
+        "count": 5,
+        "count_pct": "0.22%",
+        "qty": 818000,
+        "qty_pct": "0.05%"
+      },
+      {
+        "band": "15,700원(하단) 미만",
+        "count": 26,
+        "count_pct": "1.17%",
+        "qty": 5434000,
+        "qty_pct": "0.35%"
+      },
+      {
+        "band": "합계",
+        "count": 2227,
+        "count_pct": "100.00%",
+        "qty": 1569139000,
+        "qty_pct": "100.00%"
+      }
+    ],
+    "lockup": {
+      "6개월 확약": {
+        "count": 5,
+        "qty": 4128000
+      },
+      "3개월 확약": {
+        "count": 2,
+        "qty": 222000
+      },
+      "1개월 확약": {
+        "count": 2,
+        "qty": 99000
+      },
+      "15일 확약": {
+        "count": 23,
+        "qty": 13218000
+      },
+      "미확약": {
+        "count": 2195,
+        "qty": 1551472000
+      }
+    }
   }
 }
