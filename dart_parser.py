@@ -436,7 +436,8 @@ def parse_overview(path):
                 continue
             model = out["val_model"]
             if model and out["val_multiple"] is None and re.search(r"(유사기업|유사회사|비교회사|비교기업|비교대상|적용)", joined) \
-                    and re.sub(r"\s+", "", model) in joined and "적용산식" not in joined:
+                    and re.sub(r"\s+|\(.*?\)", "", model) in joined and "적용산식" not in joined:
+                # 평가모형이 "PER(주가수익비율)"처럼 괄호 설명이 붙어도 "비교대상회사 PER" 행을 찾는다(2026-11 데스틴파워)
                 for c in vals:
                     m = num_re.match(c)
                     if m and "." in m.group(1) or (m and m.group(2) == "배"):
@@ -451,7 +452,8 @@ def parse_overview(path):
                             out["val_fair"] = v
                         break
             if out["val_discount"] is None and "할인율" in joined:
-                m = re.search(r"([\d.]+)\s*%\s*~\s*([\d.]+)\s*%", " ".join(vals))
+                # "47.98% ~ 28.47%" 또는 단위 칸이 따로 "%"인 "18.42 ~ 32.60"(2026-11 KTE)
+                m = re.search(r"([\d.]+)\s*%?\s*~\s*([\d.]+)\s*%?", " ".join(c for c in vals if c != "%"))
                 if m:
                     out["val_discount"] = [float(m.group(1)), float(m.group(2))]
     text = re.sub(r"\s+", " ", soup.get_text(" "))
@@ -464,7 +466,8 @@ def parse_overview(path):
     first = None
     i = text.find("사업의 개요")
     while i >= 0 and out["biz"] is None:
-        for m in re.finditer(r"(?:당사|동사)는\s[^.]{10,400}?니다\.", text[i:i + 8000]):
+        # 앞에 [용어 설명] 표가 길게 붙은 신고서가 있어 넉넉히 본다(2026-11 KTE: 첫 문장이 1만 1천여 자 뒤)
+        for m in re.finditer(r"(?:당사|동사)는\s[^.]{10,400}?니다\.", text[i:i + 20000]):
             first = first or m.group(0)
             if intro.search(m.group(0)):
                 out["biz"] = m.group(0)
