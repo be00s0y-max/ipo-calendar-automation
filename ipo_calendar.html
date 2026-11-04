@@ -76,6 +76,9 @@
   .ul-items { margin: 0; padding-left: 17px; }
   .ul-items li { font-size: 12.5px; color: var(--ink-dim); line-height: 1.65; }
   .ul-empty { font-size: 12.5px; color: var(--ink-faint); line-height: 1.7; padding: 8px 0; }
+  .ul-miss { background: #fdf8e1; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin: 4px 0 6px; }
+  .ul-miss-h { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+  .ul-miss-sub { font-size: 11.5px; color: var(--ink-faint); margin: 2px 0 6px; }
 
   /* ---- today digest ---- */
   .digest {
@@ -1167,7 +1170,6 @@
   <div class="panel-head">
     <button class="panel-close" id="ulPanelClose">✕</button>
     <div class="pname">업데이트 내역</div>
-    <div class="puw">매일 아침 8시·오후 3시에 DART와 거래소를 훑어서 바뀐 것만 적어둡니다.</div>
   </div>
   <div class="panel-body">
     <div id="ulList"></div>
@@ -5535,13 +5537,41 @@ document.getElementById("todayDate").textContent = fmt(today) + " " + today.getF
 document.getElementById("lastUpdatedDate").textContent = LAST_UPDATED_KST;
 
 /* ---------- 업데이트 내역 팝업 ---------- */
+// 정보 빠진 종목: 아직 상장 전인 종목 중 DART 증권신고서에서 못 찾은 항목이 있는 종목.
+// DEMAND_INFO(수요예측 조건·공모개요)를 매번 다시 보므로, 값이 채워지면 목록에서 저절로 빠진다.
+// 스팩은 공모개요(밸류에이션·사업개요 등)를 읽지 않으므로(update_dart_data.py) 수요예측 조건만 본다.
+const MISSING_LABELS = {
+  band: "공모가 밴드", qty_unit: "수량단위", price_unit: "가격단위", inst_max: "기관 최고한도",
+  val_model: "밸류에이션 방식", val_multiple: "밸류에이션 배수", val_fair: "적정가", val_discount: "할인율",
+  listed_shares: "상장예정주식수", biz: "사업개요",
+};
+const MISSING_TERM_FIELDS = ["band", "qty_unit", "price_unit", "inst_max"];
+const MISSING_OVERVIEW_FIELDS = ["val_model", "val_multiple", "val_fair", "val_discount", "listed_shares", "biz"];
+function missingInfoList(){
+  const t0 = isoKey(today);
+  return deals.filter(dl => !dl.list || dl.list >= t0).map(dl => {
+    const t = DEMAND_INFO[dl.name];
+    if (!t) return { dl, miss: ["DART 신고서 정보 전체"] };
+    const fields = MISSING_TERM_FIELDS.concat(/스팩/.test(dl.name) ? [] : MISSING_OVERVIEW_FIELDS);
+    return { dl, miss: fields.filter(f => t[f] == null).map(f => MISSING_LABELS[f]) };
+  }).filter(x => x.miss.length);
+}
+function missingInfoHtml(){
+  const miss = missingInfoList();
+  if (!miss.length) return "";
+  return `<div class="ul-miss">
+      <div class="ul-miss-h">정보 빠진 종목 ${miss.length}건</div>
+      <div class="ul-miss-sub">상장 전 종목 중 DART 증권신고서에서 아직 못 찾은 항목입니다. 채워지면 자동으로 빠집니다.</div>
+      <ul class="ul-items">${miss.map(x => `<li><b>${escHtml(x.dl.name)}</b> — ${x.miss.join(", ")}</li>`).join("")}</ul>
+    </div>`;
+}
 function renderUpdateLog(){
   const box = document.getElementById("ulList");
   if (!UPDATE_LOG.length) {
-    box.innerHTML = `<div class="ul-empty">아직 쌓인 내역이 없습니다.<br>다음 자동 갱신(평일 오전 8시·오후 3시)부터 여기에 기록됩니다.</div>`;
+    box.innerHTML = missingInfoHtml() + `<div class="ul-empty">아직 쌓인 내역이 없습니다.</div>`;
     return;
   }
-  box.innerHTML = UPDATE_LOG.map(e => `
+  box.innerHTML = missingInfoHtml() + UPDATE_LOG.map(e => `
     <div class="ul-entry">
       <div class="ul-when">${e.at}</div>
       <ul class="ul-items">${e.items.map(t => `<li>${t}</li>`).join("")}</ul>
@@ -8204,14 +8234,19 @@ function renderStageCell(dl, idx, rec, col){
   }
 }
 
-// 수요예측 탭에서 "미참여"인 종목은 신청일~확약여부 칸을 입력 없이 회색 블록 하나로 막는다.
-const NP_BLOCK_FIELDS = ["appliedDate", "price", "qty", "allotShares", "_bp", "commit"];
+// 수요예측 탭에서 "미참여"로 고른 종목은 입력칸을 회색 블록 하나("미참여")로 막는다.
+// 수요예측 탭: 신청일~확약여부, 청약 탭: 공문 배정주식~공문 출력(납입·상장 탭과 같은 방식).
+const NP_BLOCK_FIELDS = {
+  demand: ["appliedDate", "price", "qty", "allotShares", "_bp", "commit"],
+  sub: ["_ns1", "_ns2", "_notice"],
+};
 function stageCellsHtml(key, cfg, dl, idx, rec){
   const cols = cfg.columns;
-  if (key !== "demand" || rec.participation !== "미참여")
+  const blockFields = NP_BLOCK_FIELDS[key];
+  if (!blockFields || rec.participation !== "미참여")
     return cols.map(col => renderStageCell(dl, idx, rec, col)).join("");
-  const first = cols.findIndex(c => NP_BLOCK_FIELDS.includes(c.field));
-  const last = cols.length - 1 - [...cols].reverse().findIndex(c => NP_BLOCK_FIELDS.includes(c.field));
+  const first = cols.findIndex(c => blockFields.includes(c.field));
+  const last = cols.length - 1 - [...cols].reverse().findIndex(c => blockFields.includes(c.field));
   return cols.slice(0, first).map(col => renderStageCell(dl, idx, rec, col)).join("")
     + `<td class="np-block" colspan="${last - first + 1}">미참여</td>`
     + cols.slice(last + 1).map(col => renderStageCell(dl, idx, rec, col)).join("");
@@ -8221,28 +8256,33 @@ function renderStageTable(key){
   const container = document.getElementById("stage-" + key);
   if (!container) return;
   const head = cfg.columns.map(c => `<th>${typeof c.label === "function" ? c.label() : c.label}</th>`).join("");
-  // 최신 딜(수요예측 시작일 늦은 순)이 위로, 표 위 검색칸으로 종목명 필터.
+  // 표 위 검색칸으로 종목명 필터.
   const order = deals.map((dl, idx) => idx)
-    .filter(idx => matchesQuery(deals[idx].name, stageSearch[key]))
-    .sort((a, b) => deals[b].demand[0].localeCompare(deals[a].demand[0]) || b - a);
-  // 수요예측·청약이 오늘 진행 중인 딜은 분홍으로 맨 위에 따로 모은다.
-  const live = order.filter(idx => liveStage(deals[idx]));
-  const rest = order.filter(idx => !liveStage(deals[idx]));
+    .filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
+  // 줄 색·순서는 상장·납입 탭과 같은 기준을 이 탭의 일정(수요예측일 / 청약일)에 적용한다:
+  //   오늘이 기간 안 = 분홍(live-row), 오늘 기준 앞뒤 7일 안 = 옅은 노랑(soon-row).
+  //   다가오는 일정은 시작일, 지난 일정은 마지막날로 7일을 잰다.
+  const t0 = isoKey(today);
+  const rangeOf = dl => key === "sub" ? dl.sub : dl.demand;
+  const inRange = dl => { const r = rangeOf(dl); return !!r && r[0] <= t0 && t0 <= r[1]; };
+  const nearDate = dl => { const r = rangeOf(dl); return !r ? "" : inRange(dl) ? t0 : r[0] > t0 ? r[0] : r[1]; };
+  const rowCls = dl => inRange(dl) ? "live-row" : nearToday(nearDate(dl)) ? "soon-row" : "";
   const rowHtml = idx => {
     const dl = deals[idx];
     const rec = records[dl.name];
     const detail = cfg.detail && demandOpen.has(idx)
       ? `<tr class="detail-row"><td colspan="${cfg.columns.length}">${cfg.detail(dl, idx)}</td></tr>` : "";
-    return `<tr data-row="${idx}" class="${liveStage(dl) ? "live-row" : ""}">${stageCellsHtml(key, cfg, dl, idx, rec)}</tr>${detail}`;
+    return `<tr data-row="${idx}" class="${rowCls(dl)}">${stageCellsHtml(key, cfg, dl, idx, rec)}</tr>${detail}`;
   };
-  // 진행 중 딜이 맨 앞에 오도록 이어 붙인 뒤 30종목씩 자른다(진행 중 딜은 항상 1페이지).
-  const all = live.concat(rest);
+  // 순서: 오늘 → 앞뒤 7일(다가오는 것 가까운 순, 그다음 지난 것 최근 순) → 7일 넘게 남은 것 → 날짜 미정 → 7일 넘게 지난 것
+  const all = nearOrder(order, nearDate, inRange);
   const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
   const slice = all.slice((page - 1) * STAGE_PAGE_SIZE, page * STAGE_PAGE_SIZE);
   const rows = slice.map((idx, i) => {
-    const sep = i > 0 && liveStage(deals[slice[i - 1]]) && !liveStage(deals[idx])
+    const prevCls = i > 0 ? rowCls(deals[slice[i - 1]]) : "";
+    const sep = prevCls && prevCls !== rowCls(deals[idx])
       ? `<tr class="live-sep"><td colspan="${cfg.columns.length}"></td></tr>` : "";
     return sep + rowHtml(idx);
   }).join("");
