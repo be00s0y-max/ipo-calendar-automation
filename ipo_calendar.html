@@ -5890,8 +5890,10 @@ async function loadSharedRecords(){
       accountBook = data.accountBook;
       try { localStorage.setItem(ACCOUNT_KEY, JSON.stringify(accountBook)); } catch(e) {}
     }
+    let accountDirNormalized = false;
     if (data.accountDir) {
       accountDir = data.accountDir;
+      accountDirNormalized = normalizeAccountDir(accountDir);
       try { localStorage.setItem(ACCOUNT_DIR_KEY, JSON.stringify(accountDir)); } catch(e) {}
       renderAcctTab();
     }
@@ -5908,6 +5910,8 @@ async function loadSharedRecords(){
       localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
       localStorage.setItem(STAMP_KEY, String(recordsUpdatedAt));
     } catch(e) {}
+    // 공유 저장본의 계좌를 정리 규칙대로 고쳤으면, 고친 값을 공유 저장에도 올린다(방금 받은 최신본 위에서 고친 것이라 안전).
+    if (accountDirNormalized) persistRecords();
 
     rerender();
     if (STAGE_TABS) renderAllStageTables();
@@ -7282,6 +7286,33 @@ let accountDir = (() => {
   try { return JSON.parse(localStorage.getItem(ACCOUNT_DIR_KEY) || "null") || { brokers: {}, order: [] }; }
   catch(e) { return { brokers: {}, order: [] }; }
 })();
+// 사용자가 정한 계좌 정리 규칙(2026-11):
+//   - 대신증권: 고유 계좌는 맨 위 하나만 남긴다(엑셀의 "(펀드가입분)"·"(공모주_일임)" 고유 줄은 뺀다). 직접 추가한 계좌는 그대로.
+//   - IBK투자증권: 계좌번호 옆 한글 설명(예: "(카드결제업무부보관)")을 지우고 번호만 남긴다.
+// 엑셀로 다시 불러와도, 다른 기기의 옛 저장본을 받아와도 같은 결과가 되도록 불러올 때마다 적용한다. 바뀌었으면 true.
+function normalizeAccountDir(dir){
+  let changed = false;
+  const db = (dir.brokers || {})["대신"];
+  if (db && Array.isArray(db.accts)) {
+    let seen = false;
+    const kept = db.accts.filter(a => {
+      if (a.sec !== "고유" || a.manual) return true;
+      if (seen) return false;
+      seen = true; return true;
+    });
+    if (kept.length !== db.accts.length) { db.accts = kept; changed = true; }
+  }
+  const ib = (dir.brokers || {})["ibk"];
+  if (ib && Array.isArray(ib.accts)) ib.accts.forEach(a => {
+    const t = String(a.text || "").replace(/\s*\([^)]*[가-힣][^)]*\)/g, "").replace(/[가-힣]/g, "").trim();
+    if (t !== a.text) { a.text = t; changed = true; }
+  });
+  return changed;
+}
+if (normalizeAccountDir(accountDir)) {
+  // 시작 시점에는 공유 저장본을 아직 안 읽었으므로 이 기기에만 저장하고, 공유 저장은 다음 저장 때 같이 올라간다.
+  try { localStorage.setItem(ACCOUNT_DIR_KEY, JSON.stringify(accountDir)); } catch(e) {}
+}
 let adEditMode = false;
 // 증권사 HTS 이름 (2026-10 각 사 홈페이지·다운로드 안내 기준, 상상인·SK·LS·BNK·iM은 나무위키 HTS 문서 기준).
 // 키는 brokerKey. 우리투자증권은 HTS 미제공으로 적혀 있어 넣지 않았다.
@@ -7507,6 +7538,7 @@ document.getElementById("adXlsx").addEventListener("change", async e => {
       status.textContent = "계좌·일임계좌(전북)·일임계좌(인성) 시트를 찾지 못했습니다"; return;
     }
     accountDir = mergeAccountDir(parseAccountWorkbook(XLSX, wb));
+    normalizeAccountDir(accountDir);
     saveAccountDir();
     const n = accountDir.order.reduce((a, k) => a + accountDir.brokers[k].accts.length, 0);
     status.textContent = `${accountDir.order.length}개 증권사 · 계좌 ${n}개를 불러왔습니다`;
