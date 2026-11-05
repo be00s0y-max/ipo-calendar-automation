@@ -319,6 +319,8 @@
   table.stage-table tbody tr.live-sep td { padding: 0; height: 6px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
   .live-badge { display: inline-block; font-size: 10.5px; font-weight: 700; color: #b0285a; background: #fff;
                 border: 1px solid #f3b6cb; border-radius: 4px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; }
+  /* 상장 탭: 우리가 확약을 건 기간의 락업해제일 — 캘린더 빨간 칩과 같은 색 */
+  .live-badge.commit { color: var(--ev-commit); border-color: var(--ev-commit); }
   .stc-name { font-weight: 700; font-size: 13px; }
   .stc-uw { font-size: 11px; color: var(--ink-faint); }
   .stc-ref { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-dim); }
@@ -8549,8 +8551,19 @@ const LIST_GROUPS = ["일임", "H일임", "코벤", "신탁"];
 function fixedPriceOf(dl){
   return dl.finalPrice || (dartData[dl.name] ? dartPricePerShare(dartData[dl.name].offering) : null);
 }
+// 우리가 확약을 건 기간(rec.commit)의 락업해제일 — 캘린더에서 빨간 칩으로 보이는 날(buildEvents와 같은 계산).
+const LOCKUP_COMMIT_DATE = {
+  "15일": dt => addDays(dt, 15), "1개월": dt => addMonths(dt, 1), "3개월": dt => addMonths(dt, 3), "6개월": dt => addMonths(dt, 6) };
+function commitLockupDateOf(dl){
+  const rec = records[dl.name];
+  const f = rec && rec.participation !== "미참여" && LOCKUP_COMMIT_DATE[rec.commit];
+  return dl.list && f ? isoKey(nextBizDay(f(d(dl.list)))) : "";
+}
+function commitLockupToday(dl){ return commitLockupDateOf(dl) === isoKey(today); }
 function listToday(dl){ return !!dl.list && dl.list === isoKey(today); }
-function listRowCls(dl){ return listToday(dl) ? "live-row" : nearToday(dl.list) ? "soon-row" : ""; }
+// 오늘 상장하거나, 오늘이 우리 확약 락업해제일이면 분홍으로 맨 위.
+function listLive(dl){ return listToday(dl) || commitLockupToday(dl); }
+function listRowCls(dl){ return listLive(dl) ? "live-row" : nearToday(dl.list) ? "soon-row" : ""; }
 function renderListTab(){
   const key = "list";
   const container = document.getElementById("stage-list");
@@ -8561,7 +8574,7 @@ function renderListTab(){
   const idxs = deals.map((dl, idx) => idx).filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
   const by = (f, asc) => idxs.filter(idx => f(deals[idx]))
     .sort((a, b) => (asc ? 1 : -1) * String(deals[a].list || deals[a].demand[0]).localeCompare(String(deals[b].list || deals[b].demand[0])) || b - a);
-  const all = nearOrder(idxs, dl => dl.list || "", listToday);
+  const all = nearOrder(idxs, dl => dl.list || "", listLive);
   const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
@@ -8574,8 +8587,8 @@ function renderListTab(){
     const fixed = fixedPriceOf(dl);
     const cap = fixed && t.listed_shares ? t.listed_shares * fixed : null;
     const sep = i > 0 && listRowCls(deals[slice[i - 1]]) && listRowCls(deals[slice[i - 1]]) !== listRowCls(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
-    const head = `<td><div class="stc-name">${dl.name}${listToday(dl) ? `<span class="live-badge">오늘 상장</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
-      <td class="stc-ref">${dl.list ? fmt(dl.list) : "미정"}</td>
+    const head = `<td><div class="stc-name">${dl.name}${listToday(dl) ? `<span class="live-badge">오늘 상장</span>` : ""}${commitLockupToday(dl) ? `<span class="live-badge commit">확약 ${rec.commit} 해제</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
+      <td class="stc-ref">${dl.list ? fmt(dl.list) : "미정"}${commitLockupToday(dl) ? `<div class="stc-hint">해제일 ${fmt(commitLockupDateOf(dl))}</div>` : ""}</td>
       <td class="lt-cell">${band && band[0] != null ? (band[0] === band[1] ? `${fmtNum(band[0])}원` : `${fmtNum(band[0])} ~ ${fmtNum(band[1])}원`) : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${fixed ? `<b>${fmtNum(fixed)}원</b>` : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${cap ? eok(cap) : `<span class="lt-none">—</span>`}${t.listed_shares ? `<span class="sub">${fmtNum(t.listed_shares)}주</span>` : ""}</td>`;
