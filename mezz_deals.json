@@ -1488,7 +1488,10 @@
     "conv_period_start": "2027-11-07",
     "conv_period_end": "2033-10-06",
     "refixing": "아니오",
-    "rcept_no": "20261008000732"
+    "rcept_no": "20261008000732",
+    "put_start": "2029-03-07",
+    "put_end": "2029-04-06",
+    "put_redemption": "2029-05-06"
   },
   "00145598_CB_5": {
     "name": "이연제약",
@@ -2395,5 +2398,47 @@
     "conv_period_end": "2031-10-19",
     "refixing": "아니오",
     "rcept_no": "20261105000553"
+  },
+  "00381756_CB_2": {
+    "name": "티씨머티리얼즈",
+    "kind": "CB",
+    "round": "2",
+    "bondName": "무기명식 무이권부 무보증 사모 전환사채",
+    "amount": 30000000000,
+    "board_date": "2026-11-06",
+    "sub_date": "2026-11-16",
+    "pay_date": "2026-11-16",
+    "maturity_date": "2031-11-16",
+    "coupon_rate": "0.0",
+    "ytm_rate": "1.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 4290,
+    "conv_period_start": "2027-11-16",
+    "conv_period_end": "2031-10-16",
+    "refixing": "아니오",
+    "rcept_no": "20261106000165"
+  },
+  "00991298_CB_1": {
+    "name": "씨이랩",
+    "kind": "CB",
+    "round": "1",
+    "bondName": "무기명식 무보증 사모 전환사채",
+    "amount": 10000000000,
+    "board_date": "2026-11-06",
+    "sub_date": "2026-11-16",
+    "pay_date": "2026-11-16",
+    "maturity_date": "2031-11-16",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 8106,
+    "conv_period_start": "2027-11-16",
+    "conv_period_end": "2031-10-16",
+    "refixing": "아니오",
+    "rcept_no": "20261106000150"
   }
 }
