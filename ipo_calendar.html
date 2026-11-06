@@ -6972,6 +6972,7 @@ function syncFundTotals(rec, idx){
   }
   const s1 = document.querySelector(`.fund-sum[data-fsum="${idx}"]`); if (s1) s1.textContent = fmtNum(qty);
   const s2 = document.querySelector(`.fund-asum[data-fasum="${idx}"]`); if (s2) s2.textContent = fmtNum(allot);
+  if (rec.participation !== "미참여") refreshComputedCells("demand", Number(idx)); // 펀드 그룹별 배정주수 칸
 }
 
 /* ---------- 진행 중 딜 (오늘이 수요예측 또는 청약 기간 안) ---------- */
@@ -8065,7 +8066,14 @@ const STAGE_TABS = {
       { field: "participation", label: "참여", type: "participation" },
       { field: "appliedDate", label: "신청일", type: "date" },
       { field: "price", label: "참여가격(원)", type: "number" },
-      { field: "qty", label: "신청수량(총)", type: "number" },
+      // 신청수량(총) 대신 상장 탭처럼 펀드 그룹별 배정주수와 배정주수 × 확정공모가(펀드별 신청수량은 펼친 줄에서 입력).
+      ...["일임", "H일임", "코벤", "신탁"].map(gname => ({ field: "_grp_" + gname, label: gname, type: "computed", get: (dl, rec) => {
+          const g = FUND_GROUPS.find(x => x.group === gname);
+          const shares = g ? g.funds.reduce((a, f) => a + ((((rec && rec.funds) || {})[f] || {}).allot || 0), 0) : 0;
+          if (!shares) return `<div class="lt-cell"><span class="lt-none">—</span></div>`;
+          const fixed = fixedPriceOf(dl);
+          return `<div class="lt-cell"><b>${fmtNum(shares)}주</b>${fixed ? `<span class="sub">${fmtNum(shares * fixed)}원</span>` : ""}</div>`;
+        } })),
       { field: "allotShares", label: "배정수량(총)", type: "number" },
       { field: "_bp", label: "NAV 대비 배정", type: "computed", get: (dl, rec) => {
           const b = rec.allotBp || {};
@@ -8394,7 +8402,7 @@ function renderStageCell(dl, idx, rec, col){
 // 수요예측 탭에서 "미참여"로 고른 종목은 입력칸을 회색 블록 하나("미참여")로 막는다.
 // 수요예측 탭: 신청일~확약여부, 청약 탭: 공문 배정주식~공문 출력(납입·상장 탭과 같은 방식).
 const NP_BLOCK_FIELDS = {
-  demand: ["appliedDate", "price", "qty", "allotShares", "_bp", "commit"],
+  demand: ["appliedDate", "price", "_grp_일임", "_grp_H일임", "_grp_코벤", "_grp_신탁", "allotShares", "_bp", "commit"],
   sub: ["_ns1", "_ns2", "_notice"],
 };
 function stageCellsHtml(key, cfg, dl, idx, rec){
@@ -8563,7 +8571,14 @@ function commitLockupToday(dl){ return commitLockupDateOf(dl) === isoKey(today);
 function listToday(dl){ return !!dl.list && dl.list === isoKey(today); }
 // 오늘 상장하거나, 오늘이 우리 확약 락업해제일이면 분홍으로 맨 위.
 function listLive(dl){ return listToday(dl) || commitLockupToday(dl); }
-function listRowCls(dl){ return listLive(dl) ? "live-row" : nearToday(dl.list) ? "soon-row" : ""; }
+// 상장일이 앞뒤 7일 밖이어도 우리 확약 락업해제일이 앞뒤 7일 안이면 옅은 노랑.
+function commitLockupNear(dl){ return !nearToday(dl.list) && nearToday(commitLockupDateOf(dl)); }
+// 줄 순서·색을 잴 날짜: 확약 해제일이 오늘이거나 앞뒤 7일 안이면(상장일이 그렇지 않을 때) 해제일, 아니면 상장일.
+function listNearDate(dl){
+  if (listToday(dl) || nearToday(dl.list)) return dl.list;
+  return commitLockupToday(dl) || nearToday(commitLockupDateOf(dl)) ? commitLockupDateOf(dl) : (dl.list || "");
+}
+function listRowCls(dl){ return listLive(dl) ? "live-row" : nearToday(listNearDate(dl)) ? "soon-row" : ""; }
 function renderListTab(){
   const key = "list";
   const container = document.getElementById("stage-list");
@@ -8574,7 +8589,7 @@ function renderListTab(){
   const idxs = deals.map((dl, idx) => idx).filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
   const by = (f, asc) => idxs.filter(idx => f(deals[idx]))
     .sort((a, b) => (asc ? 1 : -1) * String(deals[a].list || deals[a].demand[0]).localeCompare(String(deals[b].list || deals[b].demand[0])) || b - a);
-  const all = nearOrder(idxs, dl => dl.list || "", listLive);
+  const all = nearOrder(idxs, listNearDate, listLive);
   const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
@@ -8587,8 +8602,8 @@ function renderListTab(){
     const fixed = fixedPriceOf(dl);
     const cap = fixed && t.listed_shares ? t.listed_shares * fixed : null;
     const sep = i > 0 && listRowCls(deals[slice[i - 1]]) && listRowCls(deals[slice[i - 1]]) !== listRowCls(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
-    const head = `<td><div class="stc-name">${dl.name}${listToday(dl) ? `<span class="live-badge">오늘 상장</span>` : ""}${commitLockupToday(dl) ? `<span class="live-badge commit">확약 ${rec.commit} 해제</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
-      <td class="stc-ref">${dl.list ? fmt(dl.list) : "미정"}${commitLockupToday(dl) ? `<div class="stc-hint">해제일 ${fmt(commitLockupDateOf(dl))}</div>` : ""}</td>
+    const head = `<td><div class="stc-name">${dl.name}${listToday(dl) ? `<span class="live-badge">오늘 상장</span>` : ""}${commitLockupToday(dl) || commitLockupNear(dl) ? `<span class="live-badge commit">확약 ${rec.commit} 해제</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
+      <td class="stc-ref">${dl.list ? fmt(dl.list) : "미정"}${commitLockupToday(dl) || commitLockupNear(dl) ? `<div class="stc-hint">해제일 ${fmt(commitLockupDateOf(dl))}</div>` : ""}</td>
       <td class="lt-cell">${band && band[0] != null ? (band[0] === band[1] ? `${fmtNum(band[0])}원` : `${fmtNum(band[0])} ~ ${fmtNum(band[1])}원`) : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${fixed ? `<b>${fmtNum(fixed)}원</b>` : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${cap ? eok(cap) : `<span class="lt-none">—</span>`}${t.listed_shares ? `<span class="sub">${fmtNum(t.listed_shares)}주</span>` : ""}</td>`;
