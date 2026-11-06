@@ -1440,7 +1440,10 @@
     "conv_period_start": "2027-10-30",
     "conv_period_end": "2029-09-30",
     "refixing": "아니오",
-    "rcept_no": "20261007000422"
+    "rcept_no": "20261007000422",
+    "put_start": "2027-09-22",
+    "put_end": "2027-10-07",
+    "put_redemption": "2027-11-06"
   },
   "01524118_CB_2": {
     "name": "나노팀",
@@ -2175,7 +2178,10 @@
     "conv_period_start": "2027-11-06",
     "conv_period_end": "2031-10-06",
     "refixing": "아니오",
-    "rcept_no": "20261103000081"
+    "rcept_no": "20261103000081",
+    "put_start": "2029-03-07",
+    "put_end": "2029-04-06",
+    "put_redemption": "2029-05-06"
   },
   "00561723_CB_1": {
     "name": "쏘닉스",
@@ -2238,7 +2244,10 @@
     "conv_period_start": "2027-11-06",
     "conv_period_end": "2031-10-06",
     "refixing": "아니오",
-    "rcept_no": "20261029000401"
+    "rcept_no": "20261029000401",
+    "put_start": "2028-09-07",
+    "put_end": "2028-10-10",
+    "put_redemption": "2028-11-06"
   },
   "01022902_CB_12": {
     "name": "애드바이오텍",
