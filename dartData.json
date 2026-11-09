@@ -2873,5 +2873,44 @@
         "qty": 1551472000
       }
     }
+  },
+  "하나에어로다이내믹스": {
+    "offering": {
+      "offer_shares": 4400000,
+      "offer_amount_final": 25080000000,
+      "subscription": {
+        "inst_start": "2026년 11월 10일",
+        "inst_end": "2026년 11월 11일"
+      },
+      "payment_date": "2026년 11월 13일"
+    },
+    "demand_summary": {
+      "total_count": 2152,
+      "total_qty": 3469561000,
+      "competition_rate": 1051.38
+    },
+    "price_bands": null,
+    "lockup": {
+      "6개월 확약": {
+        "count": 1,
+        "qty": 3300000
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "15일 확약": {
+        "count": 1,
+        "qty": 1879000
+      },
+      "미확약": {
+        "count": 86,
+        "qty": 184667000
+      }
+    }
   }
 }
