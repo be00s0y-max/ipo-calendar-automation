@@ -744,10 +744,10 @@
       "2026-11-11"
     ],
     "pay": "2026-11-13",
-    "list": null,
-    "dealSizeM": 20680,
+    "list": "2026-11-20",
+    "dealSizeM": 25080,
     "stockCode": "271160",
-    "finalPrice": null
+    "finalPrice": 5700
   },
   {
     "name": "씨앤엠",
