@@ -46,6 +46,11 @@ jobs:
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
           exit 0
 
+      # 참여의견 탭용 신고서 본문 요약(핵심투자위험·자금의 사용목적·사업의 내용).
+      # DART 웹 화면을 읽어서 API 키가 필요 없고, 실패해도 항상 0으로 끝난다.
+      - name: Run DART sections update (참여의견용 신고서 본문)
+        run: python update_dart_sections.py
+
       - name: Run mezzanine update (CB·BW·EB 시장 전역 스캔)
         id: mezz
         env:
