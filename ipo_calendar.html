@@ -664,7 +664,8 @@
   .bid-box:disabled { color: var(--ink-faint); cursor: default; }
   #bidToIlim:disabled { opacity: .45; cursor: default; }
   /* ---- 참여의견 탭 ---- */
-  .op-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 18px; align-items: start; }   /* 왼쪽 입력 좁게(사용자 요청) */
+  #tab-opinion [hidden] { display: none !important; }   /* .bid-form·.op-batt의 display가 hidden을 덮지 않게 */
+  .op-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 18px; align-items: start; }   /* 왼쪽 입력 좁게(사용자 요청) */
   .op-right { position: sticky; top: 12px; }
   @media (max-width: 900px) { .op-grid { grid-template-columns: 1fr; } .op-right { position: static; } }
   .op-empty { font-size: 13px; color: var(--ink-faint); border: 1px dashed var(--border); border-radius: 10px; padding: 28px 14px; text-align: center; }
@@ -691,6 +692,7 @@
   .op-cons .sub { display: flex; align-items: center; gap: 8px; }
   .op-cons .sub small { font-size: 11.5px; color: var(--ink-faint); min-width: 28px; }
   .op-join { flex-direction: column; align-items: flex-start; }
+  .op-price { margin-top: 6px; width: 140px; font-family: var(--font-kr); font-size: 13.5px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
   .op-batt { display: flex; align-items: center; gap: 4px; margin: 0 0 12px; }
   .op-batt-body { position: relative; flex: 1 1 auto; max-width: 320px; height: 26px; border: 2px solid var(--ink-dim); border-radius: 6px; padding: 2px; box-sizing: border-box; }
   .op-batt-fill { height: 100%; width: 0; border-radius: 3px; background: #2f9e5b; transition: width .5s linear;
@@ -10035,14 +10037,15 @@ function opHeader(dl){
 }
 function opFinalText(dl){
   const s = opRec(dl).sel;
-  if (s.final === "drop") return "드랍 추천드립니다.";
   if (s.final === "skip") return "미참여 추천드립니다.";
   if (s.final !== "join") return "";
   const t = DEMAND_INFO[dl.name] || {};
   const p = s.price != null ? `${fmtNum(s.price)}원` : "";
   const unit = t.qty_unit ? fmtNum(t.qty_unit) : "1,000";
   const max = writableMax(dl.name);
-  return `참여 가격 : ${p}\n참여 수량 : \n(펀드참여): [NAV(전일 기준 3개월)/ ${p}] 주(수량단위:${unit}주)\n(고유참여): [자기자본(직전분기말)/ ${p}] 주(수량단위:${unit}주)\n최대 수량: ${max != null ? fmtNum(max) + "주" : ""}\n참여 방법: ${s.method || "미확약"}`;
+  // 대신증권 딜이면 맨 끝에 -10% 변동여부 문장(대화방 의견글과 같은 문구, 사용자 요청)
+  const daishin = /대신/.test(dl.uw || "") ? "\n\n*확정공모가액 -10% 변동여부: 예로 참여 추천드립니다." : "";
+  return `참여 가격 : ${p}\n참여 수량 : \n(펀드참여): [NAV(전일 기준 3개월)/ ${p}] 주(수량단위:${unit}주)\n(고유참여): [자기자본(직전분기말)/ ${p}] 주(수량단위:${unit}주)\n최대 수량: ${max != null ? fmtNum(max) + "주" : ""}\n참여 방법: ${s.method || "미확약"}` + daishin;
 }
 function opFullText(dl){
   const o = opRec(dl), s = o.sel;
@@ -10087,16 +10090,20 @@ function renderOpinionTab(){
   // 선택
   document.getElementById("opMkt").innerHTML = opSeg("mkt", [["pos", "적극적으로 참여 중"], ["neg", "소극적으로 참여 중"], ["none", "빼기"]], s.mkt);
   document.getElementById("opCons").innerHTML =
-    `<div class="sub"><small>가격</small>${opSeg("cPrice", [["밴드상단", "밴드상단"], ["밴드하단", "밴드하단"], ["", "—"]], s.cPrice)}</div>` +
-    `<div class="sub"><small>수량</small>${opSeg("cQty", [["전체수량", "전체수량"], ["제한수량", "제한수량"], ["", "—"]], s.cQty)}</div>` +
-    `<div class="sub"><small>확약</small>${opSeg("cCommit", [["미확약", "미확약"], ["15일", "15일"], ["1개월", "1개월"], ["3개월", "3개월"], ["6개월", "6개월"], ["", "—"]], s.cCommit)}</div>`;
-  document.getElementById("opFinal").innerHTML = opSeg("final", [["join", "참여"], ["drop", "드랍"], ["skip", "미참여"], ["", "미정"]], s.final);
+    `<div class="sub"><small>가격</small>${opSeg("cPrice", [["밴드상단", "밴드상단"], ["밴드하단", "밴드하단"]], s.cPrice)}</div>` +
+    `<div class="sub"><small>수량</small>${opSeg("cQty", [["전체수량", "전체수량"], ["제한수량", "제한수량"]], s.cQty)}</div>` +
+    `<div class="sub"><small>확약</small>${opSeg("cCommit", [["미확약", "미확약"], ["15일", "15일"], ["1개월", "1개월"], ["3개월", "3개월"], ["6개월", "6개월"]], s.cCommit)}</div>`;
+  document.getElementById("opFinal").innerHTML = opSeg("final", [["join", "참여"], ["skip", "미참여"]], s.final);
   const join = document.getElementById("opJoin");
   join.hidden = s.final !== "join";
   if (s.final === "join") {
+    // 참여 가격: 밴드 하단/상단을 고르거나 "직접 입력"을 눌러 숫자를 쓴다(사용자 요청)
     const band = t.band ? [["하단", t.band[0]], ["상단", t.band[1]]] : [];
-    join.innerHTML = `<label>참여 가격(원)<input type="number" id="opPrice" value="${s.price != null ? s.price : ""}"></label>`
-      + (band.length ? `<div class="bid-band">밴드<div class="seg">${band.map(([k, v]) => `<button type="button" data-op-price="${v}" class="${s.price === v ? "on" : ""}">${k} ${fmtNum(v)}</button>`).join("")}</div></div>` : "")
+    const isBand = band.some(([, v]) => v === s.price) && !s.priceManual;
+    const manual = !isBand && (s.priceManual || s.price != null);
+    join.innerHTML = `<div class="bid-band">참여 가격<div class="seg">${band.map(([k, v]) => `<button type="button" data-op-price="${v}" class="${isBand && s.price === v ? "on" : ""}">${k} ${fmtNum(v)}</button>`).join("")}`
+      + `<button type="button" data-op-price="manual" class="${manual ? "on" : ""}">직접 입력</button></div>`
+      + (manual ? `<input type="number" id="opPrice" class="op-price" placeholder="가격" value="${s.price != null ? s.price : ""}">` : "") + `</div>`
       + `<label>참여 방법<select id="opMethod">${["미확약", "15일", "1개월", "3개월", "6개월"].map(m => `<option ${s.method === m ? "selected" : ""}>${m}</option>`).join("")}</select></label>`;
   }
   const p1 = document.getElementById("opP1"), p2 = document.getElementById("opP2");
@@ -10280,7 +10287,14 @@ document.getElementById("tab-opinion").addEventListener("click", e => {
     opSave(); renderOpinionTab(); return;
   }
   const pr = e.target.closest("[data-op-price]");
-  if (pr) { opRec(dl).sel.price = Number(pr.dataset.opPrice); opSave(); renderOpinionTab(); return; }
+  if (pr) {
+    const s = opRec(dl).sel;
+    if (pr.dataset.opPrice === "manual") { s.priceManual = true; }
+    else { s.priceManual = false; s.price = Number(pr.dataset.opPrice); }
+    opSave(); renderOpinionTab();
+    if (s.priceManual) { const inp = document.getElementById("opPrice"); if (inp) inp.focus(); }
+    return;
+  }
   const del = e.target.closest("[data-op-del]");
   if (del) { (opMats[dl.name] || []).splice(Number(del.dataset.opDel), 1); renderOpinionTab(); return; }
   if (e.target.closest("#opBox")) { copyText(opFullText(dl)).then(ok => showToast(ok ? "복사됨" : "복사가 막혔습니다 — 길게 눌러 직접 복사하세요")); return; }
@@ -10299,7 +10313,6 @@ document.getElementById("tab-opinion").addEventListener("input", e => {
   else return;
   clearTimeout(opRec.t); opRec.t = setTimeout(opSave, 800);
   document.getElementById("opBox").textContent = opFullText(dl);
-  if (e.target.id === "opPrice") document.querySelectorAll("[data-op-price]").forEach(b => b.classList.toggle("on", Number(b.dataset.opPrice) === o.sel.price));
 });
 document.getElementById("opExToggle").addEventListener("click", () => {
   const p = document.getElementById("opExPanel");
