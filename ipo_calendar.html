@@ -647,7 +647,9 @@
   .bid-form input, .bid-form select { font-family: var(--font-kr); font-size: 13.5px; padding: 7px 9px; border: 1px solid var(--border);
             border-radius: 8px; background: var(--surface); color: var(--ink); }
   .bid-form #bidName { width: 220px; } .bid-form #bidQty, .bid-form #bidPrice { width: 140px; }
-  .bid-recs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; font-size: 12px; color: var(--ink-faint); }
+  .bid-recs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 30px; margin-bottom: 8px; font-size: 12px; color: var(--ink-faint); }
+  .bid-recs .sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
+  .bid-recs .mini.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .bid-recs button { font-family: var(--font-kr); font-size: 12.5px; font-weight: 700; padding: 5px 10px; border-radius: 999px;
             border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); cursor: pointer; }
   .bid-recs button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
@@ -9593,6 +9595,7 @@ function renderInfoTab(){
    종목칸: 비어 있으면 오늘 수요예측 중인 종목을 추천 버튼으로, 글자를 치면 이름에 그 글자가 든 종목을 버튼으로 보여준다.
    목록에 없는 이름을 쳐도 문구는 그 이름으로 만든다(일임에 넣기는 목록에 있는 종목만).
    수량 기본값 = 작성가능 최고한도(기관 최고한도를 수량단위로 내림), 가격 기본값 = 공모가 밴드 상단(DART 신고서, DEMAND_INFO).
+   가격은 "밴드 하단/상단" 버튼으로 바꿀 수 있다.
      <에이엘로봇 수요예측 참여>
      - 참여수량 : 1,800,000주
      - 참여가격 : 17,600원
@@ -9627,6 +9630,15 @@ function bidFillDefaults(){
   document.getElementById("bidQty").value = q != null ? q : "";
   document.getElementById("bidPrice").value = pr != null ? pr : "";
 }
+// 고른 종목의 "최고한도로"·밴드 하단/상단 버튼. 지금 가격과 같은 쪽 버튼을 켜 둔다.
+function bidToolsHtml(dl){
+  if (!dl) return "";
+  const t = DEMAND_INFO[dl.name], pr = document.getElementById("bidPrice").value;
+  const band = t && t.band ? [["하단", t.band[0]], ["상단", t.band[1]]].map(([k, v]) =>
+    `<button type="button" class="mini${pr !== "" && Number(pr) === v ? " on" : ""}" data-bid-price="${v}">밴드 ${k} ${fmtNum(v)}원</button>`).join("") : "";
+  const max = writableMax(dl.name) != null ? `<button type="button" class="mini" id="bidMax">최고한도로</button>` : "";
+  return band || max ? `<span class="sep"></span>${max}${band}` : "";
+}
 function bidText(){
   const n = document.getElementById("bidName").value.trim();
   const q = document.getElementById("bidQty").value, pr = document.getElementById("bidPrice").value;
@@ -9642,7 +9654,7 @@ function renderBidTab(){
   const chip = x => `<button type="button" data-bid-pick="${escHtml(x.name)}" class="${dl && dl.name === x.name ? "on" : ""}">${escHtml(x.name)}</button>`;
   document.getElementById("bidRecs").innerHTML = (!q || dl ? (live.length ? `<span>수요예측 중</span>` : "") : `<span>${list.length ? "검색" : "검색 결과 없음"}</span>`)
     + list.map(chip).join("")
-    + (dl && writableMax(dl.name) != null ? `<button type="button" class="mini" id="bidMax">최고한도로</button>` : "");
+    + bidToolsHtml(dl);
   const text = bidText(), box = document.getElementById("bidBox");
   box.textContent = text || "종목·수량·가격을 넣으면 여기에 문구가 생깁니다";
   box.disabled = !text;
@@ -9653,6 +9665,8 @@ document.getElementById("bidName").addEventListener("input", () => { bidFillDefa
 document.getElementById("tab-bid").addEventListener("click", e => {
   const pick = e.target.closest("[data-bid-pick]");
   if (pick) { document.getElementById("bidName").value = pick.dataset.bidPick; bidFillDefaults(); renderBidTab(); return; }
+  const bp = e.target.closest("[data-bid-price]");
+  if (bp) { document.getElementById("bidPrice").value = bp.dataset.bidPrice; renderBidTab(); return; }
   if (e.target.closest("#bidMax")) {
     const dl = bidDeal(); if (dl) document.getElementById("bidQty").value = writableMax(dl.name);
     renderBidTab(); return;
