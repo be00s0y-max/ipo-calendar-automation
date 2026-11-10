@@ -2912,5 +2912,45 @@
         "qty": 184667000
       }
     }
+  },
+  "엠비디": {
+    "offering": {
+      "offer_shares": 2000000,
+      "offer_amount_expected": 19200000000,
+      "offer_amount_final": 14000000000,
+      "subscription": {
+        "inst_start": "2026년 11월 12일(목)",
+        "inst_end": "2026년 11월 13일(금)"
+      },
+      "payment_date": "2026년 11월 17일"
+    },
+    "demand_summary": {
+      "total_count": 925,
+      "total_qty": 280648000,
+      "competition_rate": 187.1
+    },
+    "price_bands": null,
+    "lockup": {
+      "미확약": {
+        "count": 43,
+        "qty": 16041000
+      },
+      "15일 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "6개월 확약": {
+        "count": 0,
+        "qty": 0
+      }
+    }
   }
 }
