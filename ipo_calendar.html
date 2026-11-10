@@ -641,6 +641,22 @@
                background: var(--surface-2); color: var(--ink); border-radius: 6px; padding: 4px 9px; cursor: pointer; }
   .acct-copy:hover { border-color: var(--accent); color: var(--accent); }
   .acct-none { font-size: 12px; color: var(--ink-faint); }
+  /* ---- 수요예측 참여 현황 탭 ---- */
+  .bid-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
+  .bid-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--ink-dim); }
+  .bid-form input, .bid-form select { font-family: var(--font-kr); font-size: 13.5px; padding: 7px 9px; border: 1px solid var(--border);
+            border-radius: 8px; background: var(--surface); color: var(--ink); }
+  .bid-form #bidName { width: 220px; } .bid-form #bidQty, .bid-form #bidPrice { width: 140px; }
+  .bid-recs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; font-size: 12px; color: var(--ink-faint); }
+  .bid-recs button { font-family: var(--font-kr); font-size: 12.5px; font-weight: 700; padding: 5px 10px; border-radius: 999px;
+            border: 1px solid var(--border); background: var(--surface); color: var(--ink-dim); cursor: pointer; }
+  .bid-recs button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .bid-recs .mini { font-family: var(--font-kr); font-size: 11.5px; padding: 3px 8px; border-radius: 6px; }
+  .bid-box { display: block; width: 100%; max-width: 420px; text-align: left; white-space: pre-wrap; font-family: var(--font-kr);
+            font-size: 14px; line-height: 1.7; padding: 14px 16px; margin: 6px 0 8px; border: 1px solid var(--border);
+            border-radius: 10px; background: var(--surface); color: var(--ink); cursor: pointer; }
+  .bid-box:hover { border-color: var(--accent); }
+  .bid-box:disabled { color: var(--ink-faint); cursor: default; }
   /* ---- 계좌 탭 ---- */
   #tab-acct .stage-search { flex-wrap: wrap; gap: 8px; }
   .ad-btn { font-family: var(--font-kr); font-size: 12.5px; font-weight: 700; padding: 7px 12px; border-radius: 8px;
@@ -829,6 +845,7 @@
     <span class="tab-divider"></span>
     <button class="tabbtn" data-tab="reply">배정 현황</button>
     <button class="tabbtn" data-tab="acct">계좌</button>
+    <button class="tabbtn" data-tab="bid">수요예측 참여 현황</button>
   </div>
 
   <div class="tab-panel" id="tab-todo">
@@ -1068,6 +1085,23 @@
       <button type="button" class="ad-btn on" id="adfSave">추가</button>
     </div>
     <div id="adList"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-bid">
+    <div class="stage-head">
+      <h2>수요예측 참여 현황</h2>
+    </div>
+    <div class="bid-form">
+      <label>종목<input type="text" id="bidName" list="bidNames" placeholder="종목명" autocomplete="off"></label>
+      <datalist id="bidNames"></datalist>
+      <label>참여수량(주)<input type="number" id="bidQty" min="0"></label>
+      <label>참여가격(원)<input type="number" id="bidPrice" min="0"></label>
+      <label>확약여부<select id="bidCommit"><option>미확약</option><option>15일</option><option>1개월</option><option>3개월</option><option>6개월</option></select></label>
+    </div>
+    <div class="bid-recs" id="bidRecs"></div>
+    <div class="nt-hint" id="bidInfo"></div>
+    <button type="button" class="bid-box" id="bidBox" title="누르면 복사하고 수요예측 탭 일임에 넣습니다"></button>
+    <div class="nt-hint" id="bidSaved"></div>
   </div>
 
   <div class="tab-panel" id="tab-reply">
@@ -8571,7 +8605,7 @@ function renderPayTab(){
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
   const slice = all.slice((page - 1) * STAGE_PAGE_SIZE, page * STAGE_PAGE_SIZE);
-  const NCOL = 6;
+  const NCOL = 5;
   const none = `<span class="lt-none">—</span>`;
   const rows = slice.map((idx, i) => {
     const dl = deals[idx], rec = records[dl.name] || {};
@@ -8579,9 +8613,8 @@ function renderPayTab(){
     const sep = i > 0 && payRowCls(deals[slice[i - 1]]) && payRowCls(deals[slice[i - 1]]) !== payRowCls(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
     const head = `<td><div class="stc-name">${dl.name}${payToday(dl) ? `<span class="live-badge">오늘 납입</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
       <td class="stc-ref">${pd ? fmt(pd) : "미정"}</td>`;
-    const confirm = `<td><input type="checkbox" data-idx="${idx}" data-field="payConfirmed" ${rec.payConfirmed ? "checked" : ""}></td>`;
     if (rec.participation === "미참여")
-      return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}<td class="np-block" colspan="3">미참여</td>${confirm}</tr>`;
+      return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}<td class="np-block" colspan="3">미참여</td></tr>`;
     const pn = payNumbers(dl);
     const uws = (dl.uw || "").split(",").map(x => x.trim()).filter(Boolean);
     // 입금계좌: 그 펀드(일임/H일임) 칸 안, 납입금액 바로 아래
@@ -8598,11 +8631,10 @@ function renderPayTab(){
         ${acctHtml(sec)}</td>`;
     return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}
       <td class="lt-cell">${pn.price ? `<b>${fmtNum(pn.price)}원</b>` : none}</td>
-      ${fundCell(pn.rows[0], "일임")}${fundCell(pn.rows[1], "H일임")}
-      ${confirm}</tr>`;
+      ${fundCell(pn.rows[0], "일임")}${fundCell(pn.rows[1], "H일임")}</tr>`;
   }).join("");
   container.innerHTML = `<table class="stage-table"><thead><tr>
-      <th>종목 / 주간사</th><th>납입일</th><th class="lt-r">확정공모가액</th><th class="lt-r">일임</th><th class="lt-r">H일임</th><th>납입확인</th>
+      <th>종목 / 주간사</th><th>납입일</th><th class="lt-r">확정공모가액</th><th class="lt-r">일임</th><th class="lt-r">H일임</th>
     </tr></thead><tbody>${rows}</tbody></table>` + stagePagerHtml(key, page, pages, all.length);
 }
 
@@ -9544,6 +9576,100 @@ function renderInfoTab(){
   else renderInfoList();
 }
 
+/* ---------- 수요예측 참여 현황 탭 ----------
+   종목·참여수량·참여가격·확약여부를 고르면 아래 문구를 만든다. 문구 상자를 누르면 복사하고,
+   같은 값(수량·가격)을 수요예측 탭 펀드별 참여의 일임 줄에 넣는다(참여로 표시, 일임 확약은 규칙대로 미확약).
+   추천 종목 = 오늘이 수요예측 기간인 종목. 수량 기본값 = 작성가능 최고한도(기관 최고한도를 수량단위로 내림),
+   가격 기본값 = 공모가 밴드 상단(DART 신고서, DEMAND_INFO). 둘 다 고칠 수 있다.
+     <에이엘로봇 수요예측 참여>
+     - 참여수량 : 1,800,000주
+     - 참여가격 : 17,600원
+     - 미확약 */
+function writableMax(name){
+  const t = DEMAND_INFO[name];
+  return t && t.inst_max != null && t.qty_unit ? Math.floor(t.inst_max / t.qty_unit) * t.qty_unit : null;
+}
+function bandTop(name){
+  const t = DEMAND_INFO[name];
+  return t && t.band ? t.band[1] : null;
+}
+function bidDeals(){ // 수요예측 중인 종목
+  const t = isoKey(today);
+  return deals.filter(dl => dl.demand && dl.demand[0] <= t && t <= dl.demand[1]);
+}
+function bidDeal(){ const n = document.getElementById("bidName").value.trim(); return deals.find(dl => dl.name === n) || null; }
+// 종목을 바꾸면 수량·가격을 그 종목 기본값으로(일임에 이미 넣은 값이 있으면 그 값으로) 채운다.
+function bidFillDefaults(){
+  const dl = bidDeal();
+  const f = dl && records[dl.name].funds && records[dl.name].funds["일임"];
+  const q = f && f.qty != null ? f.qty : dl ? writableMax(dl.name) : null;
+  const pr = f && f.price != null ? f.price : dl ? bandTop(dl.name) : null;
+  document.getElementById("bidQty").value = q != null ? q : "";
+  document.getElementById("bidPrice").value = pr != null ? pr : "";
+}
+function bidText(){
+  const dl = bidDeal();
+  const q = document.getElementById("bidQty").value, pr = document.getElementById("bidPrice").value;
+  if (!dl || q === "" || pr === "") return "";
+  return `<${dl.name} 수요예측 참여>\n- 참여수량 : ${fmtNum(Number(q))}주\n- 참여가격 : ${fmtNum(Number(pr))}원\n- ${document.getElementById("bidCommit").value}`;
+}
+function renderBidTab(){
+  const live = bidDeals();
+  const nameEl = document.getElementById("bidName");
+  if (!nameEl.value && live.length) { nameEl.value = live[0].name; bidFillDefaults(); }
+  // 자동완성: 수요예측 중 → 아직 수요예측 전인 종목
+  const t = isoKey(today);
+  const later = deals.filter(dl => dl.demand && dl.demand[0] > t).sort((a, b) => a.demand[0].localeCompare(b.demand[0]));
+  document.getElementById("bidNames").innerHTML = live.concat(later).map(dl => `<option value="${escHtml(dl.name)}">`).join("");
+  const dl = bidDeal();
+  document.getElementById("bidRecs").innerHTML = (live.length ? `<span>수요예측 중</span>` + live.map(x =>
+      `<button type="button" data-bid-pick="${escHtml(x.name)}" class="${dl && dl.name === x.name ? "on" : ""}">${escHtml(x.name)}</button>`).join("")
+    : `<span>오늘 수요예측 중인 종목 없음</span>`)
+    + (dl && writableMax(dl.name) != null ? `<button type="button" class="mini" id="bidMax">최고한도로</button>` : "");
+  const wm = dl ? writableMax(dl.name) : null, bt = dl ? bandTop(dl.name) : null;
+  document.getElementById("bidInfo").textContent = !dl ? (nameEl.value.trim() ? "목록에 없는 종목명입니다" : "")
+    : `${dl.uw} · 수요예측 ${fmt(dl.demand[0])} ~ ${fmt(dl.demand[1])} · 작성가능 최고한도 ${wm != null ? fmtNum(wm) + "주" : "DART 값 없음"} · 밴드 상단 ${bt != null ? fmtNum(bt) + "원" : "DART 값 없음"}`;
+  const text = bidText(), box = document.getElementById("bidBox");
+  box.textContent = text || "종목·수량·가격을 넣으면 여기에 문구가 생깁니다";
+  box.disabled = !text;
+  const f = dl && records[dl.name].funds && records[dl.name].funds["일임"];
+  document.getElementById("bidSaved").textContent = !dl ? ""
+    : records[dl.name].participation === "미참여" ? "수요예측 탭에서 미참여로 고른 종목이라 일임에 넣지 않습니다"
+    : f && (f.qty != null || f.price != null) ? `수요예측 탭 일임: ${f.qty != null ? fmtNum(f.qty) + "주" : "수량 없음"} · ${f.price != null ? fmtNum(f.price) + "원" : "가격 없음"}`
+    : "수요예측 탭 일임: 아직 없음 (문구를 누르면 들어갑니다)";
+}
+document.getElementById("bidName").addEventListener("input", () => { bidFillDefaults(); renderBidTab(); });
+["bidQty", "bidPrice", "bidCommit"].forEach(id => document.getElementById(id).addEventListener("input", renderBidTab));
+document.getElementById("tab-bid").addEventListener("click", e => {
+  const pick = e.target.closest("[data-bid-pick]");
+  if (pick) { document.getElementById("bidName").value = pick.dataset.bidPick; bidFillDefaults(); renderBidTab(); return; }
+  if (e.target.closest("#bidMax")) {
+    const dl = bidDeal(); if (dl) document.getElementById("bidQty").value = writableMax(dl.name);
+    renderBidTab(); return;
+  }
+  if (!e.target.closest("#bidBox")) return;
+  const text = bidText(), dl = bidDeal();
+  if (!text || !dl) return;
+  const idx = deals.indexOf(dl), rec = records[dl.name];
+  const q = Number(document.getElementById("bidQty").value), pr = Number(document.getElementById("bidPrice").value);
+  let saved = false;
+  if (rec.participation !== "미참여") {
+    // 수요예측 탭 펀드별 표에서 일임 줄에 적은 것과 같게: 참여 + 수량·가격, 참여가격은 참여한 펀드 모두 같게.
+    rec.funds = rec.funds || {};
+    const f = rec.funds["일임"] = rec.funds["일임"] || {};
+    f.participation = "참여"; f.joined = true; f.qty = q; f.price = pr;
+    Object.values(rec.funds).forEach(v => { if (v.joined) v.price = pr; });
+    rec.price = pr;
+    applyCommitRules(rec);
+    syncFundTotals(rec, idx);
+    persistRecords();
+    rerender();
+    saved = true;
+  }
+  copyText(text).then(ok => showToast((ok ? "복사됨" : "복사가 막혔습니다 — 길게 눌러 직접 복사하세요") + (saved ? " · 수요예측 탭 일임에 넣었습니다" : "")));
+  renderBidTab();
+});
+
 /* ---------- 탭 전환 / 종목정보 목록↔상세를 브라우저 히스토리에 반영 ----------
    지금까지는 탭을 눌러도 URL·히스토리가 안 바뀌어서, 뒤로가기를 눌러도
    "이전 화면"이 없어 아무 일도 안 일어나거나 아티팩트 밖으로 나가버렸다.
@@ -9565,6 +9691,7 @@ function applyAppState(state){
   if (key === "todo") renderTodoTab();
   if (key === "reply") renderReplyView();
   if (key === "acct") renderAcctTab();
+  if (key === "bid") renderBidTab();
 }
 function navigateTo(state){
   applyAppState(state);
