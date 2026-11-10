@@ -244,7 +244,7 @@
   .pt-cell .l { display: flex; justify-content: flex-end; gap: 8px; align-items: baseline; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
   .pt-cell .l .k { font-family: var(--font-kr); font-size: 11.5px; color: var(--ink-faint); }
   .pt-cell .acct-copy { margin-top: 3px; }
-  .pt-acct { font-size: 12px; white-space: nowrap; }
+  .pt-acct { font-size: 12px; white-space: nowrap; margin-top: 6px; padding-top: 5px; border-top: 1px dashed var(--border); text-align: left; }
   .pt-acct .r { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 2px 0; }
   .pt-acct .k { color: var(--ink-dim); }
   .pt-acct .k small { color: var(--ink-faint); margin-left: 3px; }
@@ -6233,8 +6233,8 @@ function renderTodoTab(){
     // 수요예측 탭에서 "미참여"로 고른 종목은 그 종목 일정 전부를 완료처럼 회색으로, 꼬리표는 "미참여"
     const isNp = ev => records[deals[ev.dealIdx].name].participation === "미참여";
     const isDone = ev => isNp(ev) || isEventDone(deals[ev.dealIdx].name, ev.type);
-    // 전체 일정 보기에서는 완료·미참여 항목을 그날 맨 아래로 내린다(사용자 요청).
-    if (todoMode === "all") evs = [...evs.filter(ev => !isDone(ev)), ...evs.filter(isDone)];
+    // 완료·미참여 항목은 그날 맨 아래로 내린다(전체 일정·나의 일정 모두, 사용자 요청).
+    evs = [...evs.filter(ev => !isDone(ev)), ...evs.filter(isDone)];
     const items = evs.map(ev => {
       const np = isNp(ev);
       const done = isDone(ev);
@@ -8507,7 +8507,8 @@ function renderStageTable(key){
    납입은 공문 기준으로 일임·H일임만 본다. 공문 계산(noticeNumbers)과 같은 값:
      배정수량 = 펀드별 배정주수(getNoticeShares), 확정공모가액 = 공문에서 고친 값 > DART 확정 신고서 > 38,
      수수료 = 청약금액 × 청약수수료율(공문 설정, 종목별로 끈 경우 0), 납입금액 = 청약금액 + 수수료(누르면 숫자 복사).
-   연계계좌 = 계좌 탭(accountDir)에서 주관사의 일임·H일임 연계 계좌(없으면 납입계좌), 누르면 숫자 복사.
+   입금계좌 = 계좌 탭(accountDir)에서 주관사의 일임·H일임 연계 계좌(없으면 납입계좌), 누르면 숫자 복사.
+     IBK투자증권은 당좌계좌로 입금하므로 당좌 계좌를 쓴다(없으면 연계). 일임·H일임 칸 안 납입금액 아래에 보여준다.
    납입일(공문과 같게 DART 확정 신고서 납입일 > 38 납입일)이 오늘인 종목은 분홍으로 맨 위. */
 function payDateOf(dl){
   const m = /(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/.exec((dartData[dl.name] && dartData[dl.name].offering.payment_date) || "");
@@ -8550,6 +8551,9 @@ function linkAcctsFor(uw, sec){
   const b = (accountDir.brokers || {})[brokerKey(uw)];
   if (!b) return [];
   const list = b.accts.filter(a => a.sec === sec);
+  // IBK투자증권은 당좌계좌로 입금한다(사용자 지정)
+  const chk = brokerKey(uw) === "ibk" ? list.filter(a => a.kind === "당좌") : [];
+  if (chk.length) return chk;
   const link = list.filter(a => a.kind === "연계");
   return link.length ? link : list.filter(a => a.kind === "납입");
 }
@@ -8567,7 +8571,7 @@ function renderPayTab(){
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
   const slice = all.slice((page - 1) * STAGE_PAGE_SIZE, page * STAGE_PAGE_SIZE);
-  const NCOL = 7;
+  const NCOL = 6;
   const none = `<span class="lt-none">—</span>`;
   const rows = slice.map((idx, i) => {
     const dl = deals[idx], rec = records[dl.name] || {};
@@ -8577,24 +8581,28 @@ function renderPayTab(){
       <td class="stc-ref">${pd ? fmt(pd) : "미정"}</td>`;
     const confirm = `<td><input type="checkbox" data-idx="${idx}" data-field="payConfirmed" ${rec.payConfirmed ? "checked" : ""}></td>`;
     if (rec.participation === "미참여")
-      return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}<td class="np-block" colspan="4">미참여</td>${confirm}</tr>`;
+      return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}<td class="np-block" colspan="3">미참여</td>${confirm}</tr>`;
     const pn = payNumbers(dl);
-    const fundCell = v => !v ? `<td class="pt-cell">${none}</td>` : `<td class="pt-cell">
+    const uws = (dl.uw || "").split(",").map(x => x.trim()).filter(Boolean);
+    // 입금계좌: 그 펀드(일임/H일임) 칸 안, 납입금액 바로 아래
+    const acctHtml = sec => {
+      const lines = uws.flatMap(uw => linkAcctsFor(uw, sec).map(a =>
+        `<div class="r"><span class="k">${uws.length > 1 ? `${escHtml(shortUw(uw))} ` : ""}${escHtml(a.kind)}</span>
+          <span class="v">${a.bank ? `<span class="bank">${escHtml(a.bank)}</span>` : ""}<button class="acct-copy" data-copy="${escHtml(adCopyDigits(a.text))}" title="누르면 ${escHtml(adCopyDigits(a.text))} 복사">${escHtml(a.text)}</button></span></div>`));
+      return `<div class="pt-acct">${lines.length ? lines.join("") : `<span class="lt-none">${(accountDir.order || []).length ? "계좌 탭에 없음" : "계좌 탭에서 엑셀을 불러오세요"}</span>`}</div>`;
+    };
+    const fundCell = (v, sec) => `<td class="pt-cell">${!v ? none : `
         <div class="l"><span class="k">배정</span><b>${fmtNum(v.shares)}주</b></div>
         <div class="l"><span class="k">수수료</span>${fmtNum(v.fee)}원</div>
-        ${pn.price ? `<button class="acct-copy" data-copy="${Math.round(v.total)}" title="납입금액 — 누르면 ${Math.round(v.total)} 복사">${fmtNum(Math.round(v.total))}원</button>` : ""}</td>`;
-    const uws = (dl.uw || "").split(",").map(x => x.trim()).filter(Boolean);
-    const acctLines = ["일임", "H일임"].flatMap(sec => uws.flatMap(uw => linkAcctsFor(uw, sec).map(a =>
-      `<div class="r"><span class="k">${sec}${uws.length > 1 ? `<small>${escHtml(uw)}</small>` : ""}<small>${escHtml(a.kind)}</small></span>
-        <span class="v">${a.bank ? `<span class="bank">${escHtml(a.bank)}</span>` : ""}<button class="acct-copy" data-copy="${escHtml(adCopyDigits(a.text))}" title="누르면 ${escHtml(adCopyDigits(a.text))} 복사">${escHtml(a.text)}</button></span></div>`)));
+        ${pn.price ? `<button class="acct-copy" data-copy="${Math.round(v.total)}" title="납입금액 — 누르면 ${Math.round(v.total)} 복사">${fmtNum(Math.round(v.total))}원</button>` : ""}`}
+        ${acctHtml(sec)}</td>`;
     return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}
       <td class="lt-cell">${pn.price ? `<b>${fmtNum(pn.price)}원</b>` : none}</td>
-      ${fundCell(pn.rows[0])}${fundCell(pn.rows[1])}
-      <td class="pt-acct">${acctLines.length ? acctLines.join("") : `<span class="lt-none">${(accountDir.order || []).length ? "계좌 탭에 없음" : "계좌 탭에서 엑셀을 불러오세요"}</span>`}</td>
+      ${fundCell(pn.rows[0], "일임")}${fundCell(pn.rows[1], "H일임")}
       ${confirm}</tr>`;
   }).join("");
   container.innerHTML = `<table class="stage-table"><thead><tr>
-      <th>종목 / 주간사</th><th>납입일</th><th class="lt-r">확정공모가액</th><th class="lt-r">일임</th><th class="lt-r">H일임</th><th>연계계좌</th><th>납입확인</th>
+      <th>종목 / 주간사</th><th>납입일</th><th class="lt-r">확정공모가액</th><th class="lt-r">일임</th><th class="lt-r">H일임</th><th>납입확인</th>
     </tr></thead><tbody>${rows}</tbody></table>` + stagePagerHtml(key, page, pages, all.length);
 }
 
