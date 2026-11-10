@@ -695,6 +695,7 @@
   .op-price-row { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
   .op-price-row .seg { flex: 0 0 auto; flex-wrap: nowrap !important; }
   .op-price-row .op-price { width: 110px !important; flex: 0 0 110px; box-sizing: border-box; }
+  .op-price-row .op-price.off { visibility: hidden; }
   @media (max-width: 480px) { .op-price-row { flex-wrap: wrap; } }   /* 휴대폰에서는 줄바꿈(가로 넘침 방지) */
   .op-price { font-family: var(--font-kr); font-size: 13.5px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
   .op-batt { display: flex; align-items: center; gap: 4px; margin: 0 0 12px; }
@@ -10107,8 +10108,8 @@ function renderOpinionTab(){
     const manual = !isBand && (s.priceManual || s.price != null);
     join.innerHTML = `<div class="bid-band">참여 가격<div class="op-price-row"><div class="seg">${band.map(([k, v]) => `<button type="button" data-op-price="${v}" class="${isBand && s.price === v ? "on" : ""}">${k} ${fmtNum(v)}</button>`).join("")}`
       + `<button type="button" data-op-price="manual" class="${manual ? "on" : ""}">직접 입력</button></div>`
-      // 숫자칸은 늘 버튼 옆에 둔다(누를 때마다 화면이 바뀌지 않게, 사용자 요청). 밴드 버튼을 고르면 비워진다.
-      + `<input type="number" id="opPrice" class="op-price" placeholder="직접 입력" value="${manual && s.price != null ? s.price : ""}"></div></div>`
+      // 숫자칸은 "직접 입력"을 눌렀을 때만 보인다(사용자 요청). 자리는 늘 잡아 두어(visibility) 나타나고 사라질 때 다른 칸이 밀리지 않게 한다.
+      + `<input type="number" id="opPrice" class="op-price${manual ? "" : " off"}" placeholder="가격" value="${manual && s.price != null ? s.price : ""}" ${manual ? "" : 'tabindex="-1" aria-hidden="true"'}></div></div>`
       + `<label>참여 방법<select id="opMethod">${["미확약", "15일", "1개월", "3개월", "6개월"].map(m => `<option ${s.method === m ? "selected" : ""}>${m}</option>`).join("")}</select></label>`;
   }
   const p1 = document.getElementById("opP1"), p2 = document.getElementById("opP2");
@@ -10297,7 +10298,8 @@ document.getElementById("tab-opinion").addEventListener("click", e => {
     if (pr.dataset.opPrice === "manual") { s.priceManual = true; }
     else { s.priceManual = false; s.price = Number(pr.dataset.opPrice); }
     opSave(); renderOpinionTab();
-    if (s.priceManual) { const inp = document.getElementById("opPrice"); if (inp) inp.focus(); }
+    // 지금 가격이 칸에 들어 있으니 전체 선택해서, 바로 치면 새 숫자로 바뀌게 한다
+    if (s.priceManual) { const inp = document.getElementById("opPrice"); if (inp) { inp.focus(); inp.select(); } }
     return;
   }
   const del = e.target.closest("[data-op-del]");
