@@ -677,16 +677,29 @@
   .op-row textarea { flex: 1 1 260px; }
   #tab-opinion textarea { width: 100%; box-sizing: border-box; font-family: var(--font-kr); font-size: 13px; line-height: 1.6;
             padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
-  .op-mats { display: flex; flex-wrap: wrap; gap: 6px; }
-  .op-mat { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 999px;
-            border: 1px solid var(--border); color: var(--ink-dim); }
+  .op-mats { display: flex; flex-direction: column; gap: 6px; }
+  .op-mat { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 8px;
+            border: 1px solid var(--border); color: var(--ink-dim); min-width: 0; }
+  .op-mat .nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .op-mat small { font-weight: 500; color: var(--ink-faint); }
   .op-mat.dart { border-color: var(--accent); color: var(--accent); }
   .op-mat.none { color: var(--ink-faint); border-style: dashed; }
   .op-mat button { border: 0; background: none; color: var(--ink-faint); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
-  .op-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 6px 0; }
-  .op-pick .k { font-size: 12px; font-weight: 700; color: var(--ink-dim); min-width: 84px; }
-  .op-cons { display: flex; flex-wrap: wrap; gap: 8px; }
+  .op-pick { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 4px 0 12px; }
+  .op-pick .k { font-size: 12px; font-weight: 700; color: var(--ink-dim); }
+  .op-cons { display: flex; flex-direction: column; gap: 6px; }
+  .op-cons .sub { display: flex; align-items: center; gap: 8px; }
+  .op-cons .sub small { font-size: 11.5px; color: var(--ink-faint); min-width: 28px; }
+  .op-join { flex-direction: column; align-items: flex-start; }
+  .op-batt { display: flex; align-items: center; gap: 4px; margin: 0 0 12px; }
+  .op-batt-body { position: relative; flex: 1 1 auto; max-width: 320px; height: 26px; border: 2px solid var(--ink-dim); border-radius: 6px; padding: 2px; box-sizing: border-box; }
+  .op-batt-fill { height: 100%; width: 0; border-radius: 3px; background: #2f9e5b; transition: width .5s linear;
+            background-image: linear-gradient(45deg, rgba(255,255,255,.22) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.22) 50%, rgba(255,255,255,.22) 75%, transparent 75%);
+            background-size: 18px 18px; animation: opBattMove 1s linear infinite; }
+  @keyframes opBattMove { from { background-position: 0 0; } to { background-position: 18px 0; } }
+  .op-batt-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: var(--ink); font-family: var(--font-mono); }
+  .op-batt-cap { width: 4px; height: 10px; border-radius: 0 2px 2px 0; background: var(--ink-dim); }
+  .op-batt-time { font-size: 11.5px; color: var(--ink-faint); margin-left: 8px; font-family: var(--font-mono); }
   #tab-opinion .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
   #tab-opinion .seg button { font-family: var(--font-kr); font-size: 12.5px; font-weight: 700; padding: 6px 10px; border: 0; background: none;
             color: var(--ink-dim); cursor: pointer; white-space: nowrap; }
@@ -1176,10 +1189,6 @@
             <div class="op-row">
               <label class="ad-btn">파일 올리기 (엑셀·PDF·녹취 txt·html)<input type="file" id="opFiles" multiple accept=".xlsx,.xlsm,.xls,.pdf,.txt,.html,.htm,.md,.csv" hidden></label>
             </div>
-            <div class="op-row">
-              <textarea id="opPaste" rows="3" placeholder="메모·간담회 내용 등을 붙여넣기"></textarea>
-              <button type="button" class="ad-btn" id="opPasteAdd">자료로 넣기</button>
-            </div>
           </div>
           <div class="op-sec">
             <div class="op-sec-t">고르기</div>
@@ -1192,6 +1201,11 @@
             <button type="button" class="ad-btn on" id="opGen">초안 쓰기</button>
             <button type="button" class="ad-btn" id="opStop" hidden>멈추기</button>
             <span class="nt-hint op-status" id="opStatus"></span>
+          </div>
+          <div class="op-batt" id="opBatt" hidden>
+            <div class="op-batt-body"><div class="op-batt-fill" id="opBattFill"></div><span class="op-batt-pct" id="opBattPct">0%</span></div>
+            <div class="op-batt-cap"></div>
+            <span class="op-batt-time" id="opBattTime"></span>
           </div>
         </div>
       </div>
@@ -10072,13 +10086,13 @@ function renderOpinionTab(){
   // 자료
   const mats = opMats[dl.name] || [];
   document.getElementById("opMatList").innerHTML = (dt ? `<span class="op-mat dart">다트 신고서 본문</span>` : `<span class="op-mat none">다트 신고서 본문 없음</span>`)
-    + mats.map((m, i) => `<span class="op-mat">${escHtml(m.name)} <small>${fmtNum(m.text.length)}자</small><button type="button" data-op-del="${i}" title="빼기">×</button></span>`).join("");
+    + mats.map((m, i) => `<span class="op-mat"><span class="nm" title="${escHtml(m.name)}">${escHtml(m.name)}</span><small>${fmtNum(m.text.length)}자</small><button type="button" data-op-del="${i}" title="빼기">×</button></span>`).join("");
   // 선택
   document.getElementById("opMkt").innerHTML = opSeg("mkt", [["pos", "적극적으로 참여 중"], ["neg", "소극적으로 참여 중"], ["none", "빼기"]], s.mkt);
   document.getElementById("opCons").innerHTML =
-    opSeg("cPrice", [["밴드상단", "밴드상단"], ["밴드하단", "밴드하단"], ["", "—"]], s.cPrice) +
-    opSeg("cQty", [["전체수량", "전체수량"], ["제한수량", "제한수량"], ["", "—"]], s.cQty) +
-    opSeg("cCommit", [["미확약", "미확약"], ["15일", "15일"], ["1개월", "1개월"], ["3개월", "3개월"], ["6개월", "6개월"], ["", "—"]], s.cCommit);
+    `<div class="sub"><small>가격</small>${opSeg("cPrice", [["밴드상단", "밴드상단"], ["밴드하단", "밴드하단"], ["", "—"]], s.cPrice)}</div>` +
+    `<div class="sub"><small>수량</small>${opSeg("cQty", [["전체수량", "전체수량"], ["제한수량", "제한수량"], ["", "—"]], s.cQty)}</div>` +
+    `<div class="sub"><small>확약</small>${opSeg("cCommit", [["미확약", "미확약"], ["15일", "15일"], ["1개월", "1개월"], ["3개월", "3개월"], ["6개월", "6개월"], ["", "—"]], s.cCommit)}</div>`;
   document.getElementById("opFinal").innerHTML = opSeg("final", [["join", "참여"], ["drop", "드랍"], ["skip", "미참여"], ["", "미정"]], s.final);
   const join = document.getElementById("opJoin");
   join.hidden = s.final !== "join";
@@ -10108,6 +10122,39 @@ function opRenderRun(){
   if (opSample === null) document.getElementById("opStatus").textContent = "이 화면에서는 Claude를 쓸 수 없습니다 (claude.ai에서 페이지를 열어야 합니다)";
 }
 function opStatus(t){ document.getElementById("opStatus").textContent = t; }
+// 진행 게이지(배터리 충전 모양). 걸리는 시간을 미리 알 수 없어서, 끝난 단계로 채우고
+// 단계 사이에는 다음 단계 직전까지만 천천히 차오르게 한다. 단계: 자료 조각 요약 1칸씩 + 초안 3칸.
+const opProg = { timer: null, start: 0, shown: 0, done: 0, total: 1, cap: 0 };
+function opProgStart(total){
+  Object.assign(opProg, { start: Date.now(), shown: 0, done: 0, total, cap: 1 / total });
+  document.getElementById("opBatt").hidden = false;
+  clearInterval(opProg.timer);
+  opProg.timer = setInterval(opProgTick, 500);
+  opProgTick();
+}
+// 끝난 단계 수와, 진행 중인 단계가 얼마나 됐는지(0~1)를 받아 목표치를 정한다
+function opProgSet(done, partial){
+  opProg.done = done;
+  opProg.shown = Math.max(opProg.shown, done / opProg.total);            // 끝난 만큼은 바로 채우고
+  opProg.cap = Math.min(0.99, (done + (partial != null ? partial : 0.9)) / opProg.total);  // 다음 칸 직전까지만 천천히
+  opProgTick();
+}
+function opProgTick(){
+  opProg.shown += Math.max(0, opProg.cap - opProg.shown) * 0.04;
+  const pct = Math.min(99, Math.floor(opProg.shown * 100));
+  document.getElementById("opBattFill").style.width = pct + "%";
+  document.getElementById("opBattPct").textContent = pct + "%";
+  const sec = Math.round((Date.now() - opProg.start) / 1000);
+  document.getElementById("opBattTime").textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")} 지남`;
+}
+function opProgEnd(ok){
+  clearInterval(opProg.timer);
+  if (ok) {
+    document.getElementById("opBattFill").style.width = "100%";
+    document.getElementById("opBattPct").textContent = "100%";
+  }
+  setTimeout(() => { if (!opRun) document.getElementById("opBatt").hidden = true; }, ok ? 2500 : 0);
+}
 const OP_ERR = {
   not_granted: "Claude 사용을 허락하지 않아 쓸 수 없습니다", sampling_disabled: "이 계정에서는 Claude를 쓸 수 없습니다",
   rate_limited: "사용량 한도에 걸렸습니다. 잠시 뒤 다시 눌러 주세요", prompt_too_large: "보낼 글이 너무 깁니다. 자료를 줄여 주세요",
@@ -10154,10 +10201,12 @@ async function opGenerate(){
     const mats = (opMats[dl.name] || []).map(m => ({ name: m.name, text: opScrub(m.text).replace(/[ \t]+/g, " ").replace(/\n{2,}/g, "\n") }));
     const total = mats.reduce((a, m) => a + m.text.length, 0);
     let notes;
+    const jobs = [];
+    if (total > OP_DIRECT) mats.forEach(m => { for (let i = 0; i < m.text.length; i += OP_CHUNK) jobs.push({ name: m.name, part: Math.floor(i / OP_CHUNK) + 1, text: m.text.slice(i, i + OP_CHUNK) }); });
+    const FINAL_W = 3;   // 초안 쓰기는 요약 한 조각보다 오래 걸려서 3칸으로 센다
+    opProgStart(jobs.length + FINAL_W);
     if (total <= OP_DIRECT) notes = mats.map(m => `[자료: ${m.name}]\n${m.text}`).join("\n\n");
     else {
-      const jobs = [];
-      mats.forEach(m => { for (let i = 0; i < m.text.length; i += OP_CHUNK) jobs.push({ name: m.name, part: Math.floor(i / OP_CHUNK) + 1, text: m.text.slice(i, i + OP_CHUNK) }); });
       const out = new Array(jobs.length);
       let done = 0, next = 0;
       opStatus(`자료 정리 중 0/${jobs.length}`);
@@ -10167,6 +10216,7 @@ async function opGenerate(){
           const r = await opSample(`${OP_NOTE_RULES(name)}\n\n[자료: ${j.name} (${j.part})]\n${j.text}`, { signal: ctl.signal });
           out[jobs.indexOf(j)] = `[자료 메모: ${j.name} (${j.part})]\n${r.text.trim()}`;
           opStatus(`자료 정리 중 ${++done}/${jobs.length}`);
+          opProgSet(done);
         }
       };
       await Promise.all([worker(), worker()]);
@@ -10181,13 +10231,17 @@ async function opGenerate(){
     while (bytesOf(prompt) > OP_MAX_BYTES && examples.length) { examples.pop(); prompt = build(); }
     if (bytesOf(prompt) > OP_MAX_BYTES) { while (bytesOf(prompt) > OP_MAX_BYTES && notes.length > 2000) { notes = notes.slice(0, Math.floor(notes.length * 0.85)) + "\n(이하 생략)"; prompt = build(); } }
     opStatus("초안 쓰는 중… (보통 30초~2분)");
-    const res = await opSample.json(prompt, { signal: ctl.signal, cache: false });
+    opProgSet(jobs.length, 0.3);
+    // 초안 글자가 써지는 만큼 채운다(두 문단 합쳐 보통 1,500자 안팎)
+    const res = await opSample.json(prompt, { signal: ctl.signal, cache: false,
+      onText: ({ text }) => opProgSet(jobs.length + Math.min(FINAL_W - 0.2, FINAL_W * text.length / 1600), 0.5) });
     if (!res || typeof res.company !== "string" || typeof res.trend !== "string") throw { code: "invalid_json" };
     const o = opRec(dl);
     o.p1 = res.company.trim(); o.p2 = res.trend.trim().replace(/^시장참여자들은[^.]*\.\s*/, "");
     o.checks = Array.isArray(res.checks) ? res.checks.map(String).filter(Boolean) : [];
     o.at = Date.now();
     opSave();
+    opProgEnd(true);
     opStatus("초안을 만들었습니다. 고칠 곳은 초안 칸에서 바로 고치세요.");
   } catch (e) {
     const code = e && e.code;
@@ -10196,6 +10250,7 @@ async function opGenerate(){
     else opStatus(OP_ERR[code] || "잠깐 문제가 생겼습니다. 다시 눌러 주세요");
   } finally {
     opRun = null;
+    if (opProg.timer && document.getElementById("opBattPct").textContent !== "100%") opProgEnd(false);
     renderOpinionTab();
   }
 }
@@ -10234,11 +10289,6 @@ document.getElementById("tab-opinion").addEventListener("click", e => {
   if (e.target.closest("#opBox")) { copyText(opFullText(dl)).then(ok => showToast(ok ? "복사됨" : "복사가 막혔습니다 — 길게 눌러 직접 복사하세요")); return; }
   if (e.target.closest("#opGen")) { opGenerate(); return; }
   if (e.target.closest("#opStop")) { if (opRun) opRun.abort(); return; }
-  if (e.target.closest("#opPasteAdd")) {
-    const ta = document.getElementById("opPaste");
-    if (ta.value.trim()) { (opMats[dl.name] = opMats[dl.name] || []).push({ name: "붙여넣은 글", text: ta.value }); ta.value = ""; renderOpinionTab(); }
-    return;
-  }
   if (e.target.closest("#opClear") && confirm("이 종목의 초안 두 문단을 지울까요?")) { const o = opRec(dl); o.p1 = ""; o.p2 = ""; o.checks = []; opSave(); renderOpinionTab(); }
 });
 document.getElementById("tab-opinion").addEventListener("input", e => {
