@@ -664,7 +664,14 @@
   .bid-box:disabled { color: var(--ink-faint); cursor: default; }
   #bidToIlim:disabled { opacity: .45; cursor: default; }
   /* ---- 참여의견 탭 ---- */
-  .op-sec { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 12px 14px; margin: 10px 0; max-width: 760px; }
+  .op-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  .op-right { position: sticky; top: 12px; }
+  @media (max-width: 900px) { .op-grid { grid-template-columns: 1fr; } .op-right { position: static; } }
+  .op-empty { font-size: 13px; color: var(--ink-faint); border: 1px dashed var(--border); border-radius: 10px; padding: 28px 14px; text-align: center; }
+  .op-select { font-family: var(--font-kr); font-size: 13.5px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
+  .op-expanel { margin: -6px 0 12px; }
+  .op-genrow { margin: 4px 0 10px; }
+  .op-sec { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 12px 14px; margin: 0 0 10px; }
   .op-sec-t { font-size: 12.5px; font-weight: 800; color: var(--ink-dim); margin-bottom: 8px; }
   .op-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
   .op-row textarea { flex: 1 1 260px; }
@@ -692,9 +699,7 @@
   .op-checks { font-size: 12.5px; color: var(--ink-dim); margin: 8px 0; }
   .op-checks-t { font-weight: 800; color: var(--today-ring); }
   .op-checks ul { margin: 4px 0 0 18px; padding: 0; }
-  .op-box { max-width: 760px; }
-  .op-ex { max-width: 760px; margin: 10px 0; }
-  .op-ex summary { cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--ink-dim); }
+  .op-box { max-width: none; margin-top: 0; }
   /* ---- 계좌 탭 ---- */
   #tab-acct .stage-search { flex-wrap: wrap; gap: 8px; }
   .ad-btn { font-family: var(--font-kr); font-size: 12.5px; font-weight: 700; padding: 7px 12px; border-radius: 8px;
@@ -1146,49 +1151,60 @@
     <div class="stage-head">
       <h2>참여의견</h2>
     </div>
-    <div class="bid-form">
-      <label>종목<input type="text" id="opName" placeholder="종목명 검색" autocomplete="off"></label>
-      <label>대표주관<select id="opUw"></select></label>
+    <div class="stage-search">
+      <input type="text" class="tab-search" id="opName" placeholder="종목명 검색" autocomplete="off">
+      <span class="nt-hint" id="opExCount"></span>
+      <label class="ad-btn" title="대화방 내보내기(html)에서 의견글(*간담회 및 수요예측 동향)만 골라 문체 예시로 저장합니다. 한 번 넣으면 공유 저장본에 남습니다.">문체 예시 불러오기
+        <input type="file" id="opExFile" accept=".html,.htm" hidden></label>
+      <button type="button" class="ad-btn" id="opExToggle">문체 예시 보기</button>
+    </div>
+    <div class="op-expanel" id="opExPanel" hidden>
+      <textarea id="opExamples" rows="10" placeholder="의견글 예시(여러 건이면 ===== 줄로 구분)"></textarea>
     </div>
     <div class="bid-recs" id="opRecs"></div>
-    <div id="opBody" hidden>
-      <div class="op-sec">
-        <div class="op-sec-t">자료</div>
-        <div class="op-mats" id="opMatList"></div>
-        <div class="op-row">
-          <label class="ad-btn">파일 올리기 (엑셀·PDF·녹취 txt·html)<input type="file" id="opFiles" multiple accept=".xlsx,.xlsm,.xls,.pdf,.txt,.html,.htm,.md,.csv" hidden></label>
-        </div>
-        <div class="op-row">
-          <textarea id="opPaste" rows="3" placeholder="메모·간담회 내용 등을 붙여넣기"></textarea>
-          <button type="button" class="ad-btn" id="opPasteAdd">자료로 넣기</button>
+    <div class="op-grid">
+      <div class="op-left">
+        <div class="op-empty" id="opEmptyL">종목을 고르세요</div>
+        <div id="opBody" hidden>
+          <div class="op-sec">
+            <div class="op-sec-t">대표주관</div>
+            <select id="opUw" class="op-select"></select>
+          </div>
+          <div class="op-sec">
+            <div class="op-sec-t">자료</div>
+            <div class="op-mats" id="opMatList"></div>
+            <div class="op-row">
+              <label class="ad-btn">파일 올리기 (엑셀·PDF·녹취 txt·html)<input type="file" id="opFiles" multiple accept=".xlsx,.xlsm,.xls,.pdf,.txt,.html,.htm,.md,.csv" hidden></label>
+            </div>
+            <div class="op-row">
+              <textarea id="opPaste" rows="3" placeholder="메모·간담회 내용 등을 붙여넣기"></textarea>
+              <button type="button" class="ad-btn" id="opPasteAdd">자료로 넣기</button>
+            </div>
+          </div>
+          <div class="op-sec">
+            <div class="op-sec-t">고르기</div>
+            <div class="op-pick"><span class="k">시장참여자</span><div id="opMkt"></div></div>
+            <div class="op-pick"><span class="k">시장컨센서스</span><div class="op-cons" id="opCons"></div></div>
+            <div class="op-pick"><span class="k">최종 참여의견</span><div id="opFinal"></div></div>
+            <div class="bid-form op-join" id="opJoin" hidden></div>
+          </div>
+          <div class="op-row op-genrow">
+            <button type="button" class="ad-btn on" id="opGen">초안 쓰기</button>
+            <button type="button" class="ad-btn" id="opStop" hidden>멈추기</button>
+            <span class="nt-hint op-status" id="opStatus"></span>
+          </div>
         </div>
       </div>
-      <div class="op-sec">
-        <div class="op-sec-t">고르기</div>
-        <div class="op-pick"><span class="k">시장참여자</span><div id="opMkt"></div></div>
-        <div class="op-pick"><span class="k">시장컨센서스</span><div class="op-cons" id="opCons"></div></div>
-        <div class="op-pick"><span class="k">최종 참여의견</span><div id="opFinal"></div></div>
-        <div class="bid-form op-join" id="opJoin" hidden></div>
-      </div>
-      <div class="op-sec">
-        <div class="op-row">
-          <button type="button" class="ad-btn on" id="opGen">초안 쓰기</button>
-          <button type="button" class="ad-btn" id="opStop" hidden>멈추기</button>
-          <span class="nt-hint op-status" id="opStatus"></span>
+      <div class="op-right">
+        <div class="op-empty" id="opEmptyR">초안이 여기에 나옵니다</div>
+        <div id="opOut" hidden>
+          <button type="button" class="bid-box op-box" id="opBox" title="누르면 복사"></button>
+          <div class="op-checks" id="opChecks"></div>
+          <label class="op-lbl">회사 소개 문단<textarea id="opP1" rows="6"></textarea></label>
+          <label class="op-lbl">동향 문단 (시장참여자 문장 뒤)<textarea id="opP2" rows="8"></textarea></label>
+          <div class="op-row"><button type="button" class="ad-btn" id="opClear">두 문단 지우기</button></div>
         </div>
-        <label class="op-lbl">회사 소개 문단<textarea id="opP1" rows="5"></textarea></label>
-        <label class="op-lbl">동향 문단 (시장참여자 문장 뒤)<textarea id="opP2" rows="7"></textarea></label>
-        <div class="op-checks" id="opChecks"></div>
-        <button type="button" class="ad-btn" id="opClear">두 문단 지우기</button>
       </div>
-      <button type="button" class="bid-box op-box" id="opBox" title="누르면 복사"></button>
-      <details class="op-ex">
-        <summary><span id="opExCount"></span></summary>
-        <div class="op-row">
-          <label class="ad-btn">대화방 내보내기(html)에서 불러오기<input type="file" id="opExFile" accept=".html,.htm" hidden></label>
-        </div>
-        <textarea id="opExamples" rows="8" placeholder="의견글 예시(여러 건이면 ===== 줄로 구분)"></textarea>
-      </details>
     </div>
   </div>
 
@@ -9991,9 +10007,14 @@ function renderOpinionTab(){
   const list = !q || dl ? live : bidSearch(q);
   document.getElementById("opRecs").innerHTML = (!q || dl ? (live.length ? `<span>수요예측 중</span>` : "") : `<span>${list.length ? "검색" : "검색 결과 없음"}</span>`)
     + list.map(x => `<button type="button" data-op-pick="${escHtml(x.name)}" class="${dl && dl.name === x.name ? "on" : ""}">${escHtml(x.name)}</button>`).join("");
+  const ex = noticeSettings.opinionExamples || [];
+  document.getElementById("opExCount").textContent = ex.length ? `문체 예시 ${ex.length}건 저장됨` : "문체 예시 없음 — 대화방 내보내기 html을 불러오세요";
+  const exBox = document.getElementById("opExamples");
+  if (document.activeElement !== exBox) exBox.value = ex.join("\n=====\n");
   const body = document.getElementById("opBody");
-  if (!dl) { body.hidden = true; return; }
-  body.hidden = false;
+  body.hidden = !dl;
+  document.getElementById("opEmptyL").hidden = !!dl;
+  if (!dl) { document.getElementById("opOut").hidden = true; document.getElementById("opEmptyR").hidden = false; return; }
   const o = opRec(dl), s = o.sel, t = DEMAND_INFO[dl.name] || {}, dt = DART_TEXT[dl.name];
   const uws = (dl.uw || "").split(",").map(x => x.trim()).filter(Boolean);
   document.getElementById("opUw").innerHTML = uws.map(u => `<option ${(o.uw || uws[0]) === u ? "selected" : ""}>${escHtml(u)}</option>`).join("");
@@ -10022,10 +10043,11 @@ function renderOpinionTab(){
   document.getElementById("opChecks").innerHTML = (o.checks || []).length
     ? `<div class="op-checks-t">확인할 것</div><ul>${o.checks.map(c => `<li>${escHtml(c)}</li>`).join("")}</ul>` : "";
   document.getElementById("opBox").textContent = opFullText(dl);
-  const ex = noticeSettings.opinionExamples || [];
-  document.getElementById("opExCount").textContent = ex.length ? `문체 예시 ${ex.length}건` : "문체 예시 없음";
-  const exBox = document.getElementById("opExamples");
-  if (document.activeElement !== exBox) exBox.value = ex.join("\n=====\n");
+  // 오른쪽: 초안이 있으면 결과, 없으면 안내
+  const has = !!((o.p1 || "").trim() || (o.p2 || "").trim());
+  document.getElementById("opOut").hidden = !has && !opRun;
+  document.getElementById("opEmptyR").hidden = has || !!opRun;
+  document.getElementById("opEmptyR").textContent = "자료를 넣고 고른 뒤 \"초안 쓰기\"를 누르면 여기에 초안이 나옵니다";
   opRenderRun();
 }
 function opRenderRun(){
@@ -10115,7 +10137,7 @@ async function opGenerate(){
     o.checks = Array.isArray(res.checks) ? res.checks.map(String).filter(Boolean) : [];
     o.at = Date.now();
     opSave();
-    opStatus("초안을 만들었습니다. 고칠 곳은 아래 칸에서 바로 고치세요.");
+    opStatus("초안을 만들었습니다. 고칠 곳은 초안 칸에서 바로 고치세요.");
   } catch (e) {
     const code = e && e.code;
     if (code === "cancelled") opStatus("멈췄습니다");
@@ -10180,6 +10202,11 @@ document.getElementById("tab-opinion").addEventListener("input", e => {
   clearTimeout(opRec.t); opRec.t = setTimeout(opSave, 800);
   document.getElementById("opBox").textContent = opFullText(dl);
   if (e.target.id === "opPrice") document.querySelectorAll("[data-op-price]").forEach(b => b.classList.toggle("on", Number(b.dataset.opPrice) === o.sel.price));
+});
+document.getElementById("opExToggle").addEventListener("click", () => {
+  const p = document.getElementById("opExPanel");
+  p.hidden = !p.hidden;
+  document.getElementById("opExToggle").textContent = p.hidden ? "문체 예시 보기" : "문체 예시 닫기";
 });
 document.getElementById("opExamples").addEventListener("change", e => { opSetExamples(e.target.value.split(/\n=+\n/)); renderOpinionTab(); });
 document.getElementById("opFiles").addEventListener("change", async e => {
