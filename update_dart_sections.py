@@ -9,6 +9,8 @@
   - use  : 제1부 > 자금의 사용목적 (자금조달·사용계획 앞부분)
   - biz  : 제2부 > 사업의 내용 (표를 뺀 본문 앞부분)
 
+[발행조건확정] 신고서는 목차가 "증권발행조건확정" 하나뿐이라 본문이 없다. 그때는 demandInfo의
+ov_rcept(공모개요를 뽑은 본 신고서)로 다시 읽는다.
 DART 웹 화면은 API 키가 필요 없다. 접수번호가 바뀌지 않은 종목은 dartSections.json에
 저장해 둔 값을 그대로 쓴다. 실패해도 다른 갱신을 막지 않도록 항상 종료코드 0으로 끝낸다.
 """
@@ -154,23 +156,29 @@ def main():
         if len(demand) < 2 or demand[1] < since:
             continue  # 참여의견을 쓸 일이 없는 종목은 빼서 페이지가 커지지 않게
         info = demand_info.get(name) or {}
-        rc = info.get("rcept_no")
-        if not rc:
+        cands = [rc for rc in (info.get("rcept_no"), info.get("ov_rcept")) if rc]
+        cands = list(dict.fromkeys(cands))
+        if not cands:
             continue
         old = cache.get(name)
-        if old and old.get("rcept_no") == rc and any(old.get(k) for k in LIMITS):
+        if old and old.get("rcept_no") in cands and any(old.get(k) for k in LIMITS):
             keep[name] = {**old, **{k: cut(old[k], LIMITS[k]) for k in LIMITS if old.get(k)}}
             continue
-        try:
-            print(f"{name}: {rc} 신고서 본문 읽는 중")
-            sec = fetch(rc)
-            sec["rcept_no"] = rc
-            keep[name] = sec
-            print("  " + ", ".join(f"{k} {len(sec.get(k, ''))}자" for k in LIMITS))
-        except Exception as e:  # noqa: BLE001
-            print(f"  실패: {e}")
-            if old:
-                keep[name] = old
+        for rc in cands:
+            try:
+                print(f"{name}: {rc} 신고서 본문 읽는 중")
+                sec = fetch(rc)
+            except Exception as e:  # noqa: BLE001
+                print(f"  실패: {e}")
+                continue
+            if any(sec.get(k) for k in LIMITS):
+                sec["rcept_no"] = rc
+                keep[name] = sec
+                print("  " + ", ".join(f"{k} {len(sec.get(k, ''))}자" for k in LIMITS))
+                break
+            print("  본문 없음(발행조건확정 등)")
+        if name not in keep and old and any(old.get(k) for k in LIMITS):
+            keep[name] = old
 
     json.dump(keep, open(CACHE_PATH, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     html = open(HTML_PATH, encoding="utf-8").read()
