@@ -6217,7 +6217,8 @@ function todoWeekStart(){ return addDays(today, -today.getDay() + todoWeek * 7);
 function renderTodoTab(){
   const el = document.getElementById("todo-list");
   if (!el) return;
-  const byDay = eventsByDay(buildEvents());
+  // 배정 예정 칩은 TO DO 탭에서 뺀다(사용자 요청). 캘린더·오늘 할 일에는 그대로 둔다.
+  const byDay = eventsByDay(buildEvents().filter(ev => ev.type !== "allot"));
   const start = todoWeekStart();
   document.getElementById("todoWeekLabel").textContent = `${fmt(start)} ~ ${fmt(addDays(start, 6))}`;
   document.getElementById("todoWeekNow").hidden = todoWeek === 0;
@@ -6228,12 +6229,15 @@ function renderTodoTab(){
     const all = byDay.get(isoKey(dt)) || [];
     // 우리 확약 락업해제는 나의 일정 보기에도 항상 넣고, 그날 맨 위에 둔다.
     const shown = todoMode === "checked" ? all.filter(ev => isTodoChecked(ev) || isCommittedLockup(ev)) : all;
-    const evs = [...shown.filter(isCommittedLockup), ...shown.filter(ev => !isCommittedLockup(ev))];
+    let evs = [...shown.filter(isCommittedLockup), ...shown.filter(ev => !isCommittedLockup(ev))];
+    // 수요예측 탭에서 "미참여"로 고른 종목은 그 종목 일정 전부를 완료처럼 회색으로, 꼬리표는 "미참여"
+    const isNp = ev => records[deals[ev.dealIdx].name].participation === "미참여";
+    const isDone = ev => isNp(ev) || isEventDone(deals[ev.dealIdx].name, ev.type);
+    // 전체 일정 보기에서는 완료·미참여 항목을 그날 맨 아래로 내린다(사용자 요청).
+    if (todoMode === "all") evs = [...evs.filter(ev => !isDone(ev)), ...evs.filter(isDone)];
     const items = evs.map(ev => {
-      const dl = deals[ev.dealIdx];
-      // 수요예측 탭에서 "미참여"로 고른 종목은 그 종목 일정 전부를 완료처럼 회색으로, 꼬리표는 "미참여"
-      const np = records[dl.name].participation === "미참여";
-      const done = np || isEventDone(dl.name, ev.type);
+      const np = isNp(ev);
+      const done = isDone(ev);
       const chip = done ? digestDoneChipHtml(ev) : digestChipHtml(ev);
       const pk = pendingKey(ev);
       const checked = pk in todoPending ? todoPending[pk] : isTodoChecked(ev);
