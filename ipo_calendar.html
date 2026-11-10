@@ -692,7 +692,11 @@
   .op-cons .sub { display: flex; align-items: center; gap: 8px; }
   .op-cons .sub small { font-size: 11.5px; color: var(--ink-faint); min-width: 28px; }
   .op-join { flex-direction: column; align-items: flex-start; }
-  .op-price { margin-top: 6px; width: 140px; font-family: var(--font-kr); font-size: 13.5px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
+  .op-price-row { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+  .op-price-row .seg { flex: 0 0 auto; flex-wrap: nowrap !important; }
+  .op-price-row .op-price { width: 110px !important; flex: 0 0 110px; box-sizing: border-box; }
+  @media (max-width: 480px) { .op-price-row { flex-wrap: wrap; } }   /* 휴대폰에서는 줄바꿈(가로 넘침 방지) */
+  .op-price { font-family: var(--font-kr); font-size: 13.5px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); }
   .op-batt { display: flex; align-items: center; gap: 4px; margin: 0 0 12px; }
   .op-batt-body { position: relative; flex: 1 1 auto; max-width: 320px; height: 26px; border: 2px solid var(--ink-dim); border-radius: 6px; padding: 2px; box-sizing: border-box; }
   .op-batt-fill { height: 100%; width: 0; border-radius: 3px; background: #2f9e5b; transition: width .5s linear;
@@ -10101,9 +10105,10 @@ function renderOpinionTab(){
     const band = t.band ? [["하단", t.band[0]], ["상단", t.band[1]]] : [];
     const isBand = band.some(([, v]) => v === s.price) && !s.priceManual;
     const manual = !isBand && (s.priceManual || s.price != null);
-    join.innerHTML = `<div class="bid-band">참여 가격<div class="seg">${band.map(([k, v]) => `<button type="button" data-op-price="${v}" class="${isBand && s.price === v ? "on" : ""}">${k} ${fmtNum(v)}</button>`).join("")}`
+    join.innerHTML = `<div class="bid-band">참여 가격<div class="op-price-row"><div class="seg">${band.map(([k, v]) => `<button type="button" data-op-price="${v}" class="${isBand && s.price === v ? "on" : ""}">${k} ${fmtNum(v)}</button>`).join("")}`
       + `<button type="button" data-op-price="manual" class="${manual ? "on" : ""}">직접 입력</button></div>`
-      + (manual ? `<input type="number" id="opPrice" class="op-price" placeholder="가격" value="${s.price != null ? s.price : ""}">` : "") + `</div>`
+      // 숫자칸은 늘 버튼 옆에 둔다(누를 때마다 화면이 바뀌지 않게, 사용자 요청). 밴드 버튼을 고르면 비워진다.
+      + `<input type="number" id="opPrice" class="op-price" placeholder="직접 입력" value="${manual && s.price != null ? s.price : ""}"></div></div>`
       + `<label>참여 방법<select id="opMethod">${["미확약", "15일", "1개월", "3개월", "6개월"].map(m => `<option ${s.method === m ? "selected" : ""}>${m}</option>`).join("")}</select></label>`;
   }
   const p1 = document.getElementById("opP1"), p2 = document.getElementById("opP2");
@@ -10308,7 +10313,12 @@ document.getElementById("tab-opinion").addEventListener("input", e => {
   const o = opRec(dl);
   if (e.target.id === "opP1") o.p1 = e.target.value;
   else if (e.target.id === "opP2") o.p2 = e.target.value;
-  else if (e.target.id === "opPrice") o.sel.price = e.target.value === "" ? null : Number(e.target.value);
+  else if (e.target.id === "opPrice") {
+    // 숫자를 치면 "직접 입력"으로 바뀐다(버튼 표시만 바꾸고 다시 그리지 않아 입력이 끊기지 않게)
+    o.sel.price = e.target.value === "" ? null : Number(e.target.value);
+    o.sel.priceManual = true;
+    document.querySelectorAll("#opJoin [data-op-price]").forEach(b => b.classList.toggle("on", b.dataset.opPrice === "manual"));
+  }
   else if (e.target.id === "opMethod") o.sel.method = e.target.value;
   else return;
   clearTimeout(opRec.t); opRec.t = setTimeout(opSave, 800);
