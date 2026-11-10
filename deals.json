@@ -726,10 +726,10 @@
       "2026-11-13"
     ],
     "pay": "2026-11-17",
-    "list": null,
-    "dealSizeM": 19200,
+    "list": "2026-11-24",
+    "dealSizeM": 14000,
     "stockCode": "498150",
-    "finalPrice": null
+    "finalPrice": 7000
   },
   {
     "name": "하나에어로다이내믹스",
@@ -981,6 +981,24 @@
     "list": null,
     "dealSizeM": 44000,
     "stockCode": "464570",
+    "finalPrice": null
+  },
+  {
+    "name": "마더스제약",
+    "no": "2359",
+    "uw": "KB증권,NH투자증권",
+    "demand": [
+      "2026-11-27",
+      "2026-12-03"
+    ],
+    "sub": [
+      "2026-12-08",
+      "2026-12-09"
+    ],
+    "pay": "2026-12-11",
+    "list": null,
+    "dealSizeM": 26400,
+    "stockCode": "363170",
     "finalPrice": null
   },
   {
