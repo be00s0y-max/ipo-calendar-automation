@@ -6062,7 +6062,7 @@ const MISSING_TERM_FIELDS = ["band", "qty_unit", "price_unit", "inst_max"];
 const MISSING_OVERVIEW_FIELDS = ["val_model", "val_multiple", "val_fair", "val_discount", "listed_shares", "biz"];
 function missingInfoList(){
   const t0 = isoKey(today);
-  return deals.filter(dl => !dl.withdrawn && (!dl.list || dl.list >= t0)).map(dl => {
+  return deals.filter(dl => !isWd(dl) && (!dl.list || dl.list >= t0)).map(dl => {
     const t = DEMAND_INFO[dl.name];
     if (!t) return { dl, miss: ["DART 신고서 정보 전체"] };
     const fields = MISSING_TERM_FIELDS.concat(/스팩/.test(dl.name) ? [] : MISSING_OVERVIEW_FIELDS);
@@ -6145,7 +6145,7 @@ function buildCompactEvents(dealsList){
     const day3 = businessDayN(ds, 3);
     if (day3 <= de) push(day3, "demand", compactLabel(dl, "수요예측", "3일차"));
     if (isoKey(de) !== isoKey(ds)) push(de, "demand", compactLabel(dl, "수요예측", "마지막날"));
-    if (dl.withdrawn) return; // 철회 종목은 수요예측까지만(청약·납입·상장 일정 없음)
+    if (isWd(dl)) return; // 철회 종목은 수요예측까지만(청약·납입·상장 일정 없음)
     push(d(dl.sub[0]), "sub", compactLabel(dl, "청약"));
     push(d(dl.pay), "pay", compactLabel(dl, "납입"));
     if (dl.list) {
@@ -6164,7 +6164,7 @@ function buildCompactEvents(dealsList){
 // 수요예측 탭 "참여" 칸에서 직접 고른 값(rec.participation)이 있으면 그게 우선이다.
 function isJoined(rec){
   if (!rec) return false;
-  if (rec.participation === "미참여") return false;
+  if (rec.participation === "미참여" || rec.participation === "철회") return false;
   if (rec.participation === "참여") return true;
   if (rec.price != null || rec.qty != null || rec.allotShares != null) return true;
   return Object.values(rec.funds || {}).some(v => v && (v.joined || v.price != null || v.qty != null || v.allot != null));
@@ -6301,7 +6301,8 @@ async function loadSharedRecords(){
       localStorage.setItem(STAMP_KEY, String(recordsUpdatedAt));
     } catch(e) {}
     // 공유 저장본의 계좌를 정리 규칙대로 고쳤으면, 고친 값을 공유 저장에도 올린다(방금 받은 최신본 위에서 고친 것이라 안전).
-    if (accountDirNormalized) persistRecords();
+    const withdrawnApplied = applyWithdrawn();
+    if (accountDirNormalized || withdrawnApplied) persistRecords();
 
     rerender();
     if (STAGE_TABS) renderAllStageTables();
@@ -6315,7 +6316,7 @@ deals.forEach(dl => {
   const seed = {
     // 수요예측 신청
     applied: false, appliedDate: "", appliedNote: "",
-    // 수요예측 참여 ("" = 입력값으로 자동 판정, "참여"/"미참여" = 직접 선택)
+    // 수요예측 참여 ("" = 입력값으로 자동 판정, "참여"/"미참여"/"철회" = 직접 선택)
     participation: "",
     joined: DEFAULT_JOINED.includes(dl.name), price: null, qty: null, commit: dl.name === "케이앤에스아이앤씨" ? "미확약" : "",
     // 배정
@@ -6330,6 +6331,20 @@ deals.forEach(dl => {
   records[dl.name] = Object.assign(seed, stored[dl.name] || {});
   migrateNoticeShares(records[dl.name]);
 });
+// DART 철회신고서로 철회가 확인된 딜(deals[].withdrawn)은 미참여처럼 참여 값을 지우고 "철회"로 둔다(사용자 지정).
+// 시작할 때는 공유 저장본을 아직 안 읽었으므로 이 기기에만 저장하고(시각은 그대로 둬서 공유 저장본이 이기게),
+// 공유 저장본을 읽은 뒤 다시 적용해 바뀌었으면 공유 저장에도 올린다.
+function applyWithdrawn(){
+  let changed = false;
+  deals.forEach(dl => {
+    const rec = records[dl.name];
+    if (dl.withdrawn && rec && rec.participation !== "철회") { clearParticipation(rec, "철회"); changed = true; }
+  });
+  return changed;
+}
+if (applyWithdrawn()) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); } catch(e) {}
+}
 // 예전 공문 화면에만 적어 둔 배정주식(noticeShares1/2)을 수요예측 일임(전북)·H일임(인성)
 // 배정주수로 옮긴다. 펀드 쪽에 이미 값이 있으면 그 값을 그대로 둔다.
 function migrateNoticeShares(rec){
@@ -6403,7 +6418,7 @@ function buildEvents(){
     push(demandEnd, "demand-end");
     // 철회 종목(deals[].withdrawn = DART 철회신고서 접수일)은 수요예측까지만 남기고
     // 배정·청약·납입·상장·락업 일정은 넣지 않는다(A안, 사용자 지정).
-    if (dl.withdrawn) return;
+    if (isWd(dl)) return;
     push(allotDateFor(dl), "allot");
     push(d(dl.sub[0]), "sub-start");
     push(d(dl.sub[1]), "sub-end");
@@ -6578,7 +6593,7 @@ function renderTodoTab(){
     const shown = todoMode === "checked" ? all.filter(ev => isTodoChecked(ev) || isCommittedLockup(ev)) : all;
     let evs = [...shown.filter(isCommittedLockup), ...shown.filter(ev => !isCommittedLockup(ev))];
     // 수요예측 탭에서 "미참여"로 고른 종목은 그 종목 일정 전부를 완료처럼 회색으로, 꼬리표는 "미참여"
-    const isNp = ev => records[deals[ev.dealIdx].name].participation === "미참여";
+    const isNp = ev => records[deals[ev.dealIdx].name].participation === "미참여" || isWd(deals[ev.dealIdx]);
     const isDone = ev => isNp(ev) || isEventDone(deals[ev.dealIdx].name, ev.type);
     // 완료·미참여 항목은 그날 맨 아래로 내린다(전체 일정·나의 일정 모두, 사용자 요청).
     evs = [...evs.filter(ev => !isDone(ev)), ...evs.filter(isDone)];
@@ -6592,7 +6607,7 @@ function renderTodoTab(){
       const box = todoMode === "all"
         ? `<input type="checkbox" data-todo-deal="${ev.dealIdx}" data-todo-key="${todoKey(ev)}" ${checked ? "checked" : ""}>` : "";
       return `<div class="todo-item">
-        ${box}${chip}${done ? `<span class="tdone">${np ? "미참여" : "완료"}</span>` : ""}
+        ${box}${chip}${done ? `<span class="tdone">${np ? (isWd(deals[ev.dealIdx]) ? "철회" : "미참여") : "완료"}</span>` : ""}
       </div>`;
     }).join("");
     const emptyMsg = todoMode === "checked" ? (all.length ? "나의 일정 없음" : "일정 없음") : "일정 없음";
@@ -6796,8 +6811,8 @@ function openPanel(idx){
   if (demandDay3 <= d(dl.demand[1])) rows.push(["demand-day3", "수요예측 3일차", isoKey(demandDay3)]);
   rows.push(["demand-end", "수요예측 마감", dl.demand[1]]);
   const allotD = allotDateFor(dl);
-  if (allotD && !dl.withdrawn) rows.push(["allot", isAllotEstimated(dl) ? "배정 예정" : "배정공고", isoKey(allotD)]);
-  if (!dl.withdrawn) rows.push(
+  if (allotD && !isWd(dl)) rows.push(["allot", isAllotEstimated(dl) ? "배정 예정" : "배정공고", isoKey(allotD)]);
+  if (!isWd(dl)) rows.push(
     ["sub-start",    "청약 시작",     dl.sub[0]],
     ["sub-end",      "청약 마감",     dl.sub[1]],
     ["pay",          "납입일",        dl.pay],
@@ -6814,7 +6829,7 @@ function openPanel(idx){
     const meta = TYPE_META[type];
     const isCurrentLockup = LOCKUP_COMMIT_KEY[rec.commit] === type;
     return `<div class="sched-row ${isCurrentLockup ? "current-lockup" : ""}"><span class="k"><i style="background:${meta.color}"></i>${label}</span><span class="v">${fmtMaybeYear(dateStr)}</span></div>`;
-  }).join("") + (dl.withdrawn ? `<div class="sched-row"><span class="k">공모 철회</span><span class="v">${fmtMaybeYear(dl.withdrawn)}</span></div>`
+  }).join("") + (isWd(dl) ? `<div class="sched-row"><span class="k">공모 철회</span><span class="v">${dl.withdrawn ? fmtMaybeYear(dl.withdrawn) : "철회"}</span></div>`
     : !dl.list ? `<div class="sched-row"><span class="k">상장일 · 락업해제</span><span class="v" style="font-family:var(--font-kr);color:var(--ink-faint)">상장일 미정</span></div>` : "");
 
   document.getElementById("pOverview").innerHTML = overviewHtml(dl);
@@ -6924,7 +6939,7 @@ let rpMode = "rec";
 function rpRecommended(cands){
   const t = isoKey(addDays(today, -7));
   // 미참여 종목은 배정이 없으므로 납입일 조건만 본다
-  return cands.filter(x => (isNonJoined(x.rec) || REPLY_FUNDS.some(f => ((x.rec.funds || {})[f.key] || {}).allot > 0)) && !x.dl.withdrawn && x.dl.pay && x.dl.pay >= t);
+  return cands.filter(x => (isNonJoined(x.rec) || REPLY_FUNDS.some(f => ((x.rec.funds || {})[f.key] || {}).allot > 0)) && !isWd(x.dl) && x.dl.pay && x.dl.pay >= t);
 }
 function rpShown(cands){
   if (rpMode === "rec") return rpRecommended(cands);
@@ -7018,7 +7033,7 @@ const stPicked = new Set();
 let stInit = false;
 function stRecommended(){
   const t = isoKey(today);
-  return statusCandidates().filter(dl => !dl.withdrawn && dl.demand[0] <= t && (!dl.pay || dl.pay >= t));
+  return statusCandidates().filter(dl => !isWd(dl) && dl.demand[0] <= t && (!dl.pay || dl.pay >= t));
 }
 function stShown(){
   const cands = statusCandidates();
@@ -7041,6 +7056,12 @@ function fundCommit(rec, fund){
 }
 // 참여 종목 + "미참여"로 고른 종목(미참여는 종목명 옆 칸을 모두 합쳐 "미참여" 한 칸으로 보여준다)
 function isNonJoined(rec){ return !!rec && rec.participation === "미참여"; }
+// 수요예측 탭 "참여" 칸에 보일 값: 철회 > 참여(입력값 자동 판정) > 미참여 > 빈칸
+function participationValue(rec){
+  if (!rec) return "";
+  if (rec.participation === "철회") return "철회";
+  return isJoined(rec) ? "참여" : rec.participation === "미참여" ? "미참여" : "";
+}
 function statusCandidates(){
   return deals.filter(dl => isJoined(records[dl.name]) || isNonJoined(records[dl.name]))
     .sort((a, b) => String(b.demand[0]).localeCompare(String(a.demand[0])));
@@ -7379,9 +7400,11 @@ function liveStage(dl){
   if (dl.sub && dl.sub[0] <= t && t <= dl.sub[1]) return "청약 중";
   return "";
 }
-function wdBadge(dl){ return dl.withdrawn ? `<span class="live-badge wd" title="${fmt(dl.withdrawn)} 철회신고서">철회</span>` : ""; }
+// 철회: DART 철회신고서로 표시된 딜(deals[].withdrawn) 또는 수요예측 탭 참여 칸에서 "철회"로 고른 종목
+function isWd(dl){ return !!dl && (!!dl.withdrawn || ((records[dl.name] || {}).participation === "철회")); }
+function wdBadge(dl){ return isWd(dl) ? `<span class="live-badge wd" title="${dl.withdrawn ? fmt(dl.withdrawn) + " 철회신고서" : "참여 칸에서 철회로 고름"}">철회</span>` : ""; }
 function liveBadge(dl){
-  if (dl.withdrawn) return wdBadge(dl);
+  if (isWd(dl)) return wdBadge(dl);
   const st = liveStage(dl);
   return st ? `<span class="live-badge">${st}</span>` : "";
 }
@@ -7558,7 +7581,7 @@ function demandDetailHtml(dl, idx){
   return `<div class="demand-detail">
     <div class="dd-col"><div class="dd-title">수요예측 조건 (DART 증권신고서)</div>${termsHtml(dl)}</div>
     <div class="dd-col"><div class="dd-title">주관사 계좌 (누르면 기호 없이 복사)</div>${accountsHtml(dl)}</div>
-    <div class="dd-col dd-wide"><div class="dd-title">펀드별 참여</div>${records[dl.name].participation === "미참여" ? `<div class="info-none" style="padding:8px 0;font-weight:700">미참여</div>` : fundsHtml(dl, idx)}</div>
+    <div class="dd-col dd-wide"><div class="dd-title">펀드별 참여</div>${["미참여", "철회"].includes(records[dl.name].participation) ? `<div class="info-none" style="padding:8px 0;font-weight:700">${records[dl.name].participation}</div>` : fundsHtml(dl, idx)}</div>
   </div>`;
 }
 function termsHtml(dl){
@@ -8486,7 +8509,7 @@ const STAGE_TABS = {
   sub: {
     columns: [
       { field: "_name", label: "종목 / 주간사", type: "ref-name" },
-      { field: "_sub", label: "청약일", type: "ref", get: dl => dl.withdrawn ? "—" : fmtRange(dl.sub[0], dl.sub[1]) },
+      { field: "_sub", label: "청약일", type: "ref", get: dl => isWd(dl) ? "—" : fmtRange(dl.sub[0], dl.sub[1]) },
       { field: "_ns1", label: () => `공문 배정주식(${noticeRecipientName(1)})`, type: "notice-shares", n: 1 },
       { field: "_ns2", label: () => `공문 배정주식(${noticeRecipientName(2)})`, type: "notice-shares", n: 2 },
       { field: "_notice", label: "공문", type: "action",
@@ -8776,9 +8799,9 @@ function renderStageCell(dl, idx, rec, col){
       return `<td><select data-idx="${idx}" data-field="${col.field}">${opts}</select></td>`;
     }
     case "participation": {
-      // 배정 엑셀을 넣거나 참여 데이터가 있으면 "참여"로 자동 표시, 드랍한 건은 "미참여"로 직접 고른다.
-      const cur = isJoined(rec) ? "참여" : (rec.participation === "미참여" ? "미참여" : "");
-      const opts = [["", "—"], ["참여", "참여"], ["미참여", "미참여"]]
+      // 배정 엑셀을 넣거나 참여 데이터가 있으면 "참여"로 자동 표시, 드랍한 건은 "미참여", 공모 철회는 "철회"로 고른다.
+      const cur = participationValue(rec);
+      const opts = [["", "—"], ["참여", "참여"], ["미참여", "미참여"], ["철회", "철회"]]
         .map(([o, l]) => `<option value="${o}" ${cur === o ? "selected" : ""}>${l}</option>`).join("");
       return `<td><select data-idx="${idx}" data-field="${col.field}">${opts}</select></td>`;
     }
@@ -8806,7 +8829,7 @@ const NP_BLOCK_FIELDS = {
 function stageCellsHtml(key, cfg, dl, idx, rec){
   const cols = cfg.columns;
   const blockFields = NP_BLOCK_FIELDS[key];
-  const wd = key !== "demand" && !!dl.withdrawn; // 철회: 청약 탭만 막고 수요예측 탭 값은 그대로 둔다
+  const wd = isWd(dl); // 철회: 미참여처럼 입력칸을 "철회" 한 칸으로 막는다(수요예측·청약 탭)
   if (!blockFields || (rec.participation !== "미참여" && !wd))
     return cols.map(col => renderStageCell(dl, idx, rec, col)).join("");
   const first = cols.findIndex(c => blockFields.includes(c.field));
@@ -8827,7 +8850,7 @@ function renderStageTable(key){
   //   오늘이 기간 안 = 분홍(live-row), 오늘 기준 앞뒤 7일 안 = 옅은 노랑(soon-row).
   //   다가오는 일정은 시작일, 지난 일정은 마지막날로 7일을 잰다.
   const t0 = isoKey(today);
-  const rangeOf = dl => key === "sub" ? (dl.withdrawn ? null : dl.sub) : dl.demand;
+  const rangeOf = dl => key === "sub" ? (isWd(dl) ? null : dl.sub) : dl.demand;
   const inRange = dl => { const r = rangeOf(dl); return !!r && r[0] <= t0 && t0 <= r[1]; };
   const nearDate = dl => { const r = rangeOf(dl); return !r ? "" : inRange(dl) ? t0 : r[0] > t0 ? r[0] : r[1]; };
   const rowCls = dl => inRange(dl) ? "live-row" : nearToday(nearDate(dl)) ? "soon-row" : "";
@@ -8865,9 +8888,9 @@ function payDateOf(dl){
   const m = /(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/.exec((dartData[dl.name] && dartData[dl.name].offering.payment_date) || "");
   return m ? `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}` : (dl.pay || "");
 }
-function payToday(dl){ return !dl.withdrawn && payDateOf(dl) === isoKey(today); }
+function payToday(dl){ return !isWd(dl) && payDateOf(dl) === isoKey(today); }
 // 줄 색: 오늘 = 분홍(live-row), 날짜가 정해진 다가오는 일정 = 옅은 노랑(soon-row)
-function payRowCls(dl){ return dl.withdrawn ? "" : payToday(dl) ? "live-row" : nearToday(payDateOf(dl)) ? "soon-row" : ""; }
+function payRowCls(dl){ return isWd(dl) ? "" : payToday(dl) ? "live-row" : nearToday(payDateOf(dl)) ? "soon-row" : ""; }
 // 오늘 기준 앞뒤 7일 안(오늘 제외)이면 true — 상장·납입 탭 노란 줄
 function nearToday(iso){
   if (!iso) return false;
@@ -8917,7 +8940,7 @@ function renderPayTab(){
   const idxs = deals.map((dl, idx) => idx).filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
   const by = (f, asc) => idxs.filter(idx => f(deals[idx]))
     .sort((a, b) => (asc ? 1 : -1) * String(payDateOf(deals[a]) || deals[a].demand[0]).localeCompare(String(payDateOf(deals[b]) || deals[b].demand[0])) || b - a);
-  const all = nearOrder(idxs, dl => dl.withdrawn ? "" : payDateOf(dl), payToday);
+  const all = nearOrder(idxs, dl => isWd(dl) ? "" : payDateOf(dl), payToday);
   const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
@@ -8929,8 +8952,8 @@ function renderPayTab(){
     const pd = payDateOf(dl);
     const sep = i > 0 && payRowCls(deals[slice[i - 1]]) && payRowCls(deals[slice[i - 1]]) !== payRowCls(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
     const head = `<td><div class="stc-name">${dl.name}${payToday(dl) ? `<span class="live-badge">오늘 납입</span>` : ""}${wdBadge(dl)}</div><div class="stc-uw">${dl.uw}</div></td>
-      <td class="stc-ref">${dl.withdrawn ? "—" : pd ? fmt(pd) : "미정"}</td>`;
-    if (dl.withdrawn)
+      <td class="stc-ref">${isWd(dl) ? "—" : pd ? fmt(pd) : "미정"}</td>`;
+    if (isWd(dl))
       return sep + `<tr data-row="${idx}" class="">${head}<td class="np-block" colspan="3">철회</td></tr>`;
     if (rec.participation === "미참여")
       return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}<td class="np-block" colspan="3">미참여</td></tr>`;
@@ -9021,12 +9044,12 @@ function renderListTab(){
     const cap = fixed && t.listed_shares ? t.listed_shares * fixed : null;
     const sep = i > 0 && listRowCls(deals[slice[i - 1]]) && listRowCls(deals[slice[i - 1]]) !== listRowCls(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
     const head = `<td><div class="stc-name">${dl.name}${wdBadge(dl)}${listToday(dl) ? `<span class="live-badge">오늘 상장</span>` : ""}${commitLockupToday(dl) || commitLockupNear(dl) ? `<span class="live-badge commit">확약 ${rec.commit} 해제</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
-      <td class="stc-ref">${dl.withdrawn ? "—" : dl.list ? fmt(dl.list) : "미정"}${commitLockupToday(dl) || commitLockupNear(dl) ? `<div class="stc-hint">해제일 ${fmt(commitLockupDateOf(dl))}</div>` : ""}</td>
+      <td class="stc-ref">${isWd(dl) ? "—" : dl.list ? fmt(dl.list) : "미정"}${commitLockupToday(dl) || commitLockupNear(dl) ? `<div class="stc-hint">해제일 ${fmt(commitLockupDateOf(dl))}</div>` : ""}</td>
       <td class="lt-cell">${band && band[0] != null ? (band[0] === band[1] ? `${fmtNum(band[0])}원` : `${fmtNum(band[0])} ~ ${fmtNum(band[1])}원`) : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${fixed ? `<b>${fmtNum(fixed)}원</b>` : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${cap ? eok(cap) : `<span class="lt-none">—</span>`}${t.listed_shares ? `<span class="sub">${fmtNum(t.listed_shares)}주</span>` : ""}</td>`;
-    if (dl.withdrawn || rec.participation === "미참여")
-      return sep + `<tr data-row="${idx}" class="${listRowCls(dl)}">${head}<td class="np-block" colspan="5">${dl.withdrawn ? "철회" : "미참여"}</td></tr>`;
+    if (isWd(dl) || rec.participation === "미참여")
+      return sep + `<tr data-row="${idx}" class="${listRowCls(dl)}">${head}<td class="np-block" colspan="5">${isWd(dl) ? "철회" : "미참여"}</td></tr>`;
     let totShares = 0;
     const grpCells = LIST_GROUPS.map(gname => {
       const g = FUND_GROUPS.find(x => x.group === gname);
@@ -9075,21 +9098,24 @@ function refreshAllComputedCells(key){
 }
 
 // 입력칸 변경 → 해당 종목 records에 저장 → 계산 열만 갱신한다.
-// 종목을 "미참여"로 저장하고 그 종목에 적었던 참여 값을 지운다.
-function setNonJoined(idx){
-  const dl = deals[idx];
-  Object.assign(records[dl.name], {
-    participation: "미참여", joined: false, appliedDate: "", price: null, qty: null, commit: "",
+// 종목을 "미참여"(또는 "철회")로 저장하고 그 종목에 적었던 참여 값을 지운다.
+function clearParticipation(rec, status){
+  Object.assign(rec, {
+    participation: status, joined: false, appliedDate: "", price: null, qty: null, commit: "",
     allotDate: "", allotLink: "", allotShares: null, allotAmount: null, funds: {}, allotBp: {},
   });
+}
+function setNonJoined(idx, status = "미참여"){
+  const dl = deals[idx];
+  clearParticipation(records[dl.name], status);
   persistRecords();
-  showToast(`${dl.name}: 미참여로 저장, 적었던 값을 지웠습니다`);
+  showToast(`${dl.name}: ${status}로 저장, 적었던 값을 지웠습니다`);
   renderStageTable("demand");
   rerender();
 }
 document.addEventListener("click", e => {
   const ok = e.target.closest("[data-pp-ok]");
-  if (ok) { setNonJoined(Number(ok.dataset.ppOk)); return; }
+  if (ok) { setNonJoined(Number(ok.dataset.ppOk), ok.dataset.ppStatus || "미참여"); return; }
   const cancel = e.target.closest("[data-pp-cancel]");
   if (cancel) renderStageTable("demand"); // 칸을 원래 값으로 되돌린다
 });
@@ -9106,15 +9132,15 @@ document.addEventListener("change", e => {
   // "미참여"를 고르면 이 종목에 적었던 참여 값(신청일·가격·수량·배정·확약·펀드별)을 모두 지운다
   // — 다른 종목의 참여 데이터와 헷갈리지 않게. confirm() 창은 아티팩트(샌드박스 iframe)에서
   // 막혀 바로 "취소"로 처리될 수 있어서, 칸 밑에 지우기/취소 버튼을 띄워 확인받는다.
-  if (field === "participation" && value === "미참여") {
+  if (field === "participation" && (value === "미참여" || value === "철회")) {
     const rec = records[dl.name];
     const hasData = isJoined(rec) || rec.appliedDate || rec.commit || Object.keys(rec.funds || {}).length;
-    if (!hasData) { setNonJoined(Number(idx)); return; }
+    if (!hasData) { setNonJoined(Number(idx), value); return; }
     const td = el.closest("td");
     if (td && !td.querySelector(".pp-confirm")) {
       td.insertAdjacentHTML("beforeend", `<div class="pp-confirm" style="margin-top:4px;font-size:12px;line-height:1.5">
         적어 둔 값이 모두 지워집니다<br>
-        <button class="allot-row-btn" data-pp-ok="${idx}">지우기</button>
+        <button class="allot-row-btn" data-pp-ok="${idx}" data-pp-status="${value}">지우기</button>
         <button class="allot-row-btn" data-pp-cancel="${idx}">취소</button></div>`);
     }
     return;
@@ -9140,7 +9166,7 @@ document.addEventListener("change", e => {
   }
   // 참여가격·수량 등을 적으면 같은 줄 "참여" 칸도 자동 판정값으로 맞춘다
   const ps = document.querySelector(`#stage-demand select[data-idx="${idx}"][data-field="participation"]`);
-  if (ps && field !== "participation") { const rec = records[dl.name]; ps.value = isJoined(rec) ? "참여" : (rec.participation === "미참여" ? "미참여" : ""); }
+  if (ps && field !== "participation") { const rec = records[dl.name]; ps.value = participationValue(rec); }
   rerender(); // 참여/확약 등은 캘린더 칩·필터에도 영향
 });
 
@@ -9732,15 +9758,15 @@ function renderInfoList(){
       return `<tr class="info-list-row" data-deal="${idx}">
         <td><div class="stc-name">${dl.name}${wdBadge(dl)}</div><div class="stc-uw">${dl.uw}</div></td>
         <td class="stc-ref">${fmtRange(dl.demand[0], dl.demand[1])}</td>
-        <td class="stc-ref">${dl.withdrawn ? "—" : fmtRange(dl.sub[0], dl.sub[1])}</td>
-        <td class="stc-ref">${dl.withdrawn ? "—" : fmt(dl.pay)}</td>
-        <td class="stc-ref">${dl.withdrawn ? `철회 ${fmt(dl.withdrawn)}` : dl.list ? fmt(dl.list) : "미정"}</td>
+        <td class="stc-ref">${isWd(dl) ? "—" : fmtRange(dl.sub[0], dl.sub[1])}</td>
+        <td class="stc-ref">${isWd(dl) ? "—" : fmt(dl.pay)}</td>
+        <td class="stc-ref">${isWd(dl) ? (dl.withdrawn ? `철회 ${fmt(dl.withdrawn)}` : "철회") : dl.list ? fmt(dl.list) : "미정"}</td>
         <td class="stc-ref">${fmtNum(dl.dealSizeM)}</td>
         <td class="stc-ref">${price ? fmtNum(price) + "원" : "—"}</td>
         <td class="stc-ref">${dd && dd.demand_summary ? dd.demand_summary.competition_rate.toFixed(1) + " : 1" : "—"}</td>
         <td>${dd ? priceBandBar(dd.price_bands) : `<span class="info-none">—</span>`}</td>
         <td>${dd ? lockupBar(dd.lockup) : `<span class="info-none">—</span>`}</td>
-        <td>${isJoined(rec) ? `<span style="color:var(--ink);font-weight:700">참여</span>` : rec.participation === "미참여" ? `<span class="info-none">미참여</span>` : `<span class="info-none">—</span>`}</td>
+        <td>${isJoined(rec) ? `<span style="color:var(--ink);font-weight:700">참여</span>` : ["미참여", "철회"].includes(rec.participation) ? `<span class="info-none">${rec.participation}</span>` : `<span class="info-none">—</span>`}</td>
       </tr>`;
     }).join("");
   if (!rows) { container.innerHTML = `<div class="info-none" style="padding:16px">"${infoSearchQuery}" 검색 결과가 없습니다.</div>`; return; }
@@ -9844,9 +9870,9 @@ function renderInfoDetail(idx){
 
   const overviewPairs = [
     ["수요예측일", fmtRange(dl.demand[0], dl.demand[1])],
-    ["청약일", dl.withdrawn ? "—" : fmtRange(dl.sub[0], dl.sub[1])],
-    ["납입일", dl.withdrawn ? "—" : fmt(dl.pay)],
-    ["상장일", dl.withdrawn ? `철회 (${fmt(dl.withdrawn)} 철회신고서)` : dl.list ? fmt(dl.list) : "미정"],
+    ["청약일", isWd(dl) ? "—" : fmtRange(dl.sub[0], dl.sub[1])],
+    ["납입일", isWd(dl) ? "—" : fmt(dl.pay)],
+    ["상장일", isWd(dl) ? (dl.withdrawn ? `철회 (${fmt(dl.withdrawn)} 철회신고서)` : "철회") : dl.list ? fmt(dl.list) : "미정"],
   ];
   if (dd) {
     const off = dd.offering;
@@ -9938,7 +9964,7 @@ function bandTop(name){
 }
 function bidDeals(){ // 수요예측 중인 종목
   const t = isoKey(today);
-  return deals.filter(dl => !dl.withdrawn && dl.demand && dl.demand[0] <= t && t <= dl.demand[1]);
+  return deals.filter(dl => !isWd(dl) && dl.demand && dl.demand[0] <= t && t <= dl.demand[1]);
 }
 function bidDeal(){ const n = document.getElementById("bidName").value.trim(); return deals.find(dl => dl.name === n) || null; }
 // 검색 결과: 수요예측 중 → 수요예측 전(가까운 순) → 지난 종목(최근 순)
@@ -9985,7 +10011,7 @@ function renderBidTab(){
   const text = bidText(), box = document.getElementById("bidBox");
   box.textContent = text || "종목·수량·가격을 넣으면 여기에 문구가 생깁니다";
   box.disabled = !text;
-  document.getElementById("bidToIlim").disabled = !(text && dl && records[dl.name].participation !== "미참여");
+  document.getElementById("bidToIlim").disabled = !(text && dl && records[dl.name].participation !== "미참여" && !isWd(dl));
 }
 document.getElementById("bidName").addEventListener("input", () => { bidFillDefaults(); renderBidTab(); });
 ["bidQty", "bidPrice", "bidCommit"].forEach(id => document.getElementById(id).addEventListener("input", renderBidTab));
@@ -10003,7 +10029,7 @@ document.getElementById("tab-bid").addEventListener("click", e => {
   const dl = bidDeal();
   if (!dl || !bidText()) return;
   const idx = deals.indexOf(dl), rec = records[dl.name];
-  if (rec.participation === "미참여") return;
+  if (rec.participation === "미참여" || isWd(dl)) return;
   const q = Number(document.getElementById("bidQty").value), pr = Number(document.getElementById("bidPrice").value);
   // 수요예측 탭 펀드별 표에서 일임 줄에 적은 것과 같게: 참여 + 수량·가격, 참여가격은 참여한 펀드 모두 같게.
   rec.funds = rec.funds || {};
@@ -10979,7 +11005,7 @@ function xlsxRowFor(dl, rowNum){
 
   // 참여가격: 수요예측 탭 "참여" 칸에서 직접 "미참여"를 고른 건은 "미참여"로 적는다.
   let priceCell = null;
-  if (rec.participation === "미참여") priceCell = "미참여";
+  if (rec.participation === "미참여" || rec.participation === "철회") priceCell = rec.participation;
   else if (rec.price != null) priceCell = rec.price;
 
   const r = rowNum;
