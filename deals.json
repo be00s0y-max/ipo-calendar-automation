@@ -765,7 +765,8 @@
     "list": null,
     "dealSizeM": 29500,
     "stockCode": "0206M0",
-    "finalPrice": null
+    "finalPrice": null,
+    "withdrawn": "2026-11-11"
   },
   {
     "name": "제이앤티지",
@@ -783,7 +784,8 @@
     "list": null,
     "dealSizeM": 113520,
     "stockCode": "951425",
-    "finalPrice": null
+    "finalPrice": null,
+    "withdrawn": "2026-11-11"
   },
   {
     "name": "에스에프씨 (유가)",

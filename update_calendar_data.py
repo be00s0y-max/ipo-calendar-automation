@@ -12,6 +12,7 @@ DART 스크립트(update_dart_data.py)와 역할이 다르다: 그건 이미 아
   2. 종목별 상세페이지(?o=v&no=N)에서 공모청약일·납입일·상장일을 보충한다.
   3. deals.json(소스 오브 트루스)과 비교해서 새 종목/일정 변경을 찾아낸다.
      1페이지 기간 안에 있어야 할 딜이 사라졌으면(연기·철회) 목록에서 뺀다.
+     단, update_withdrawn.py가 철회로 표시한 딜(withdrawn)은 빼지도 덮어쓰지도 않는다.
      1페이지 밖으로 밀려난 딜도 일정(특히 상장일)이 비어 있으면, 저장해둔
      no로 상세페이지를 다시 봐서 빈 필드만 채운다.
   4. 바뀐 게 있으면 deals.json을 갱신하고 ipo_calendar.html의
@@ -211,7 +212,9 @@ def deals_to_js(deals):
             f'sub: {sub_val}, '
             f'pay: {pay_val}, '
             f'list: {list_val}, dealSizeM: {size_val}, '
-            f'stockCode: {code_val}, finalPrice: {price_val} }},'
+            f'stockCode: {code_val}, finalPrice: {price_val}'
+            + (f', withdrawn: "{d["withdrawn"]}"' if d.get("withdrawn") else "")
+            + ' },'
         )
     lines.append("];")
     return "\n".join(lines)
@@ -237,7 +240,7 @@ def backfill_off_page(merged, scraped_names):
     """
     filled = []
     for name, d in merged.items():
-        if name in scraped_names or not d.get("no"):
+        if name in scraped_names or not d.get("no") or d.get("withdrawn"):
             continue
         empty = [k for k in ("sub", "pay", "list", "stockCode", "finalPrice") if not d.get(k)]
         if not empty:
@@ -285,6 +288,14 @@ def main():
     id_added = []
     for d in scraped:
         prev = merged.get(d["name"])
+        # 철회한 딜(update_withdrawn.py가 DART 철회신고서로 표시)은 38이 옛 일정을 계속 보여줘도
+        # 덮어쓰지 않는다. 철회일보다 늦은 수요예측 일정으로 다시 올라오면 재추진으로 보고 새로 받는다.
+        if prev is not None and prev.get("withdrawn"):
+            if d["demand"][0] <= prev["withdrawn"]:
+                continue
+            changed.append(d["name"])
+            merged[d["name"]] = d
+            continue
         if prev is None:
             new_names.append(d["name"])
         elif (prev.get("demand") != d["demand"] or prev.get("sub") != d["sub"]
@@ -308,7 +319,8 @@ def main():
         window_start = min(d["demand"][0] for d in scraped)
         scraped_names = {d["name"] for d in scraped}
         for name, d in list(merged.items()):
-            if name not in scraped_names and d["demand"][0] > window_start:
+            # 철회한 딜은 38 목록에서 사라져도 남긴다(화면에 "철회"로 보여주고 입력값을 지키려고).
+            if name not in scraped_names and d["demand"][0] > window_start and not d.get("withdrawn"):
                 removed.append(name)
                 del merged[name]
 

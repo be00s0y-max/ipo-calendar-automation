@@ -31,6 +31,10 @@ def deal_names(html):
     return set(re.findall(r'\{\s*name:\s*"([^"]+)"', block(html, "DEALS")))
 
 
+def withdrawn_names(html):
+    return set(re.findall(r'\{\s*name:\s*"([^"]+)"[^\n]*withdrawn:\s*"', block(html, "DEALS")))
+
+
 def dart_names(html):
     return set(re.findall(r'^\s{2}"([^"]+)":\s*\{', block(html, "DART_DATA"), re.M))
 
@@ -67,6 +71,10 @@ def summarize(before, after):
     gone = deal_names(before) - deal_names(after)
     if gone:
         items.append(f"공모주 목록에서 빠짐 {len(gone)}건 — {listing(gone)}")
+
+    withdrawn = withdrawn_names(after) - withdrawn_names(before)
+    if withdrawn:
+        items.append(f"공모 철회 {len(withdrawn)}건 — {listing(withdrawn)}")
 
     new_dart = dart_names(after) - dart_names(before)
     if new_dart:

@@ -36,6 +36,11 @@ jobs:
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
           exit 0
 
+      # 38은 철회한 딜을 옛 일정 그대로 한동안 보여줘서, DART 철회신고서로 철회를 표시한다.
+      # DART 웹 공시검색이라 API 키가 필요 없고, 실패해도 항상 0으로 끝난다.
+      - name: Run withdrawal check (DART 철회신고서)
+        run: python update_withdrawn.py
+
       - name: Run DART update (종목 상세정보)
         id: dart
         env:

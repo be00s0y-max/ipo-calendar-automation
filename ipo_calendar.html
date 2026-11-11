@@ -321,6 +321,7 @@
                 border: 1px solid #f3b6cb; border-radius: 4px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; }
   /* 상장 탭: 우리가 확약을 건 기간의 락업해제일 — 캘린더 빨간 칩과 같은 색 */
   .live-badge.commit { color: var(--ev-commit); border-color: var(--ev-commit); }
+  .live-badge.wd { color: var(--ink-faint); border-color: var(--ink-faint); }
   .stc-name { font-weight: 700; font-size: 13px; }
   .stc-uw { font-size: 11px; color: var(--ink-faint); }
   .stc-ref { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-dim); }
@@ -1471,6 +1472,12 @@ const LAST_UPDATED_KST = "11.11(수) 15:46";
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
   {
+    "at": "11.11(수) 16:34",
+    "items": [
+      "공모 철회 2건 — 씨앤엠, 제이앤티지"
+    ]
+  },
+  {
     "at": "11.10(화) 23:31",
     "items": [
       "신규 공모주 1건 — 마더스제약"
@@ -1597,12 +1604,6 @@ const UPDATE_LOG = [
     "items": [
       "신규 공모주 1건 — KTE"
     ]
-  },
-  {
-    "at": "10.28(수) 15:50",
-    "items": [
-      "조기상환(풋옵션) 일정 2건 추가 확인"
-    ]
   }
 ];
 // AUTO-GENERATED:UPDATE_LOG:END
@@ -1655,8 +1656,8 @@ const deals = [
   { name: "에이엘로봇", uw: "대신증권", demand: ["2026-10-28","2026-11-03"], sub: ["2026-11-06", "2026-11-09"], pay: "2026-11-11", list: "2026-11-18", dealSizeM: 42240, stockCode: "471800", finalPrice: 17600 },
   { name: "엠비디", uw: "하나증권", demand: ["2026-11-02","2026-11-06"], sub: ["2026-11-12", "2026-11-13"], pay: "2026-11-17", list: "2026-11-24", dealSizeM: 14000, stockCode: "498150", finalPrice: 7000 },
   { name: "하나에어로다이내믹스", uw: "IBK투자증권", demand: ["2026-11-02","2026-11-06"], sub: ["2026-11-10", "2026-11-11"], pay: "2026-11-13", list: "2026-11-20", dealSizeM: 25080, stockCode: "271160", finalPrice: 5700 },
-  { name: "씨앤엠", uw: "한국투자증권", demand: ["2026-11-03","2026-11-09"], sub: ["2026-11-12", "2026-11-13"], pay: "2026-11-17", list: null, dealSizeM: 29500, stockCode: "0206M0", finalPrice: null },
-  { name: "제이앤티지", uw: "대신증권,NH투자증권", demand: ["2026-11-03","2026-11-09"], sub: ["2026-11-12", "2026-11-13"], pay: "2026-11-17", list: null, dealSizeM: 113520, stockCode: "951425", finalPrice: null },
+  { name: "씨앤엠", uw: "한국투자증권", demand: ["2026-11-03","2026-11-09"], sub: ["2026-11-12", "2026-11-13"], pay: "2026-11-17", list: null, dealSizeM: 29500, stockCode: "0206M0", finalPrice: null, withdrawn: "2026-11-11" },
+  { name: "제이앤티지", uw: "대신증권,NH투자증권", demand: ["2026-11-03","2026-11-09"], sub: ["2026-11-12", "2026-11-13"], pay: "2026-11-17", list: null, dealSizeM: 113520, stockCode: "951425", finalPrice: null, withdrawn: "2026-11-11" },
   { name: "에스에프씨 (유가)", uw: "미래에셋증권,한국투자증권,삼성증권", demand: ["2026-11-09","2026-11-13"], sub: ["2026-11-18", "2026-11-19"], pay: "2026-11-23", list: null, dealSizeM: 158000, stockCode: "083030", finalPrice: null },
   { name: "유캐스트", uw: "유진투자증권,신영증권", demand: ["2026-11-09","2026-11-13"], sub: ["2026-11-18", "2026-11-19"], pay: "2026-11-23", list: null, dealSizeM: 15200, stockCode: "0175C0", finalPrice: null },
   { name: "아델", uw: "삼성증권,미래에셋증권", demand: ["2026-11-12","2026-11-18"], sub: ["2026-11-23", "2026-11-24"], pay: "2026-11-26", list: null, dealSizeM: 39060, stockCode: "0181E0", finalPrice: null },
@@ -6061,7 +6062,7 @@ const MISSING_TERM_FIELDS = ["band", "qty_unit", "price_unit", "inst_max"];
 const MISSING_OVERVIEW_FIELDS = ["val_model", "val_multiple", "val_fair", "val_discount", "listed_shares", "biz"];
 function missingInfoList(){
   const t0 = isoKey(today);
-  return deals.filter(dl => !dl.list || dl.list >= t0).map(dl => {
+  return deals.filter(dl => !dl.withdrawn && (!dl.list || dl.list >= t0)).map(dl => {
     const t = DEMAND_INFO[dl.name];
     if (!t) return { dl, miss: ["DART 신고서 정보 전체"] };
     const fields = MISSING_TERM_FIELDS.concat(/스팩/.test(dl.name) ? [] : MISSING_OVERVIEW_FIELDS);
@@ -6144,6 +6145,7 @@ function buildCompactEvents(dealsList){
     const day3 = businessDayN(ds, 3);
     if (day3 <= de) push(day3, "demand", compactLabel(dl, "수요예측", "3일차"));
     if (isoKey(de) !== isoKey(ds)) push(de, "demand", compactLabel(dl, "수요예측", "마지막날"));
+    if (dl.withdrawn) return; // 철회 종목은 수요예측까지만(청약·납입·상장 일정 없음)
     push(d(dl.sub[0]), "sub", compactLabel(dl, "청약"));
     push(d(dl.pay), "pay", compactLabel(dl, "납입"));
     if (dl.list) {
@@ -6399,6 +6401,9 @@ function buildEvents(){
     const day3 = businessDayN(demandStart, 3);
     if (day3 <= demandEnd) push(day3, "demand-day3");
     push(demandEnd, "demand-end");
+    // 철회 종목(deals[].withdrawn = DART 철회신고서 접수일)은 수요예측까지만 남기고
+    // 배정·청약·납입·상장·락업 일정은 넣지 않는다(A안, 사용자 지정).
+    if (dl.withdrawn) return;
     push(allotDateFor(dl), "allot");
     push(d(dl.sub[0]), "sub-start");
     push(d(dl.sub[1]), "sub-end");
@@ -6791,8 +6796,8 @@ function openPanel(idx){
   if (demandDay3 <= d(dl.demand[1])) rows.push(["demand-day3", "수요예측 3일차", isoKey(demandDay3)]);
   rows.push(["demand-end", "수요예측 마감", dl.demand[1]]);
   const allotD = allotDateFor(dl);
-  if (allotD) rows.push(["allot", isAllotEstimated(dl) ? "배정 예정" : "배정공고", isoKey(allotD)]);
-  rows.push(
+  if (allotD && !dl.withdrawn) rows.push(["allot", isAllotEstimated(dl) ? "배정 예정" : "배정공고", isoKey(allotD)]);
+  if (!dl.withdrawn) rows.push(
     ["sub-start",    "청약 시작",     dl.sub[0]],
     ["sub-end",      "청약 마감",     dl.sub[1]],
     ["pay",          "납입일",        dl.pay],
@@ -6809,7 +6814,8 @@ function openPanel(idx){
     const meta = TYPE_META[type];
     const isCurrentLockup = LOCKUP_COMMIT_KEY[rec.commit] === type;
     return `<div class="sched-row ${isCurrentLockup ? "current-lockup" : ""}"><span class="k"><i style="background:${meta.color}"></i>${label}</span><span class="v">${fmtMaybeYear(dateStr)}</span></div>`;
-  }).join("") + (!dl.list ? `<div class="sched-row"><span class="k">상장일 · 락업해제</span><span class="v" style="font-family:var(--font-kr);color:var(--ink-faint)">상장일 미정</span></div>` : "");
+  }).join("") + (dl.withdrawn ? `<div class="sched-row"><span class="k">공모 철회</span><span class="v">${fmtMaybeYear(dl.withdrawn)}</span></div>`
+    : !dl.list ? `<div class="sched-row"><span class="k">상장일 · 락업해제</span><span class="v" style="font-family:var(--font-kr);color:var(--ink-faint)">상장일 미정</span></div>` : "");
 
   document.getElementById("pOverview").innerHTML = overviewHtml(dl);
 
@@ -6918,7 +6924,7 @@ let rpMode = "rec";
 function rpRecommended(cands){
   const t = isoKey(addDays(today, -7));
   // 미참여 종목은 배정이 없으므로 납입일 조건만 본다
-  return cands.filter(x => (isNonJoined(x.rec) || REPLY_FUNDS.some(f => ((x.rec.funds || {})[f.key] || {}).allot > 0)) && x.dl.pay && x.dl.pay >= t);
+  return cands.filter(x => (isNonJoined(x.rec) || REPLY_FUNDS.some(f => ((x.rec.funds || {})[f.key] || {}).allot > 0)) && !x.dl.withdrawn && x.dl.pay && x.dl.pay >= t);
 }
 function rpShown(cands){
   if (rpMode === "rec") return rpRecommended(cands);
@@ -7012,7 +7018,7 @@ const stPicked = new Set();
 let stInit = false;
 function stRecommended(){
   const t = isoKey(today);
-  return statusCandidates().filter(dl => dl.demand[0] <= t && (!dl.pay || dl.pay >= t));
+  return statusCandidates().filter(dl => !dl.withdrawn && dl.demand[0] <= t && (!dl.pay || dl.pay >= t));
 }
 function stShown(){
   const cands = statusCandidates();
@@ -7373,7 +7379,9 @@ function liveStage(dl){
   if (dl.sub && dl.sub[0] <= t && t <= dl.sub[1]) return "청약 중";
   return "";
 }
+function wdBadge(dl){ return dl.withdrawn ? `<span class="live-badge wd" title="${fmt(dl.withdrawn)} 철회신고서">철회</span>` : ""; }
 function liveBadge(dl){
+  if (dl.withdrawn) return wdBadge(dl);
   const st = liveStage(dl);
   return st ? `<span class="live-badge">${st}</span>` : "";
 }
@@ -8478,7 +8486,7 @@ const STAGE_TABS = {
   sub: {
     columns: [
       { field: "_name", label: "종목 / 주간사", type: "ref-name" },
-      { field: "_sub", label: "청약일", type: "ref", get: dl => fmtRange(dl.sub[0], dl.sub[1]) },
+      { field: "_sub", label: "청약일", type: "ref", get: dl => dl.withdrawn ? "—" : fmtRange(dl.sub[0], dl.sub[1]) },
       { field: "_ns1", label: () => `공문 배정주식(${noticeRecipientName(1)})`, type: "notice-shares", n: 1 },
       { field: "_ns2", label: () => `공문 배정주식(${noticeRecipientName(2)})`, type: "notice-shares", n: 2 },
       { field: "_notice", label: "공문", type: "action",
@@ -8798,12 +8806,13 @@ const NP_BLOCK_FIELDS = {
 function stageCellsHtml(key, cfg, dl, idx, rec){
   const cols = cfg.columns;
   const blockFields = NP_BLOCK_FIELDS[key];
-  if (!blockFields || rec.participation !== "미참여")
+  const wd = key !== "demand" && !!dl.withdrawn; // 철회: 청약 탭만 막고 수요예측 탭 값은 그대로 둔다
+  if (!blockFields || (rec.participation !== "미참여" && !wd))
     return cols.map(col => renderStageCell(dl, idx, rec, col)).join("");
   const first = cols.findIndex(c => blockFields.includes(c.field));
   const last = cols.length - 1 - [...cols].reverse().findIndex(c => blockFields.includes(c.field));
   return cols.slice(0, first).map(col => renderStageCell(dl, idx, rec, col)).join("")
-    + `<td class="np-block" colspan="${last - first + 1}">미참여</td>`
+    + `<td class="np-block" colspan="${last - first + 1}">${wd ? "철회" : "미참여"}</td>`
     + cols.slice(last + 1).map(col => renderStageCell(dl, idx, rec, col)).join("");
 }
 function renderStageTable(key){
@@ -8818,7 +8827,7 @@ function renderStageTable(key){
   //   오늘이 기간 안 = 분홍(live-row), 오늘 기준 앞뒤 7일 안 = 옅은 노랑(soon-row).
   //   다가오는 일정은 시작일, 지난 일정은 마지막날로 7일을 잰다.
   const t0 = isoKey(today);
-  const rangeOf = dl => key === "sub" ? dl.sub : dl.demand;
+  const rangeOf = dl => key === "sub" ? (dl.withdrawn ? null : dl.sub) : dl.demand;
   const inRange = dl => { const r = rangeOf(dl); return !!r && r[0] <= t0 && t0 <= r[1]; };
   const nearDate = dl => { const r = rangeOf(dl); return !r ? "" : inRange(dl) ? t0 : r[0] > t0 ? r[0] : r[1]; };
   const rowCls = dl => inRange(dl) ? "live-row" : nearToday(nearDate(dl)) ? "soon-row" : "";
@@ -8856,9 +8865,9 @@ function payDateOf(dl){
   const m = /(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/.exec((dartData[dl.name] && dartData[dl.name].offering.payment_date) || "");
   return m ? `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}` : (dl.pay || "");
 }
-function payToday(dl){ return payDateOf(dl) === isoKey(today); }
+function payToday(dl){ return !dl.withdrawn && payDateOf(dl) === isoKey(today); }
 // 줄 색: 오늘 = 분홍(live-row), 날짜가 정해진 다가오는 일정 = 옅은 노랑(soon-row)
-function payRowCls(dl){ return payToday(dl) ? "live-row" : nearToday(payDateOf(dl)) ? "soon-row" : ""; }
+function payRowCls(dl){ return dl.withdrawn ? "" : payToday(dl) ? "live-row" : nearToday(payDateOf(dl)) ? "soon-row" : ""; }
 // 오늘 기준 앞뒤 7일 안(오늘 제외)이면 true — 상장·납입 탭 노란 줄
 function nearToday(iso){
   if (!iso) return false;
@@ -8908,7 +8917,7 @@ function renderPayTab(){
   const idxs = deals.map((dl, idx) => idx).filter(idx => matchesQuery(deals[idx].name, stageSearch[key]));
   const by = (f, asc) => idxs.filter(idx => f(deals[idx]))
     .sort((a, b) => (asc ? 1 : -1) * String(payDateOf(deals[a]) || deals[a].demand[0]).localeCompare(String(payDateOf(deals[b]) || deals[b].demand[0])) || b - a);
-  const all = nearOrder(idxs, payDateOf, payToday);
+  const all = nearOrder(idxs, dl => dl.withdrawn ? "" : payDateOf(dl), payToday);
   const pages = Math.max(1, Math.ceil(all.length / STAGE_PAGE_SIZE));
   const page = Math.min(Math.max(1, stagePage[key] || 1), pages);
   stagePage[key] = page;
@@ -8919,8 +8928,10 @@ function renderPayTab(){
     const dl = deals[idx], rec = records[dl.name] || {};
     const pd = payDateOf(dl);
     const sep = i > 0 && payRowCls(deals[slice[i - 1]]) && payRowCls(deals[slice[i - 1]]) !== payRowCls(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
-    const head = `<td><div class="stc-name">${dl.name}${payToday(dl) ? `<span class="live-badge">오늘 납입</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
-      <td class="stc-ref">${pd ? fmt(pd) : "미정"}</td>`;
+    const head = `<td><div class="stc-name">${dl.name}${payToday(dl) ? `<span class="live-badge">오늘 납입</span>` : ""}${wdBadge(dl)}</div><div class="stc-uw">${dl.uw}</div></td>
+      <td class="stc-ref">${dl.withdrawn ? "—" : pd ? fmt(pd) : "미정"}</td>`;
+    if (dl.withdrawn)
+      return sep + `<tr data-row="${idx}" class="">${head}<td class="np-block" colspan="3">철회</td></tr>`;
     if (rec.participation === "미참여")
       return sep + `<tr data-row="${idx}" class="${payRowCls(dl)}">${head}<td class="np-block" colspan="3">미참여</td></tr>`;
     const pn = payNumbers(dl);
@@ -9009,13 +9020,13 @@ function renderListTab(){
     const fixed = fixedPriceOf(dl);
     const cap = fixed && t.listed_shares ? t.listed_shares * fixed : null;
     const sep = i > 0 && listRowCls(deals[slice[i - 1]]) && listRowCls(deals[slice[i - 1]]) !== listRowCls(dl) ? `<tr class="live-sep"><td colspan="${NCOL}"></td></tr>` : "";
-    const head = `<td><div class="stc-name">${dl.name}${listToday(dl) ? `<span class="live-badge">오늘 상장</span>` : ""}${commitLockupToday(dl) || commitLockupNear(dl) ? `<span class="live-badge commit">확약 ${rec.commit} 해제</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
-      <td class="stc-ref">${dl.list ? fmt(dl.list) : "미정"}${commitLockupToday(dl) || commitLockupNear(dl) ? `<div class="stc-hint">해제일 ${fmt(commitLockupDateOf(dl))}</div>` : ""}</td>
+    const head = `<td><div class="stc-name">${dl.name}${wdBadge(dl)}${listToday(dl) ? `<span class="live-badge">오늘 상장</span>` : ""}${commitLockupToday(dl) || commitLockupNear(dl) ? `<span class="live-badge commit">확약 ${rec.commit} 해제</span>` : ""}</div><div class="stc-uw">${dl.uw}</div></td>
+      <td class="stc-ref">${dl.withdrawn ? "—" : dl.list ? fmt(dl.list) : "미정"}${commitLockupToday(dl) || commitLockupNear(dl) ? `<div class="stc-hint">해제일 ${fmt(commitLockupDateOf(dl))}</div>` : ""}</td>
       <td class="lt-cell">${band && band[0] != null ? (band[0] === band[1] ? `${fmtNum(band[0])}원` : `${fmtNum(band[0])} ~ ${fmtNum(band[1])}원`) : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${fixed ? `<b>${fmtNum(fixed)}원</b>` : `<span class="lt-none">—</span>`}</td>
       <td class="lt-cell">${cap ? eok(cap) : `<span class="lt-none">—</span>`}${t.listed_shares ? `<span class="sub">${fmtNum(t.listed_shares)}주</span>` : ""}</td>`;
-    if (rec.participation === "미참여")
-      return sep + `<tr data-row="${idx}" class="${listRowCls(dl)}">${head}<td class="np-block" colspan="5">미참여</td></tr>`;
+    if (dl.withdrawn || rec.participation === "미참여")
+      return sep + `<tr data-row="${idx}" class="${listRowCls(dl)}">${head}<td class="np-block" colspan="5">${dl.withdrawn ? "철회" : "미참여"}</td></tr>`;
     let totShares = 0;
     const grpCells = LIST_GROUPS.map(gname => {
       const g = FUND_GROUPS.find(x => x.group === gname);
@@ -9719,11 +9730,11 @@ function renderInfoList(){
       const dd = dartData[dl.name];
       const price = dd ? dartPricePerShare(dd.offering) : null;
       return `<tr class="info-list-row" data-deal="${idx}">
-        <td><div class="stc-name">${dl.name}</div><div class="stc-uw">${dl.uw}</div></td>
+        <td><div class="stc-name">${dl.name}${wdBadge(dl)}</div><div class="stc-uw">${dl.uw}</div></td>
         <td class="stc-ref">${fmtRange(dl.demand[0], dl.demand[1])}</td>
-        <td class="stc-ref">${fmtRange(dl.sub[0], dl.sub[1])}</td>
-        <td class="stc-ref">${fmt(dl.pay)}</td>
-        <td class="stc-ref">${dl.list ? fmt(dl.list) : "미정"}</td>
+        <td class="stc-ref">${dl.withdrawn ? "—" : fmtRange(dl.sub[0], dl.sub[1])}</td>
+        <td class="stc-ref">${dl.withdrawn ? "—" : fmt(dl.pay)}</td>
+        <td class="stc-ref">${dl.withdrawn ? `철회 ${fmt(dl.withdrawn)}` : dl.list ? fmt(dl.list) : "미정"}</td>
         <td class="stc-ref">${fmtNum(dl.dealSizeM)}</td>
         <td class="stc-ref">${price ? fmtNum(price) + "원" : "—"}</td>
         <td class="stc-ref">${dd && dd.demand_summary ? dd.demand_summary.competition_rate.toFixed(1) + " : 1" : "—"}</td>
@@ -9833,9 +9844,9 @@ function renderInfoDetail(idx){
 
   const overviewPairs = [
     ["수요예측일", fmtRange(dl.demand[0], dl.demand[1])],
-    ["청약일", fmtRange(dl.sub[0], dl.sub[1])],
-    ["납입일", fmt(dl.pay)],
-    ["상장일", dl.list ? fmt(dl.list) : "미정"],
+    ["청약일", dl.withdrawn ? "—" : fmtRange(dl.sub[0], dl.sub[1])],
+    ["납입일", dl.withdrawn ? "—" : fmt(dl.pay)],
+    ["상장일", dl.withdrawn ? `철회 (${fmt(dl.withdrawn)} 철회신고서)` : dl.list ? fmt(dl.list) : "미정"],
   ];
   if (dd) {
     const off = dd.offering;
@@ -9927,7 +9938,7 @@ function bandTop(name){
 }
 function bidDeals(){ // 수요예측 중인 종목
   const t = isoKey(today);
-  return deals.filter(dl => dl.demand && dl.demand[0] <= t && t <= dl.demand[1]);
+  return deals.filter(dl => !dl.withdrawn && dl.demand && dl.demand[0] <= t && t <= dl.demand[1]);
 }
 function bidDeal(){ const n = document.getElementById("bidName").value.trim(); return deals.find(dl => dl.name === n) || null; }
 // 검색 결과: 수요예측 중 → 수요예측 전(가까운 순) → 지난 종목(최근 순)
