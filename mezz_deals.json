@@ -2139,7 +2139,10 @@
     "conv_period_start": "2027-11-12",
     "conv_period_end": "2029-11-11",
     "refixing": "아니오",
-    "rcept_no": "20261027000338"
+    "rcept_no": "20261027000338",
+    "put_start": "2028-09-14",
+    "put_end": "2028-10-16",
+    "put_redemption": "2028-11-13"
   },
   "01205709_EB_19": {
     "name": "HD현대",
@@ -2334,7 +2337,10 @@
     "conv_period_start": "2027-11-12",
     "conv_period_end": "2029-10-12",
     "refixing": "아니오",
-    "rcept_no": "20261104000344"
+    "rcept_no": "20261104000344",
+    "put_start": "2027-09-23",
+    "put_end": "2027-10-13",
+    "put_redemption": "2027-11-12"
   },
   "01688568_CB_1": {
     "name": "프로티나",
