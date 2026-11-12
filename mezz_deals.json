@@ -2500,5 +2500,26 @@
     "conv_period_end": "2030-10-16",
     "refixing": "아니오",
     "rcept_no": "20261106000481"
+  },
+  "01326792_CB_7": {
+    "name": "비투엔",
+    "kind": "CB",
+    "round": "7",
+    "bondName": "무기명식 이권부 무보증 사모 전환사채 ",
+    "amount": 10000000000,
+    "board_date": "2026-11-12",
+    "sub_date": "2026-11-16",
+    "pay_date": "2026-11-20",
+    "maturity_date": "2029-11-20",
+    "coupon_rate": "2.0",
+    "ytm_rate": "6.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 1015,
+    "conv_period_start": "2027-11-20",
+    "conv_period_end": "2029-10-20",
+    "refixing": "아니오",
+    "rcept_no": "20261112000579"
   }
 }
