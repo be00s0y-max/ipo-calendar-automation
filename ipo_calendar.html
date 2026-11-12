@@ -1463,7 +1463,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "11.12(목) 12:29";
+const LAST_UPDATED_KST = "11.12(목) 15:46";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -1471,6 +1471,12 @@ const LAST_UPDATED_KST = "11.12(목) 12:29";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "11.12(목) 15:46",
+    "items": [
+      "조기상환(풋옵션) 일정 4건 추가 확인"
+    ]
+  },
   {
     "at": "11.12(목) 12:29",
     "items": [
@@ -1597,13 +1603,6 @@ const UPDATE_LOG = [
     "items": [
       "신규 메자닌 1건 (CB 1건) — 에이엘티"
     ]
-  },
-  {
-    "at": "10.29(목) 11:05",
-    "items": [
-      "신규 공모주 2건 — 데스틴파워, 신영스팩12호",
-      "조기상환(풋옵션) 일정 1건 추가 확인"
-    ]
   }
 ];
 // AUTO-GENERATED:UPDATE_LOG:END
@@ -1658,9 +1657,9 @@ const deals = [
   { name: "하나에어로다이내믹스", uw: "IBK투자증권", demand: ["2026-11-02","2026-11-06"], sub: ["2026-11-10", "2026-11-11"], pay: "2026-11-13", list: "2026-11-20", dealSizeM: 25080, stockCode: "271160", finalPrice: 5700 },
   { name: "씨앤엠", uw: "한국투자증권", demand: ["2026-11-03","2026-11-09"], sub: ["2026-11-12", "2026-11-13"], pay: "2026-11-17", list: null, dealSizeM: 29500, stockCode: "0206M0", finalPrice: null, withdrawn: "2026-11-11" },
   { name: "제이앤티지", uw: "대신증권,NH투자증권", demand: ["2026-11-03","2026-11-09"], sub: ["2026-11-12", "2026-11-13"], pay: "2026-11-17", list: null, dealSizeM: 113520, stockCode: "951425", finalPrice: null, withdrawn: "2026-11-11" },
-  { name: "에스에프씨 (유가)", uw: "미래에셋증권,한국투자증권,삼성증권", demand: ["2026-11-09","2026-11-13"], sub: ["2026-11-18", "2026-11-19"], pay: "2026-11-23", list: null, dealSizeM: 158000, stockCode: "083030", finalPrice: null },
-  { name: "유캐스트", uw: "유진투자증권,신영증권", demand: ["2026-11-09","2026-11-13"], sub: ["2026-11-18", "2026-11-19"], pay: "2026-11-23", list: null, dealSizeM: 15200, stockCode: "0175C0", finalPrice: null },
-  { name: "아델", uw: "삼성증권,미래에셋증권", demand: ["2026-11-12","2026-11-18"], sub: ["2026-11-23", "2026-11-24"], pay: "2026-11-26", list: null, dealSizeM: 39060, stockCode: "0181E0", finalPrice: null },
+  { name: "에스에프씨 (유가)", uw: "미래에셋증권,한국투자증권,삼성증권", demand: ["2026-11-09","2026-11-13"], sub: ["2026-11-18", "2026-11-19"], pay: "2026-11-23", list: "2026-11-27", dealSizeM: 158000, stockCode: "083030", finalPrice: null },
+  { name: "유캐스트", uw: "유진투자증권,신영증권", demand: ["2026-11-09","2026-11-13"], sub: ["2026-11-18", "2026-11-19"], pay: "2026-11-23", list: "2026-11-30", dealSizeM: 15200, stockCode: "0175C0", finalPrice: null },
+  { name: "아델", uw: "삼성증권,미래에셋증권", demand: ["2026-11-12","2026-11-18"], sub: ["2026-11-23", "2026-11-24"], pay: "2026-11-26", list: "2026-12-02", dealSizeM: 39060, stockCode: "0181E0", finalPrice: null },
   { name: "제논", uw: "삼성증권", demand: ["2026-11-16","2026-11-20"], sub: ["2026-11-24", "2026-11-25"], pay: "2026-11-27", list: null, dealSizeM: 21340, stockCode: "0158J0", finalPrice: null },
   { name: "케이엠에프", uw: "IBK투자증권", demand: ["2026-11-16","2026-11-20"], sub: ["2026-11-24", "2026-11-25"], pay: "2026-11-27", list: null, dealSizeM: 30000, stockCode: "0103V0", finalPrice: null },
   { name: "에이엔에이치스트럭쳐", uw: "NH투자증권", demand: ["2026-11-19","2026-11-25"], sub: ["2026-11-27", "2026-11-30"], pay: "2026-12-02", list: null, dealSizeM: 23520, stockCode: "0111R0", finalPrice: null },
@@ -1772,13 +1771,13 @@ const mezzDeals = [
   {"name": "LS전선", "kind": "EB", "round": "34", "bondName": "무기명식 무이권부 무보증 사모 교환사채", "amount": 500000000000, "board_date": "2026-09-10", "sub_date": "2026-11-09", "pay_date": "2026-11-09", "maturity_date": "2031-11-09", "coupon_rate": "0.00", "ytm_rate": "0.00", "method": "사모", "underwriter": null, "conv_rate": "100.00", "conv_price": 270000, "conv_period_start": "2026-11-10", "conv_period_end": "2031-10-09", "refixing": "아니오", "rcept_no": "20260911000411"},
   {"name": "KG에코솔루션", "kind": "EB", "round": "4", "bondName": "무기명식 무이권부 무보증 사모 교환사채", "amount": 16254726432, "board_date": "2026-10-07", "sub_date": "2026-11-09", "pay_date": "2026-11-09", "maturity_date": "2031-11-09", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 6872, "conv_period_start": "2026-12-09", "conv_period_end": "2031-10-09", "refixing": "아니오", "rcept_no": "20261008000635"},
   {"name": "쏘닉스", "kind": "CB", "round": "1", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-10-29", "sub_date": "2026-11-09", "pay_date": "2026-11-09", "maturity_date": "2031-11-09", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 4813, "conv_period_start": "2027-11-09", "conv_period_end": "2031-10-09", "refixing": "아니오", "rcept_no": "20261029000654"},
-  {"name": "프로티나", "kind": "CB", "round": "1", "bondName": "무기명식 무보증 사모 전환사채", "amount": 29200000000, "board_date": "2026-11-04", "sub_date": "2026-11-10", "pay_date": "2026-11-12", "maturity_date": "2031-11-12", "coupon_rate": "0.0", "ytm_rate": "1.0", "method": "사모", "underwriter": null, "conv_rate": "100.0", "conv_price": 48061, "conv_period_start": "2027-11-12", "conv_period_end": "2031-10-12", "refixing": "아니오", "rcept_no": "20261104000317"},
+  {"name": "프로티나", "kind": "CB", "round": "1", "bondName": "무기명식 무보증 사모 전환사채", "amount": 29200000000, "board_date": "2026-11-04", "sub_date": "2026-11-10", "pay_date": "2026-11-12", "maturity_date": "2031-11-12", "coupon_rate": "0.0", "ytm_rate": "1.0", "method": "사모", "underwriter": null, "conv_rate": "100.0", "conv_price": 48061, "conv_period_start": "2027-11-12", "conv_period_end": "2031-10-12", "refixing": "아니오", "rcept_no": "20261104000317", "put_start": "2028-12-29", "put_end": "2029-01-29", "put_redemption": "2029-02-12"},
   {"name": "두산퓨얼셀", "kind": "BW", "round": "1", "bondName": "무기명식 이권부 무보증 비분리형 사모 영구 신주인수권부사채", "amount": 100000000000, "board_date": "2026-10-13", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2056-11-12", "coupon_rate": "0.0", "ytm_rate": "2.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 43704, "conv_period_start": "2027-11-12", "conv_period_end": "2056-10-12", "refixing": "아니오", "rcept_no": "20261013000372"},
   {"name": "두산퓨얼셀", "kind": "CB", "round": "1", "bondName": "무기명식 이권부 무보증 사모 영구 전환사채", "amount": 300000000000, "board_date": "2026-10-13", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2056-11-12", "coupon_rate": "0.0", "ytm_rate": "2.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 43704, "conv_period_start": "2027-11-12", "conv_period_end": "2056-10-12", "refixing": "아니오", "rcept_no": "20261013000355"},
-  {"name": "알에프텍", "kind": "CB", "round": "5", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 5000000000, "board_date": "2026-10-21", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2029-11-12", "coupon_rate": "2", "ytm_rate": "4", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 6485, "conv_period_start": "2027-11-12", "conv_period_end": "2029-10-12", "refixing": "아니오", "rcept_no": "20261021000315"},
-  {"name": "알에프텍", "kind": "CB", "round": "4", "bondName": "무기명식 이권부 담보부 사모 전환사채", "amount": 10000000000, "board_date": "2026-10-21", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2029-11-12", "coupon_rate": "2", "ytm_rate": "3", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 6485, "conv_period_start": "2027-11-12", "conv_period_end": "2029-10-12", "refixing": "아니오", "rcept_no": "20261021000302"},
+  {"name": "알에프텍", "kind": "CB", "round": "5", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 5000000000, "board_date": "2026-10-21", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2029-11-12", "coupon_rate": "2", "ytm_rate": "4", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 6485, "conv_period_start": "2027-11-12", "conv_period_end": "2029-10-12", "refixing": "아니오", "rcept_no": "20261021000315", "put_start": "2028-03-13", "put_end": "2028-04-12", "put_redemption": "2028-05-12"},
+  {"name": "알에프텍", "kind": "CB", "round": "4", "bondName": "무기명식 이권부 담보부 사모 전환사채", "amount": 10000000000, "board_date": "2026-10-21", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2029-11-12", "coupon_rate": "2", "ytm_rate": "3", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 6485, "conv_period_start": "2027-11-12", "conv_period_end": "2029-10-12", "refixing": "아니오", "rcept_no": "20261021000302", "put_start": "2028-03-13", "put_end": "2028-04-12", "put_redemption": "2028-05-12"},
   {"name": "FSN", "kind": "CB", "round": "16", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 3000000000, "board_date": "2026-11-04", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2029-11-12", "coupon_rate": "1.0", "ytm_rate": "5.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1201, "conv_period_start": "2027-11-12", "conv_period_end": "2029-10-12", "refixing": "아니오", "rcept_no": "20261104000344", "put_start": "2027-09-23", "put_end": "2027-10-13", "put_redemption": "2027-11-12"},
-  {"name": "루닛", "kind": "CB", "round": "3", "bondName": "무기명식 무보증 사모 전환사채", "amount": 47700000000, "board_date": "2026-11-04", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2031-11-12", "coupon_rate": "0.0", "ytm_rate": "4.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 15303, "conv_period_start": "2027-11-12", "conv_period_end": "2031-10-12", "refixing": "아니오", "rcept_no": "20261104000318"},
+  {"name": "루닛", "kind": "CB", "round": "3", "bondName": "무기명식 무보증 사모 전환사채", "amount": 47700000000, "board_date": "2026-11-04", "sub_date": "2026-11-12", "pay_date": "2026-11-12", "maturity_date": "2031-11-12", "coupon_rate": "0.0", "ytm_rate": "4.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 15303, "conv_period_start": "2027-11-12", "conv_period_end": "2031-10-12", "refixing": "아니오", "rcept_no": "20261104000318", "put_start": "2028-09-13", "put_end": "2028-10-13", "put_redemption": "2028-11-12"},
   {"name": "티씨머티리얼즈", "kind": "CB", "round": "2", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 30000000000, "board_date": "2026-11-06", "sub_date": "2026-11-16", "pay_date": "2026-11-16", "maturity_date": "2031-11-16", "coupon_rate": "0.0", "ytm_rate": "1.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 4290, "conv_period_start": "2027-11-16", "conv_period_end": "2031-10-16", "refixing": "아니오", "rcept_no": "20261106000165"},
   {"name": "씨이랩", "kind": "CB", "round": "1", "bondName": "무기명식 무보증 사모 전환사채", "amount": 10000000000, "board_date": "2026-11-06", "sub_date": "2026-11-16", "pay_date": "2026-11-16", "maturity_date": "2031-11-16", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 8106, "conv_period_start": "2027-11-16", "conv_period_end": "2031-10-16", "refixing": "아니오", "rcept_no": "20261106000150"},
   {"name": "서진시스템", "kind": "CB", "round": "45", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 60000000000, "board_date": "2026-11-06", "sub_date": "2026-11-16", "pay_date": "2026-11-16", "maturity_date": "2056-11-16", "coupon_rate": "2.0", "ytm_rate": "5.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 30391, "conv_period_start": "2027-11-16", "conv_period_end": "2056-10-16", "refixing": "아니오", "rcept_no": "20261109000003"},

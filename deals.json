@@ -800,7 +800,7 @@
       "2026-11-19"
     ],
     "pay": "2026-11-23",
-    "list": null,
+    "list": "2026-11-27",
     "dealSizeM": 158000,
     "stockCode": "083030",
     "finalPrice": null
@@ -818,7 +818,7 @@
       "2026-11-19"
     ],
     "pay": "2026-11-23",
-    "list": null,
+    "list": "2026-11-30",
     "dealSizeM": 15200,
     "stockCode": "0175C0",
     "finalPrice": null
@@ -836,7 +836,7 @@
       "2026-11-24"
     ],
     "pay": "2026-11-26",
-    "list": null,
+    "list": "2026-12-02",
     "dealSizeM": 39060,
     "stockCode": "0181E0",
     "finalPrice": null

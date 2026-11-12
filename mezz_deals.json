@@ -1962,7 +1962,10 @@
     "conv_period_start": "2027-11-12",
     "conv_period_end": "2029-10-12",
     "refixing": "아니오",
-    "rcept_no": "20261021000315"
+    "rcept_no": "20261021000315",
+    "put_start": "2028-03-13",
+    "put_end": "2028-04-12",
+    "put_redemption": "2028-05-12"
   },
   "00309831_CB_4": {
     "name": "알에프텍",
@@ -1983,7 +1986,10 @@
     "conv_period_start": "2027-11-12",
     "conv_period_end": "2029-10-12",
     "refixing": "아니오",
-    "rcept_no": "20261021000302"
+    "rcept_no": "20261021000302",
+    "put_start": "2028-03-13",
+    "put_end": "2028-04-12",
+    "put_redemption": "2028-05-12"
   },
   "00109286_CB_43": {
     "name": "대동",
@@ -2361,7 +2367,10 @@
     "conv_period_start": "2027-11-12",
     "conv_period_end": "2031-10-12",
     "refixing": "아니오",
-    "rcept_no": "20261104000317"
+    "rcept_no": "20261104000317",
+    "put_start": "2028-12-29",
+    "put_end": "2029-01-29",
+    "put_redemption": "2029-02-12"
   },
   "01397620_CB_3": {
     "name": "루닛",
@@ -2382,7 +2391,10 @@
     "conv_period_start": "2027-11-12",
     "conv_period_end": "2031-10-12",
     "refixing": "아니오",
-    "rcept_no": "20261104000318"
+    "rcept_no": "20261104000318",
+    "put_start": "2028-09-13",
+    "put_end": "2028-10-13",
+    "put_redemption": "2028-11-12"
   },
   "01366000_CB_2": {
     "name": "태성",
