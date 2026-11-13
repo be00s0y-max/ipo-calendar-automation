@@ -1074,5 +1074,23 @@
     "dealSizeM": 17600,
     "stockCode": "273940",
     "finalPrice": null
+  },
+  {
+    "name": "태석광학",
+    "no": "2360",
+    "uw": "신한투자증권,대신증권",
+    "demand": [
+      "2026-12-03",
+      "2026-12-09"
+    ],
+    "sub": [
+      "2026-12-14",
+      "2026-12-15"
+    ],
+    "pay": "2026-12-17",
+    "list": null,
+    "dealSizeM": 43365,
+    "stockCode": "0221D0",
+    "finalPrice": null
   }
 ]
