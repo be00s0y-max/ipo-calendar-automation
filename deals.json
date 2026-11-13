@@ -842,24 +842,6 @@
     "finalPrice": null
   },
   {
-    "name": "제논",
-    "no": "2341",
-    "uw": "삼성증권",
-    "demand": [
-      "2026-11-16",
-      "2026-11-20"
-    ],
-    "sub": [
-      "2026-11-24",
-      "2026-11-25"
-    ],
-    "pay": "2026-11-27",
-    "list": null,
-    "dealSizeM": 21340,
-    "stockCode": "0158J0",
-    "finalPrice": null
-  },
-  {
     "name": "케이엠에프",
     "no": "2340",
     "uw": "IBK투자증권",
@@ -1073,6 +1055,24 @@
     "list": null,
     "dealSizeM": 17600,
     "stockCode": "273940",
+    "finalPrice": null
+  },
+  {
+    "name": "제논",
+    "no": "2341",
+    "uw": "삼성증권",
+    "demand": [
+      "2026-12-03",
+      "2026-12-09"
+    ],
+    "sub": [
+      "2026-12-14",
+      "2026-12-15"
+    ],
+    "pay": "2026-12-17",
+    "list": null,
+    "dealSizeM": 21340,
+    "stockCode": "0158J0",
     "finalPrice": null
   },
   {
