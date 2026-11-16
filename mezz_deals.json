@@ -2554,5 +2554,26 @@
     "conv_period_end": "2031-10-23",
     "refixing": "아니오",
     "rcept_no": "20261113001035"
+  },
+  "01437858_CB_2": {
+    "name": "진시스템",
+    "kind": "CB",
+    "round": "2",
+    "bondName": "무기명식 이권부 무보증 사모 전환사채",
+    "amount": 2430526149,
+    "board_date": "2026-11-16",
+    "sub_date": "2026-11-16",
+    "pay_date": "2026-11-24",
+    "maturity_date": "2056-11-24",
+    "coupon_rate": "0.0",
+    "ytm_rate": "0.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 3911,
+    "conv_period_start": "2027-11-24",
+    "conv_period_end": "2056-10-24",
+    "refixing": "아니오",
+    "rcept_no": "20261116002211"
   }
 }
