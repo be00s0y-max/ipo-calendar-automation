@@ -1463,7 +1463,7 @@
 // 데이터가 언제까지 확인됐는지(날짜+시각) 보여준다. "오늘" 배지와 같은
 // "M.D(요일)" 포맷에 "HH:MM"만 덧붙인, 이미 완성된 표시 문자열이다.
 // AUTO-GENERATED:LAST_UPDATED:START
-const LAST_UPDATED_KST = "11.17(화) 08:47";
+const LAST_UPDATED_KST = "11.17(화) 14:05";
 // AUTO-GENERATED:LAST_UPDATED:END
 
 // 자동 갱신이 돌 때마다 "무엇이 바뀌었는지"를 워크플로가 여기에 쌓는다
@@ -1471,6 +1471,12 @@ const LAST_UPDATED_KST = "11.17(화) 08:47";
 // "변경 없음"만 20줄 쌓이면 정작 볼 게 안 보이니까.
 // AUTO-GENERATED:UPDATE_LOG:START
 const UPDATE_LOG = [
+  {
+    "at": "11.17(화) 14:05",
+    "items": [
+      "신규 메자닌 1건 (CB 1건) — 엠젠솔루션"
+    ]
+  },
   {
     "at": "11.17(화) 08:47",
     "items": [
@@ -1590,12 +1596,6 @@ const UPDATE_LOG = [
       "수요예측 결과 반영 1건 — 영광와이케이엠씨",
       "확정 증권신고서 공시 1건 — 영광와이케이엠씨"
     ]
-  },
-  {
-    "at": "11.2(월) 22:59",
-    "items": [
-      "신규 메자닌 1건 (CB 1건) — 광진실업"
-    ]
   }
 ];
 // AUTO-GENERATED:UPDATE_LOG:END
@@ -1664,7 +1664,7 @@ const deals = [
   { name: "씨아이에스케미칼", uw: "KB증권", demand: ["2026-11-30","2026-12-04"], sub: ["2026-12-10", "2026-12-11"], pay: "2026-12-15", list: null, dealSizeM: 21600, stockCode: "459650", finalPrice: null },
   { name: "인터엑스", uw: "한국투자증권,BNK투자증권", demand: ["2026-11-30","2026-12-04"], sub: ["2026-12-09", "2026-12-10"], pay: "2026-12-14", list: null, dealSizeM: 30000, stockCode: "480200", finalPrice: null },
   { name: "KTE", uw: "NH투자증권", demand: ["2026-12-02","2026-12-08"], sub: ["2026-12-14", "2026-12-15"], pay: "2026-12-17", list: null, dealSizeM: 53504, stockCode: "103060", finalPrice: null },
-  { name: "데스틴파워", uw: "한국투자증권", demand: ["2026-12-02","2026-12-08"], sub: ["2026-12-14", "2026-12-15"], pay: "2026-12-17", list: null, dealSizeM: 17600, stockCode: "273940", finalPrice: null },
+  { name: "데스틴파워", uw: "한국투자증권", demand: ["2026-12-02","2026-12-08"], sub: ["2026-12-11", "2026-12-14"], pay: "2026-12-16", list: null, dealSizeM: 17600, stockCode: "273940", finalPrice: null },
   { name: "제논", uw: "삼성증권", demand: ["2026-12-03","2026-12-09"], sub: ["2026-12-14", "2026-12-15"], pay: "2026-12-17", list: null, dealSizeM: 21340, stockCode: "0158J0", finalPrice: null },
   { name: "태석광학", uw: "신한투자증권,대신증권", demand: ["2026-12-03","2026-12-09"], sub: ["2026-12-14", "2026-12-15"], pay: "2026-12-17", list: null, dealSizeM: 43365, stockCode: "0221D0", finalPrice: null },
 ];
@@ -1778,6 +1778,7 @@ const mezzDeals = [
   {"name": "서진시스템", "kind": "CB", "round": "44", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 60000000000, "board_date": "2026-11-06", "sub_date": "2026-11-16", "pay_date": "2026-11-16", "maturity_date": "2030-11-16", "coupon_rate": "0.0", "ytm_rate": "2.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 33430, "conv_period_start": "2027-11-16", "conv_period_end": "2030-10-16", "refixing": "아니오", "rcept_no": "20261106000481", "put_start": "2028-09-17", "put_end": "2028-10-17", "put_redemption": "2028-11-16"},
   {"name": "비투엔", "kind": "CB", "round": "7", "bondName": "무기명식 이권부 무보증 사모 전환사채 ", "amount": 10000000000, "board_date": "2026-11-12", "sub_date": "2026-11-16", "pay_date": "2026-11-20", "maturity_date": "2029-11-20", "coupon_rate": "2.0", "ytm_rate": "6.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1015, "conv_period_start": "2027-11-20", "conv_period_end": "2029-10-20", "refixing": "아니오", "rcept_no": "20261112000579"},
   {"name": "진시스템", "kind": "CB", "round": "2", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 2430526149, "board_date": "2026-11-16", "sub_date": "2026-11-16", "pay_date": "2026-11-24", "maturity_date": "2056-11-24", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 3911, "conv_period_start": "2027-11-24", "conv_period_end": "2056-10-24", "refixing": "아니오", "rcept_no": "20261116002211"},
+  {"name": "엠젠솔루션", "kind": "CB", "round": "26", "bondName": "무기명식 이권부 무보증\n사모 전환사채", "amount": 10000000000, "board_date": "2026-11-17", "sub_date": "2026-11-17", "pay_date": "2026-11-25", "maturity_date": "2029-11-25", "coupon_rate": "2", "ytm_rate": "6", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 1046, "conv_period_start": "2027-11-25", "conv_period_end": "2029-10-25", "refixing": "아니오", "rcept_no": "20261117000068"},
   {"name": "태성", "kind": "CB", "round": "2", "bondName": "무기명식 무이권부 무보증 사모 전환사채", "amount": 70000000000, "board_date": "2026-11-05", "sub_date": "2026-11-19", "pay_date": "2026-11-19", "maturity_date": "2031-11-19", "coupon_rate": "0.0", "ytm_rate": "0.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 51931, "conv_period_start": "2027-11-19", "conv_period_end": "2031-10-19", "refixing": "아니오", "rcept_no": "20261105000553"},
   {"name": "이오플로우", "kind": "CB", "round": "7", "bondName": "무기명식 무보증 사모 전환사채\n(채권형 신종자본증권)", "amount": 10000000000, "board_date": "2026-10-15", "sub_date": "2026-11-20", "pay_date": "2026-11-20", "maturity_date": "2056-11-19", "coupon_rate": "0.00", "ytm_rate": "5.00", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 3000, "conv_period_start": "2027-11-20", "conv_period_end": "2056-08-19", "refixing": "아니오", "rcept_no": "20261015000232"},
   {"name": "보로노이", "kind": "CB", "round": "5", "bondName": "무기명식 이권부 무보증 사모 전환사채", "amount": 52700000000, "board_date": "2026-11-13", "sub_date": "2026-11-23", "pay_date": "2026-11-23", "maturity_date": "2031-11-23", "coupon_rate": "0.0", "ytm_rate": "2.0", "method": "사모", "underwriter": null, "conv_rate": "100", "conv_price": 111510, "conv_period_start": "2027-11-23", "conv_period_end": "2031-10-23", "refixing": "아니오", "rcept_no": "20261113001035"},
@@ -5031,7 +5032,7 @@ const DEMAND_INFO = {
     "biz": "당사는 실험 자동화 스크리닝 시스템 설계 기술과 지속적으로 축적되는 대규모 암환자 임상 데이터베이스를 바탕으로 차세대 정밀의료 및 신약개발 지원 솔루션을 제공하는 바이오-엔지니어링 융합기업입니다.",
     "rcept_no": "20261110000253",
     "report_nm": "[발행조건확정]증권신고서(지분증권)",
-    "ov_rcept": "20261015000329"
+    "ov_rcept": "20261110000253"
   },
   "하나에어로다이내믹스": {
     "band": [
