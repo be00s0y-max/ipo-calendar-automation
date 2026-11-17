@@ -2952,5 +2952,45 @@
         "qty": 0
       }
     }
+  },
+  "유캐스트": {
+    "offering": {
+      "offer_shares": 800000,
+      "offer_amount_expected": 15200000000,
+      "offer_amount_final": 15200000000,
+      "subscription": {
+        "inst_start": "2026년 11월 18일 (수)",
+        "inst_end": "2026년 11월 19일 (목)"
+      },
+      "payment_date": "2026년 11월 23일"
+    },
+    "demand_summary": {
+      "total_count": 715,
+      "total_qty": 104049000,
+      "competition_rate": 173.42
+    },
+    "price_bands": null,
+    "lockup": {
+      "미확약": {
+        "count": 705,
+        "qty": 103452000
+      },
+      "15일 확약": {
+        "count": 1,
+        "qty": 10000
+      },
+      "1개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "3개월 확약": {
+        "count": 0,
+        "qty": 0
+      },
+      "6개월 확약": {
+        "count": 9,
+        "qty": 587000
+      }
+    }
   }
 }

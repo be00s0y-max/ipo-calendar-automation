@@ -803,7 +803,8 @@
     "list": "2026-11-27",
     "dealSizeM": 158000,
     "stockCode": "083030",
-    "finalPrice": null
+    "finalPrice": null,
+    "withdrawn": "2026-11-17"
   },
   {
     "name": "유캐스트",
@@ -821,7 +822,7 @@
     "list": "2026-11-30",
     "dealSizeM": 15200,
     "stockCode": "0175C0",
-    "finalPrice": null
+    "finalPrice": 19000
   },
   {
     "name": "아델",
