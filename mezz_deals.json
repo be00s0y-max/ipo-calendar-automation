@@ -2595,6 +2595,27 @@
     "conv_period_start": "2027-11-25",
     "conv_period_end": "2029-10-25",
     "refixing": "아니오",
-    "rcept_no": "20261117000068"
+    "rcept_no": "20261117000152"
+  },
+  "00103547_CB_6": {
+    "name": "우진비앤지",
+    "kind": "CB",
+    "round": "6",
+    "bondName": "무기명식 이권부 무보증 \n사모 전환사채",
+    "amount": 6000000000,
+    "board_date": "2026-11-17",
+    "sub_date": null,
+    "pay_date": "2027-01-29",
+    "maturity_date": "2030-01-29",
+    "coupon_rate": "0.0",
+    "ytm_rate": "2.0",
+    "method": "사모",
+    "underwriter": null,
+    "conv_rate": "100",
+    "conv_price": 2734,
+    "conv_period_start": "2028-01-29",
+    "conv_period_end": "2029-12-29",
+    "refixing": "아니오",
+    "rcept_no": "20261117000265"
   }
 }

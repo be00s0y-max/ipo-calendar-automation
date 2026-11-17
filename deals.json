@@ -1093,5 +1093,23 @@
     "dealSizeM": 43365,
     "stockCode": "0221D0",
     "finalPrice": null
+  },
+  {
+    "name": "이나인페이",
+    "no": "2361",
+    "uw": "한국투자증권",
+    "demand": [
+      "2026-12-07",
+      "2026-12-11"
+    ],
+    "sub": [
+      "2026-12-16",
+      "2026-12-17"
+    ],
+    "pay": "2026-12-21",
+    "list": null,
+    "dealSizeM": 48000,
+    "stockCode": "0013H0",
+    "finalPrice": null
   }
 ]
