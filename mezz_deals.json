@@ -1896,7 +1896,10 @@
     "conv_period_start": "2027-12-11",
     "conv_period_end": "2030-11-11",
     "refixing": "아니오",
-    "rcept_no": "20261021000431"
+    "rcept_no": "20261021000431",
+    "put_start": "2027-09-19",
+    "put_end": "2027-10-19",
+    "put_redemption": "2027-11-18"
   },
   "01381984_CB_7": {
     "name": "SKAI",
