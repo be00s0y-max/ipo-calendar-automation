@@ -2538,7 +2538,10 @@
     "conv_period_start": "2027-11-20",
     "conv_period_end": "2029-10-20",
     "refixing": "아니오",
-    "rcept_no": "20261112000579"
+    "rcept_no": "20261112000579",
+    "put_start": "2027-09-21",
+    "put_end": "2027-10-21",
+    "put_redemption": "2027-11-20"
   },
   "01327746_CB_5": {
     "name": "보로노이",
