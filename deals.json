@@ -1130,5 +1130,23 @@
     "dealSizeM": 48000,
     "stockCode": "0013H0",
     "finalPrice": null
+  },
+  {
+    "name": "피지티",
+    "no": "2363",
+    "uw": "한국투자증권,유안타증권",
+    "demand": [
+      "2026-12-08",
+      "2026-12-14"
+    ],
+    "sub": [
+      "2026-12-17",
+      "2026-12-18"
+    ],
+    "pay": "2026-12-22",
+    "list": null,
+    "dealSizeM": 25200,
+    "stockCode": "483490",
+    "finalPrice": null
   }
 ]
