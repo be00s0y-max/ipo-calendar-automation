@@ -13,6 +13,9 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    # 기본값(6시간)이면 한 단계가 멈췄을 때 그만큼 기다리다 실패해서, 받아 둔 데이터까지 커밋하지 못한다.
+    # 평소 10~17분, 길었던 날 42분(11.6)이라 45분으로 둔다.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -58,6 +61,9 @@ jobs:
 
       - name: Run mezzanine update (CB·BW·EB 시장 전역 스캔)
         id: mezz
+        # 메자닌 스캔가 멈춰도(11.20 아침 SEIBRO 단계가 08:39부터 끝나지 않음) 이 단계만 끊고 나머지 갱신은 커밋한다.
+        timeout-minutes: 10
+        continue-on-error: true
         env:
           DART_API_KEY: ${{ secrets.DART_API_KEY }}
         run: |
@@ -68,6 +74,9 @@ jobs:
 
       - name: Run put-schedule update (KSD SEIBRO 조기상환 일정)
         id: put
+        # SEIBRO 조회가 멈춰도(11.20 아침 SEIBRO 단계가 08:39부터 끝나지 않음) 이 단계만 끊고 나머지 갱신은 커밋한다.
+        timeout-minutes: 10
+        continue-on-error: true
         run: |
           set +e
           python update_put_schedule.py
