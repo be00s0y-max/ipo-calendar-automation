@@ -840,7 +840,8 @@
     "list": "2026-12-02",
     "dealSizeM": 39060,
     "stockCode": "0181E0",
-    "finalPrice": null
+    "finalPrice": null,
+    "withdrawn": "2026-11-20"
   },
   {
     "name": "케이엠에프",
