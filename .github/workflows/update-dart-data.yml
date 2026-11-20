@@ -79,7 +79,8 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          python update_put_schedule.py
+          # -u: 출력을 모아 두지 않고 바로 로그에 찍는다(중간에 끊겨도 어디까지 했는지 남게)
+          python -u update_put_schedule.py
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
           exit 0
 

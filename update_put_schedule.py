@@ -37,6 +37,8 @@ MEZZ_DATA_PATH = os.path.join(SCRATCH, "mezz_deals.json")
 HTML_PATH = os.path.join(SCRATCH, "ipo_calendar.html")
 
 BASE = "https://m.seibro.or.kr"
+TIME_BUDGET_SEC = 7 * 60   # 워크플로 단계 제한(10분) 전에 끝내고 받은 결과를 저장한다. 한 종목은 최대 약 2분.
+MAX_FAIL_STREAK = 5        # 이만큼 연속으로 응답이 없으면 SEIBRO 장애로 보고 그만둔다
 UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
 
 _cj = http.cookiejar.CookieJar()
@@ -159,24 +161,54 @@ def main():
     not_found = []
     errors = []
 
-    for key_id, dl in mezz_deals.items():
+    # 2026-11-20 오전: SEIBRO가 응답하지 않아 이 단계가 끝나지 않았다(요청 하나에 최대 66초 × 119종목 ≈ 2시간).
+    # 그래서 (1) 종목마다 진행 상황을 바로 찍고, (2) 연달아 응답이 없으면 일찍 그만두고,
+    # (3) 정해진 시간이 지나면 그때까지 받은 결과만 저장하고 끝낸다(워크플로 단계 제한 10분보다 먼저).
+    started = time.monotonic()
+    items = list(mezz_deals.items())
+    # 매번 같은 곳에서 끊기면 뒤쪽 종목이 계속 빠지므로, 시작 위치를 실행 시각(시 단위)마다 돌린다.
+    offset = int(time.time() // 3600) % len(items) if items else 0
+    items = items[offset:] + items[:offset]
+    print(f"확인 대상: {len(items)}개 메자닌 종목 ({offset + 1}번째부터)", flush=True)
+    stopped = None
+    fail_streak = 0
+    checked = 0
+
+    for key_id, dl in items:
+        elapsed = time.monotonic() - started
+        if elapsed > TIME_BUDGET_SEC:
+            stopped = f"시간 제한 {TIME_BUDGET_SEC // 60}분을 넘겨 멈춤"
+            break
+        if fail_streak >= MAX_FAIL_STREAK:
+            stopped = f"SEIBRO가 {MAX_FAIL_STREAK}종목 연속 응답하지 않아 멈춤"
+            break
         name, round_, kind = dl.get("name"), str(dl.get("round") or ""), dl.get("kind")
         if not name or not round_ or not kind:
             continue
+        checked += 1
+        label = f"{name} {round_}회{kind}"
         try:
             found = find_isin(name, round_, kind)
         except Exception as e:  # noqa: BLE001
-            errors.append(f"{name} {round_}회{kind}: 검색 실패 ({e})")
+            errors.append(f"{label}: 검색 실패 ({e})")
+            fail_streak += 1
+            print(f"  [{checked}] {label}: 검색 실패 ({e}) — {int(time.monotonic() - started)}초", flush=True)
             continue
         if not found:
-            not_found.append(f"{name} {round_}회{kind}")
+            fail_streak = 0
+            not_found.append(label)
+            print(f"  [{checked}] {label}: SEIBRO 미등록", flush=True)
             continue
         isin, bond_name = found
         try:
             window = next_put_window(isin, bond_name, today_iso)
         except Exception as e:  # noqa: BLE001
-            errors.append(f"{name} {round_}회{kind}: 상세조회 실패 ({e})")
+            errors.append(f"{label}: 상세조회 실패 ({e})")
+            fail_streak += 1
+            print(f"  [{checked}] {label}: 상세조회 실패 ({e}) — {int(time.monotonic() - started)}초", flush=True)
             continue
+        fail_streak = 0
+        print(f"  [{checked}] {label}: {'풋 ' + window[0] if window else '풋옵션 없음'}", flush=True)
         time.sleep(0.5)  # SEIBRO에 너무 빠르게 연달아 요청하지 않도록
 
         if not window:
@@ -198,7 +230,9 @@ def main():
         save_json(MEZZ_DATA_PATH, mezz_deals)
         regenerate_html(mezz_deals)
 
-    print(f"확인 대상: {len(mezz_deals)}개 메자닌 종목")
+    if stopped:
+        print(f"중간 멈춤: {stopped} — {len(items)}개 중 {checked}개 확인, 받은 결과까지만 저장"
+              f"(나머지는 기존 값 유지, 다음 갱신 때 다시 확인)")
     if changed:
         print(f"새로 반영됨 ({len(changed)}건):")
         for c in changed[:30]:
